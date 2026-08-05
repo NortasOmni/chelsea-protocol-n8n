@@ -1,0 +1,113 @@
+{
+  "id": "PFL5cN7vR2mX8qWa",
+  "name": "Chelsea Deployment Preflight v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "0587b035-0c4d-566f-9994-ebafccb62f44",
+  "nodes": [
+    {
+      "id": "5f7e465b-d59e-58c3-a69e-fb27f187a3d8",
+      "name": "Trigger | Manual Start | DeploymentPreflight",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "be8e0ff1-f65c-577a-b733-0c3d5b520885",
+      "name": "Code | Build Non-Secret Environment Checks | DeploymentPreflight",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const vars=['CHELSEA_TELEGRAM_BOT_TOKEN','CHELSEA_OPENAI_API_KEY','CHELSEA_QDRANT_URL','CHELSEA_QDRANT_API_KEY','CHELSEA_KIE_API_KEY','CHELSEA_SUPABASE_URL','CHELSEA_SUPABASE_SERVICE_ROLE_KEY','CHELSEA_N8N_API_URL','CHELSEA_N8N_API_KEY'];const checks=vars.map(name=>({name,present:Boolean($env[name]),length:Number(String($env[name]||'').length)}));if(checks.some(x=>!x.present)) throw new Error(`Missing required environment variables: ${checks.filter(x=>!x.present).map(x=>x.name).join(', ')}`);return checks.map(x=>({json:x}));"
+      }
+    },
+    {
+      "id": "1614812a-a8d8-5528-9b6d-fc9b0b5da04f",
+      "name": "Call | n8n API | Generate Security Audit | DeploymentPreflight",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_N8N_API_URL || '') + '/audit' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $env.CHELSEA_N8N_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "63af632c-d7ad-5df2-b5e6-e22bf4f149f7",
+      "name": "End | Deployment Preflight Result | DeploymentPreflight",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Manual Start | DeploymentPreflight": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Non-Secret Environment Checks | DeploymentPreflight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Non-Secret Environment Checks | DeploymentPreflight": {
+      "main": [
+        [
+          {
+            "node": "Call | n8n API | Generate Security Audit | DeploymentPreflight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | n8n API | Generate Security Audit | DeploymentPreflight": {
+      "main": [
+        [
+          {
+            "node": "End | Deployment Preflight Result | DeploymentPreflight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

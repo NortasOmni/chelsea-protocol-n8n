@@ -1,0 +1,786 @@
+{
+  "id": "zYOv6rLZVEjAiTNf",
+  "name": "Chelsea Privacy Outbox Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "5430bc2c-a8d6-5e01-b20c-6f709a31c479",
+      "name": "Trigger | Parent Workflow | PrivacyWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1500,
+        -100
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "4226b5b6-dd27-5f7f-bdb8-e1ee67357e5d",
+      "name": "Trigger | Manual Start | PrivacyWorker",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1500,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9f585689-641f-55c3-9b39-f670999896aa",
+      "name": "Code | Build Privacy Worker Claim | PrivacyWorker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nconst workerId=String(input.workerId||`privacy_${$execution.id}`).normalize('NFKC').replace(/[^A-Za-z0-9_.:-]/g,'_').slice(0,180);\nreturn [{json:{...input,workerId,claimLimit:Math.max(1,Math.min(Number(input.claimLimit||10),50)),leaseSeconds:Math.max(60,Math.min(Number(input.leaseSeconds||300),1800))}}];"
+      }
+    },
+    {
+      "id": "1e778206-22ec-5edb-b1be-630438dcabaf",
+      "name": "Call | Supabase RPC | Claim Privacy Outbox | PrivacyWorker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1020,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_claim_privacy_outbox\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_worker:$json.workerId,p_limit:$json.claimLimit,p_lease_seconds:$json.leaseSeconds} }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "8aaeb64c-2612-5c77-b02e-bc3c92b7b6d9",
+      "name": "Code | Expand Privacy Claims | PrivacyWorker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -780,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$input.first()?.json||{};\nlet body=source.body??source.data??source;\ntry{if(typeof body==='string')body=JSON.parse(body)}catch{}\nconst rows=Array.isArray(body)?body:(body&&Array.isArray(body.data)?body.data:(body&&body.outbox_id?[body]:[]));\nreturn rows.filter(Boolean).map(row=>({json:{\n  outboxId:String(row.outbox_id||row.outboxId||''),requestId:String(row.request_id||row.requestId||''),\n  target:String(row.target||''),operation:String(row.operation||''),payload:row.payload||{},\n  attemptCount:Number(row.attempt_count||row.attemptCount||0),maxAttempts:Number(row.max_attempts||row.maxAttempts||5),\n  workerId:String($('Code | Build Privacy Worker Claim | PrivacyWorker').first().json.workerId||'')\n}}));"
+      }
+    },
+    {
+      "id": "4d4c1aba-2aea-57a3-bbaf-e614da0b72c9",
+      "name": "If | Target Supabase | PrivacyWorker",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -540,
+        -160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "77db2f46-3434-50f9-9297-468b2edbae53",
+              "leftValue": "={{ $json.target }}",
+              "rightValue": "supabase",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d67fc411-3131-5700-8c08-5d1197e0064f",
+      "name": "Call | Supabase RPC | Execute Supabase Privacy Target | PrivacyWorker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -280,
+        -300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_privacy_supabase_target_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_outbox_id:$json.outboxId,p_worker:$json.workerId} }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "93026c75-d514-54cf-a76e-bde827dd9289",
+      "name": "Code | Normalize Supabase Privacy Result | PrivacyWorker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        -300
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst claim=$('If | Target Supabase | PrivacyWorker').first().json;\nconst response=$input.first()?.json||{};let body=response.body??response.data??response;\ntry{if(typeof body==='string')body=JSON.parse(body)}catch{}\nconst row=Array.isArray(body)?body[0]:body;\nconst ok=Boolean(row&&((row.success===true)||(row.ok===true)||(row.status==='completed')));\nreturn [{json:{...claim,adapter:'supabase',success:ok,retryable:!ok,receipt:row||{},errorMessage:ok?'':String(row?.error||row?.message||'supabase_privacy_target_failed').slice(0,2000)}}];"
+      }
+    },
+    {
+      "id": "b6ce9abd-bf5a-5bef-860a-b2ce9bf8ffdf",
+      "name": "If | Target Qdrant | PrivacyWorker",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -280,
+        -80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "edab2dd5-2b72-54d1-bc80-27e555f9450a",
+              "leftValue": "={{ $json.target }}",
+              "rightValue": "qdrant",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "802cd252-7dbd-5325-82ea-7e821f67ceac",
+      "name": "If | Target Data Tables | PrivacyWorker",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -20,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0229d577-52b6-563a-854b-f9b3b09c984c",
+              "leftValue": "={{ $json.target }}",
+              "rightValue": "data_tables",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e796a7ba-418e-503d-95c2-73a365755e5e",
+      "name": "If | Target Files | PrivacyWorker",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "db12da39-036a-5a25-b4a9-86e38c6c34be",
+              "leftValue": "={{ $json.target }}",
+              "rightValue": "files",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "bca0a0e4-1538-5a53-b9ee-ad0dfb30c6d3",
+      "name": "Code | Block Unknown Privacy Target | PrivacyWorker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const claim=$input.first()?.json||{};return [{json:{...claim,adapter:'unknown',success:false,retryable:false,receipt:{blocked:true},errorMessage:'privacy_unknown_target'}}];"
+      }
+    },
+    {
+      "id": "e098508d-4207-594b-854b-509c662fc3a0",
+      "name": "Code | Build Privacy Finish RPC | PrivacyWorker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};\nreturn [{json:{...x,finishRpc:{p_outbox_id:x.outboxId,p_worker:x.workerId,p_success:x.success===true,p_retryable:x.retryable===true,p_receipt:x.receipt||{},p_error:String(x.errorMessage||'').slice(0,4000)}}}];"
+      }
+    },
+    {
+      "id": "5f9ebe69-e37e-539f-9790-cff059c059fc",
+      "name": "Call | Supabase RPC | Finish Privacy Outbox | PrivacyWorker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_finish_privacy_outbox_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.finishRpc }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "41519faf-ea5b-58f4-83ac-a22dd1f0eb18",
+      "name": "Code | Verify Privacy Finish Receipt | PrivacyWorker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$('Code | Build Privacy Finish RPC | PrivacyWorker').first().json;const r=$input.first()?.json||{};let b=r.body??r.data??r;\ntry{if(typeof b==='string')b=JSON.parse(b)}catch{}\nconst row=Array.isArray(b)?b[0]:b;if(!row||String(row.outbox_id||row.outboxId||'')!==source.outboxId)throw new Error('privacy_finish_receipt_missing');\nreturn [{json:{...source,finishReceipt:row}}];"
+      }
+    },
+    {
+      "id": "9e4fe45b-4745-500c-909f-106dc4170e58",
+      "name": "End | Privacy Claim Finished | PrivacyWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "1aba3e9f-7ed9-518b-9373-c260099b5989",
+      "name": "Call | Chelsea Qdrant Privacy Adapter | Execute Target | PrivacyWorker",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        -100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "QDP8nT5cL2vR7mXa",
+          "mode": "id",
+          "cachedResultName": "Chelsea Qdrant Privacy Adapter v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "835307e2-e8e1-5580-a009-aa89a40e57c0",
+      "name": "Call | Chelsea Legacy Data Tables Privacy Adapter | Execute Target | PrivacyWorker",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        80
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "DTP7mR4xK2qV9sLc",
+          "mode": "id",
+          "cachedResultName": "Chelsea Legacy Data Tables Privacy Adapter v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "2c0a88d3-af47-51bc-a12d-557e548c9972",
+      "name": "Call | Chelsea Files Privacy Adapter | Execute Target | PrivacyWorker",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        180
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "FPR5xC9mN2qL7vBd",
+          "mode": "id",
+          "cachedResultName": "Chelsea Files Privacy Adapter v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_expire_privacy_lifecycle_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -140,
+        300
+      ],
+      "id": "a0d4fee9-06f6-5fcc-a769-aebbb9d7201c",
+      "name": "Call | Supabase | Expire Privacy Lifecycle | PrivacyWorker",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        120,
+        300
+      ],
+      "id": "4097271d-0cc9-5fa8-93a2-ec09fbc3bc71",
+      "name": "End | Privacy Export TTL Receipt | PrivacyWorker"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Worker Claim | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Supabase | Expire Privacy Lifecycle | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Worker Claim | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Privacy Worker Claim | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Privacy Outbox | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Privacy Outbox | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Expand Privacy Claims | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Expand Privacy Claims | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "If | Target Supabase | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Target Supabase | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Execute Supabase Privacy Target | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Target Qdrant | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Execute Supabase Privacy Target | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Supabase Privacy Result | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Supabase Privacy Result | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Finish RPC | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Target Qdrant | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Qdrant Privacy Adapter | Execute Target | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Target Data Tables | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Target Data Tables | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Legacy Data Tables Privacy Adapter | Execute Target | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Target Files | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Target Files | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Files Privacy Adapter | Execute Target | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Block Unknown Privacy Target | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Block Unknown Privacy Target | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Finish RPC | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Privacy Finish RPC | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Finish Privacy Outbox | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Finish Privacy Outbox | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Privacy Finish Receipt | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Privacy Finish Receipt | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Claim Finished | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Qdrant Privacy Adapter | Execute Target | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Finish RPC | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Legacy Data Tables Privacy Adapter | Execute Target | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Finish RPC | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Files Privacy Adapter | Execute Target | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Finish RPC | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Expire Privacy Lifecycle | PrivacyWorker": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Export TTL Receipt | PrivacyWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 1080,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "ed9fc80f-768b-4157-bb44-907fcacd407a"
+}

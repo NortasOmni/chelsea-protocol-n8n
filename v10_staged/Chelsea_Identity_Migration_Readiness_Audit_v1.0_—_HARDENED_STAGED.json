@@ -1,0 +1,279 @@
+{
+  "name": "Chelsea Identity Legacy Bootstrap and Readiness v2.0 — HARDENED STAGED",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "id": "5ceb1f64-c688-4954-a50e-8146d6e9a906",
+      "name": "Trigger | Parent Workflow | IdentityAudit"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "SkihqL0Ri2ac9TfS",
+          "mode": "list",
+          "cachedResultName": "Chelsea Identity Registry"
+        },
+        "matchType": "allConditions",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        180
+      ],
+      "id": "70dbbf1d-374b-4cee-a77b-5c96753c29a1",
+      "name": "Read | Identity Registry | All Principals | IdentityAudit",
+      "alwaysOutputData": true,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Obsidian RAG Chat Memory",
+          "mode": "name",
+          "cachedResultName": "Obsidian RAG Chat Memory"
+        },
+        "matchType": "allConditions",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        180
+      ],
+      "id": "8f260bb1-9237-4b4f-9b20-14a6e5c0b685",
+      "name": "Read | Chat Memory | Legacy Actor Proof | IdentityAudit",
+      "alwaysOutputData": true,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst t=v=>String(v??'').normalize('NFKC').trim();const regs=$('Read | Identity Registry | All Principals | IdentityAudit').all().map(i=>i.json||{});const chats=$('Read | Chat Memory | Legacy Actor Proof | IdentityAudit').all().map(i=>i.json||{});\nfunction utf8(v){return Array.from(unescape(encodeURIComponent(String(v)))).map(c=>c.charCodeAt(0));}function rotr(v,s){return(v>>>s)|(v<<(32-s));}function sha(v){const k=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];const h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225],b=utf8(v),l=b.length*8;b.push(128);while(b.length%64!==56)b.push(0);for(let i=7;i>=0;i--)b.push(Math.floor(l/2**(i*8))&255);for(let o=0;o<b.length;o+=64){const w=[];for(let i=0;i<16;i++)w[i]=((b[o+i*4]<<24)|(b[o+i*4+1]<<16)|(b[o+i*4+2]<<8)|b[o+i*4+3])>>>0;for(let i=16;i<64;i++){const a=w[i-15],z=w[i-2];w[i]=(w[i-16]+(rotr(a,7)^rotr(a,18)^(a>>>3))+w[i-7]+(rotr(z,17)^rotr(z,19)^(z>>>10)))>>>0;}let[a,z,c,d,e,f,g,q]=h;for(let i=0;i<64;i++){const p=(q+(rotr(e,6)^rotr(e,11)^rotr(e,25))+((e&f)^((~e)&g))+k[i]+w[i])>>>0,m=((rotr(a,2)^rotr(a,13)^rotr(a,22))+((a&z)^(a&c)^(z&c)))>>>0;q=g;g=f;f=e;e=(d+p)>>>0;d=c;c=z;z=a;a=(p+m)>>>0;}h[0]=(h[0]+a)>>>0;h[1]=(h[1]+z)>>>0;h[2]=(h[2]+c)>>>0;h[3]=(h[3]+d)>>>0;h[4]=(h[4]+e)>>>0;h[5]=(h[5]+f)>>>0;h[6]=(h[6]+g)>>>0;h[7]=(h[7]+q)>>>0;}return h.map(x=>x.toString(16).padStart(8,'0')).join('');}\nconst legacy=regs.filter(r=>!/^tgactor_[a-f0-9]{64}$/.test(t(r.principalKey))||!/^actor_[a-f0-9]{32}$/.test(t(r.storageUsername)));\nconst candidates=legacy.map(r=>{const storage=t(r.storageUsername||r.userId).replace(/^@+/,'').toLowerCase();const actorIds=[...new Set(chats.filter(h=>t(h.userId)===storage&&/^\\d+$/.test(t(h.chatId))&&Number(h.chatId)>0).map(h=>t(h.chatId)))];const username=t(r.currentUsername||storage).replace(/^@+/,'').toLowerCase();const sourceDigest=sha([t(r.principalKey),storage,username,actorIds.join(','),t(r.registrationState)].join('|'));return {sourceDigest,legacyPrincipalKey:t(r.principalKey),legacyStorageKey:storage,currentUsername:/^[a-z0-9_]{1,64}$/.test(username)?username:'',verifiedActorId:actorIds.length===1?actorIds[0]:'',proofChatId:actorIds.length===1?actorIds[0]:'',proofSource:actorIds.length===1?'private_chat_memory_exact_user':'unresolved_chat_proof',legacyRegistrationState:t(r.registrationState)==='ready'?'ready':'processing',metadata:{registryRowId:t(r.id),actorProofCardinality:actorIds.length}};});\nconst sorted=candidates.slice().sort((a,b)=>a.sourceDigest.localeCompare(b.sourceDigest));const sourceDigest=sha(sorted.map(x=>x.sourceDigest).join('\\n'));return [{json:{schemaVersion:'chelsea_identity_legacy_bootstrap_v3',candidates:sorted,sourceLegacyRows:sorted.length,sourceVerifiedRows:sorted.filter(x=>x.verifiedActorId).length,sourceUnresolvedRows:sorted.filter(x=>!x.verifiedActorId).length,sourceDigest,generatedAtIso:new Date().toISOString()}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        300
+      ],
+      "id": "d57760ae-9948-432d-a634-c86d6bb37133",
+      "name": "Code | Build Verified Legacy Candidates | IdentityAudit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_import_legacy_candidates_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_candidates:$json.candidates,p_source_digest:$json.sourceDigest} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        300
+      ],
+      "id": "a4208963-fd0e-45c7-8f62-1af2b24cd5c1",
+      "name": "Call | Supabase | Import Legacy Identity Candidates | IdentityAudit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_readiness_v3' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_source_legacy_rows:$('Code | Build Verified Legacy Candidates | IdentityAudit').first().json.sourceLegacyRows,p_source_verified_rows:$('Code | Build Verified Legacy Candidates | IdentityAudit').first().json.sourceVerifiedRows,p_source_unresolved_rows:$('Code | Build Verified Legacy Candidates | IdentityAudit').first().json.sourceUnresolvedRows,p_source_digest:$('Code | Build Verified Legacy Candidates | IdentityAudit').first().json.sourceDigest} }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        300
+      ],
+      "id": "16d24432-09de-4399-86d5-99db8003e73f",
+      "name": "Call | Supabase | Verify PostgreSQL Identity Readiness | IdentityAudit"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Build Verified Legacy Candidates | IdentityAudit').first().json;const raw=$json.body??$json;const r=Array.isArray(raw)?raw[0]:raw;if(r?.success!==true||r?.verified!==true||r?.schemaVersion!=='chelsea_identity_readiness_receipt_v3')throw new Error('identity_readiness_receipt_invalid');if(r.databaseVerified!==true)throw new Error('identity_bootstrap_database_digest_mismatch');return [{json:{...r,schemaVersion:'chelsea_identity_readiness_receipt_v3',legacyRows:Number(r.legacyRows||0),invalidActorRows:Number(r.invalidActorRows||0),generatedAtIso:String(r.generatedAtIso||source.generatedAtIso),executionId:$execution.id,bootstrapSource:source}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        300
+      ],
+      "id": "89105e68-2911-49af-bf71-f234b962aaa6",
+      "name": "Code | Verify Immutable Identity Readiness | IdentityAudit"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        300
+      ],
+      "id": "0aa075cc-4de1-45c4-90e5-41d9851c629c",
+      "name": "End | Identity Readiness Audit | IdentityAudit"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "Read | Identity Registry | All Principals | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Identity Registry | All Principals | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "Read | Chat Memory | Legacy Actor Proof | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chat Memory | Legacy Actor Proof | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Verified Legacy Candidates | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Verified Legacy Candidates | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Import Legacy Identity Candidates | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Import Legacy Identity Candidates | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Verify PostgreSQL Identity Readiness | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Verify PostgreSQL Identity Readiness | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Immutable Identity Readiness | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Immutable Identity Readiness | IdentityAudit": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Readiness Audit | IdentityAudit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false
+  },
+  "versionId": "ec9020ca-2ac9-4000-8e15-d894e9d545db",
+  "id": "IdAuditV1m8Hs3Qa",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

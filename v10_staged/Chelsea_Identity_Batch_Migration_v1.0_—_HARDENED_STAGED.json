@@ -1,0 +1,196 @@
+{
+  "name": "Chelsea Identity Batch Migration v1.0 — HARDENED STAGED",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "id": "15c0f7d8-aba4-4256-8350-f88071261149",
+      "name": "Trigger | Manual or Parent | IdentityBatchMigration"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_pending_migrations_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        300
+      ],
+      "id": "bdb1cace-a7fd-4e4d-861e-67ee4807b15e",
+      "name": "Call | Supabase | List Verified Pending Identity Migrations | IdentityBatchMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$json.body??$json;const rows=Array.isArray(raw)?raw:(Array.isArray(raw?.rows)?raw.rows:(Object.keys(raw||{}).length?[raw]:[]));return rows.map(r=>({json:r}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ],
+      "id": "34525407-7eb4-4771-9e30-f819fb6d426f",
+      "name": "Code | Normalize Pending Identity Migrations | IdentityBatchMigration"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IdMigMainV1p7Z4cD",
+          "mode": "list",
+          "cachedResultName": "Chelsea Immutable Identity Migration v2.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        300
+      ],
+      "id": "8de8c9a0-af68-4f1a-9ccd-da2981deda9d",
+      "name": "Call | Chelsea Immutable Identity Migration | Migrate Verified Legacy User | IdentityBatchMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};if(x.identityMigrationVerified!==true||x.identityStorageMigrationRequired===true||x.identityMigrationReceipt?.contractVersion!=='chelsea_identity_migration_receipt_v2')throw new Error('identity_batch_migration_receipt_invalid');return [{json:{success:true,principalKey:x.principalKey,storageUsername:x.storageUsername,registrationState:x.registrationState,identityMigrationVerified:true,migratedAtIso:new Date().toISOString()}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "id": "3d29793f-e791-4aa9-bbd0-7c26b2f124e4",
+      "name": "Code | Verify Batch Migration Receipt | IdentityBatchMigration"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        300
+      ],
+      "id": "319f9bdb-56ec-4654-9129-4ed4da8b141a",
+      "name": "End | Identity Batch Migration | IdentityBatchMigration"
+    }
+  ],
+  "connections": {
+    "Trigger | Manual or Parent | IdentityBatchMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | List Verified Pending Identity Migrations | IdentityBatchMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | List Verified Pending Identity Migrations | IdentityBatchMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Pending Identity Migrations | IdentityBatchMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Pending Identity Migrations | IdentityBatchMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Immutable Identity Migration | Migrate Verified Legacy User | IdentityBatchMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Immutable Identity Migration | Migrate Verified Legacy User | IdentityBatchMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Batch Migration Receipt | IdentityBatchMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Batch Migration Receipt | IdentityBatchMigration": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Batch Migration | IdentityBatchMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false
+  },
+  "versionId": "ec9020ca-2ac9-4000-8e15-d894e9d545db",
+  "id": "IdBatchV198b1d7e8",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

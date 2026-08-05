@@ -1,0 +1,397 @@
+{
+  "id": "XTYsdwtfZk2RBbBn",
+  "name": "Chelsea DLQ Inspector v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "0567bec6-bc6d-5099-ad9f-7ad7fec61271",
+      "name": "Trigger | Parent Workflow | DLQ",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        -100
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "3de92282-f474-5017-b369-cd7f265c56a7",
+      "name": "Trigger | Manual Start | DLQ",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7f16b093-2123-5b6f-8c76-c9d8cf0f03dc",
+      "name": "Code | Validate DLQ Request | DLQ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};const action=String(input.action||'inspect').toLowerCase();\nif(!['inspect','requeue','resolve'].includes(action))throw new Error('invalid_dlq_action');\nconst deadLetterId=String(input.deadLetterId||input.dead_letter_id||'').trim();if(action!=='inspect'&&!/^[0-9a-f-]{36}$/i.test(deadLetterId))throw new Error('dead_letter_id_required');\nconst limit=Math.max(1,Math.min(Number(input.limit||50),200));\nreturn [{json:{...input,action,deadLetterId,limit,operatorNote:String(input.operatorNote||'').slice(0,1000)}}];"
+      }
+    },
+    {
+      "id": "4f79a135-10a6-5f59-85d6-2f0c6cf19c5a",
+      "name": "If | Inspect DLQ | DLQ",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -420,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "10e56f90-d08d-57e9-b63f-24c73152dbb1",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "inspect",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c73f8410-c529-5098-ae09-d408653ad64f",
+      "name": "Call | Supabase RPC | Inspect Dead Letters | DLQ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        -120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_inspect_dead_letters_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_limit:$json.limit} }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "fd6f7d5d-ffc9-5430-9658-478154dd9d16",
+      "name": "If | Requeue DLQ | DLQ",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2a92a808-d254-5d3f-89d5-8cb548d86e21",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "requeue",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9278b695-f1b6-5792-9d7c-b05d5b5fb314",
+      "name": "Call | Supabase RPC | Requeue Dead Letter | DLQ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_requeue_dead_letter_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_dead_letter_id:$json.deadLetterId,p_operator_note:$json.operatorNote} }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "49e95120-f003-56c3-ab3d-746fb3a55166",
+      "name": "Call | Supabase RPC | Resolve Dead Letter | DLQ",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_resolve_dead_letter_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_dead_letter_id:$json.deadLetterId,p_operator_note:$json.operatorNote} }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "fbc1c208-6f3c-5598-8a3d-3f3445451e89",
+      "name": "Code | Normalize DLQ Result | DLQ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const src=$('Code | Validate DLQ Request | DLQ').first().json;const r=$input.first()?.json||{};let b=r.body??r.data??r;try{if(typeof b==='string')b=JSON.parse(b)}catch{};return [{json:{...src,result:b}}];"
+      }
+    },
+    {
+      "id": "80755f87-a8a3-5f45-9b81-446d39f18ee8",
+      "name": "End | DLQ Result | DLQ",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate DLQ Request | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate DLQ Request | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate DLQ Request | DLQ": {
+      "main": [
+        [
+          {
+            "node": "If | Inspect DLQ | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Inspect DLQ | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Inspect Dead Letters | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Requeue DLQ | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Inspect Dead Letters | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize DLQ Result | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Requeue DLQ | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Requeue Dead Letter | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Supabase RPC | Resolve Dead Letter | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Requeue Dead Letter | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize DLQ Result | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Resolve Dead Letter | DLQ": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize DLQ Result | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize DLQ Result | DLQ": {
+      "main": [
+        [
+          {
+            "node": "End | DLQ Result | DLQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 120,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "a2821c39-1e07-577e-bfa3-f9e1ed779829"
+}

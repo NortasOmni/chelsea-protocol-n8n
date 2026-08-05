@@ -1,0 +1,96 @@
+{
+  "id": "ModelOutSecV1b6QrS",
+  "name": "Chelsea Model Output Security Validator v3.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Chelsea Model Output Security Validator v3.0 — HARDENED STAGED\nПолитика prompt-injection v3: нормализация, taint boundary, запрет tools, проверка входа/выхода и fail-closed.",
+        "height": 460,
+        "width": 1500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -220
+      ],
+      "id": "dfb5c644-388f-469b-a2ca-ecad5c1a1699",
+      "name": "Описание | Model Output Security"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -560,
+        0
+      ],
+      "id": "4585c818-1938-4495-ad68-6b7c5341a271",
+      "name": "Trigger | Parent Workflow | ModelOutputSecurity"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};\nconst fields=['aiAnswer','finalAnswer','answer','stateClarificationPromptText','stateProactivityPromptText','stateClarificationTextReplyPromptText','reactionText','summaryText','inlineText','failureText','messageText','replyText','deliveryText','routeMessage','promptText','text','clarificationQuestion','cleanAnswer','questionText'];\nconst SECRET=[['telegram_token',/\\b\\d{7,12}:[A-Za-z0-9_-]{30,}\\b/g],['openai_key',/\\b(?:sk|sess)-[A-Za-z0-9_-]{20,}\\b/g],['bearer',/\\bBearer\\s+[A-Za-z0-9._~+\\/-]{16,}\\b/gi],['jwt',/\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b/g],['credential',/\\b(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|token|secret|password|private[_ -]?key)\\s*[:=]\\s*[^\\s,;]{8,}/gi]];\nconst HIGH=[['security_marker',/CHELSEA_SECURITY_POLICY_V\\d+/u],['prompt_tags',/<\\/?(?:untrusted_[a-z_]+|application_policy|trusted_policy|user_saved_response_template)>/iu],['runtime_expression',/(?:\\$env\\.|\\$node\\[|\\$execution\\.|\\$credentials|\\{\\{\\s*\\$)/u],['internal_node_name',/(?:^|\\n)(?:Code|Call|Read|Write|If|Set|End|Start|Execute Command)\\s*\\|[^\\n]{3,180}\\|/u],['prompt_disclosure',/(?:here (?:is|are)|вот|ниже).{0,80}(?:my |мои )?(?:system prompt|developer instructions?|системн(?:ый|ые) промпт|системн(?:ые|ая|ых) инструкц|внутренн(?:ие|яя) инструкц)/iu],['env_secret_name',/CHELSEA_(?:OPENAI|KIE|QDRANT|SUPABASE|TELEGRAM|N8N)_[A-Z0-9_]*(?:KEY|TOKEN|SECRET)/u],['role_dump',/(?:^|\\n)\\s*(?:SYSTEM|DEVELOPER|TOOL)\\s*:/u],['dangerous_scheme',/(?:javascript:|data:text\\/html|file:\\/\\/|gopher:\\/\\/|http:\\/\\/(?:127\\.0\\.0\\.1|localhost|169\\.254\\.169\\.254))/iu],['active_html',/<(?:script|iframe|object|embed|form|meta)\\b/iu]];\nfunction norm(v){return String(v??'').normalize('NFKC').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F\\u200B-\\u200F\\u202A-\\u202E\\u2060\\u2066-\\u2069\\uFEFF]/g,'').trim();}\nfunction variants(s){const a=[norm(s)];try{a.push(decodeURIComponent(a[0]))}catch{};const re=/\\b[A-Za-z0-9+/_-]{24,}={0,2}\\b/g;let m,c=0;while((m=re.exec(a[0]))&&c++<10){let raw=m[0].replace(/-/g,'+').replace(/_/g,'/');while(raw.length%4)raw+='=';try{a.push(Buffer.from(raw,'base64').toString('utf8'))}catch{}}return a.map(norm);}\nfunction validate(raw){let answer=norm(raw);const findings=[];const vs=variants(answer);for(const [id,re] of SECRET){if(vs.some(v=>{re.lastIndex=0;return re.test(v)})){findings.push({type:id,severity:'critical'});re.lastIndex=0;answer=answer.replace(re,'[REDACTED_SECRET]');}}for(const [id,re] of HIGH)if(vs.some(v=>{re.lastIndex=0;return re.test(v)}))findings.push({type:id,severity:'high'});const blocked=findings.some(f=>f.severity==='high');if(blocked)answer='Я не буду раскрывать внутренние инструкции, служебные данные или секреты. Сформулируй задачу по результату, который тебе нужен, — отвечу по существу.';if(answer.length>120000){answer=answer.slice(0,120000);findings.push({type:'length_trimmed',severity:'medium'});}return {answer,findings,blocked,redacted:findings.some(f=>f.severity==='critical')};}\nconst out={...x};const all=[];let any=false,primary='';for(const field of fields){if(typeof x[field]!=='string'||!x[field].trim())continue;const r=validate(x[field]);out[field]=r.answer;all.push(...r.findings.map(f=>({...f,field})));any=any||r.blocked||r.redacted;if(!primary)primary=r.answer;}\nif(typeof x.aiAnswer==='string'){out.aiAnswer=out.aiAnswer||primary;out.finalAnswer=out.aiAnswer;}\nfunction syncBody(key,textField){if(out[key]&&typeof out[key]==='object'&&typeof out[key][textField]==='string'){const r=validate(out[key][textField]);out[key]={...out[key],[textField]:r.answer};all.push(...r.findings.map(f=>({...f,field:`${key}.${textField}`})));any=any||r.blocked||r.redacted;}}\nfor(const key of ['stateClarificationTelegramRequestBody','telegramTextReplyRequestBody','proactivitySettingsMessageBody','proactivityReplyPromptBody','telegramTaskResponseBody','telegramTaskCallbackAckBody'])syncBody(key,'text');\nif(Array.isArray(out.topics))out.topics=out.topics.map((topic,i)=>{const r=validate(topic?.body||'');all.push(...r.findings.map(f=>({...f,field:`topics[${i}].body`})));any=any||r.blocked||r.redacted;return {...topic,body:r.answer};});\nout.modelOutputSecurity={policyVersion:'chelsea_model_output_security_v3',blocked:all.some(f=>f.severity==='high'),redacted:all.some(f=>f.severity==='critical'),findings:all.slice(0,300),validatedAtIso:new Date().toISOString()};if('aiResponseReady'in out)out.aiResponseReady=Boolean(out.aiAnswer);if(any)out.aiFallbackUsed=out.aiFallbackUsed===true||out.modelOutputSecurity.blocked;return [{json:out}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        0
+      ],
+      "id": "c200a251-34aa-4230-8603-7a0f771237b0",
+      "name": "Code | Validate Model Output | ModelOutputSecurity"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "417bd537-a7ac-46c5-91cf-36cd5b354e48",
+      "name": "End | Model Output Security | ModelOutputSecurity"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ModelOutputSecurity": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Model Output | ModelOutputSecurity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Model Output | ModelOutputSecurity": {
+      "main": [
+        [
+          {
+            "node": "End | Model Output Security | ModelOutputSecurity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 60,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "ccd48242-a445-499b-8ed1-7eefc4c404d7",
+  "meta": null,
+  "tags": []
+}

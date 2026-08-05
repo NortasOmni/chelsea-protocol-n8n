@@ -1,0 +1,469 @@
+{
+  "id": "IdMigTblV1x9Q2aB",
+  "name": "Chelsea Identity Data Table Migration Target v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Identity Data Table migration target\nКопирует строки одного legacy-ключа на immutable actor-ключ, проверяет канонические хеши и только после проверки удаляет старые строки. Один вход — один table target.",
+        "height": 720,
+        "width": 2600
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -300
+      ],
+      "id": "53853ab1-ed57-4888-855d-bd969687e208",
+      "name": "Описание | Identity Data Table Target"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -760,
+        40
+      ],
+      "id": "a14b995a-a2bc-4324-91d6-e8260f54542f",
+      "name": "Trigger | Parent Workflow | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();\nfor(const k of ['tableName','keyName','oldValue','newValue','principalKey','storageUsername'])if(!t(x[k]))throw new Error(`identity_table_migration_missing_${k}`);\nif(!/^tgactor_[a-f0-9]{64}$/.test(t(x.principalKey))||!/^actor_[a-f0-9]{32}$/.test(t(x.storageUsername)))throw new Error('identity_table_migration_actor_contract_invalid');\nif(!/^[A-Za-zА-Яа-я0-9 _|.-]{1,160}$/u.test(t(x.tableName))||!/^[A-Za-zА-Яа-я0-9 _|.-]{1,120}$/u.test(t(x.keyName)))throw new Error('identity_table_migration_target_invalid');\nreturn [{json:{...x,oldValue:t(x.oldValue),newValue:t(x.newValue),migrationTargetVersion:'chelsea_identity_table_target_v1'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        40
+      ],
+      "id": "98a8de21-964a-42db-897a-36ba50f630bf",
+      "name": "Code | Validate Migration Target | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic identity migration table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.keyName }}",
+              "keyValue": "={{ $json.newValue }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        40
+      ],
+      "id": "76f87014-e3fd-44a3-8feb-f5385fe05635",
+      "name": "Read | Existing Immutable Rows Before Migration | IdentityTableMigration",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic identity migration table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.keyName }}",
+              "keyValue": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.oldValue }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        40
+      ],
+      "id": "f4219995-b414-42f9-87b2-2f4849b76547",
+      "name": "Read | Legacy Rows | IdentityTableMigration",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const plan=$('Code | Validate Migration Target | IdentityTableMigration').first().json;const oldRows=$input.all().map(i=>i.json||{}).filter(r=>Object.keys(r).length&&!r.error);let existing=[];try{existing=$('Read | Existing Immutable Rows Before Migration | IdentityTableMigration').all().map(i=>i.json||{}).filter(r=>Object.keys(r).length&&!r.error);}catch{}\nfunction replace(v){if(Array.isArray(v))return v.map(replace);if(v&&typeof v==='object'){const o={};for(const [k,x] of Object.entries(v))o[k]=replace(x);return o;}if(typeof v!=='string')return v;const exact={[plan.legacyPrincipalKey]:plan.principalKey,[plan.legacyStorageUsername]:plan.storageUsername,[plan.legacyUserId]:plan.userId,[plan.legacyMemoryUserId]:plan.memoryUserId,[plan.legacyTenantId]:plan.tenantId,[plan.legacyMemoryTenantId]:plan.memoryTenantId,[plan.legacyQdrantCollection]:plan.qdrantCollection,[plan.legacySoulId]:plan.soulId};return Object.prototype.hasOwnProperty.call(exact,v)?exact[v]:v;}\nfunction canonical(v){if(Array.isArray(v))return '['+v.map(canonical).sort().join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).filter(k=>!['createdAt','updatedAt'].includes(k)).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';return JSON.stringify(v);}\nconst transformed=oldRows.map(row=>{const out=replace(row);out[plan.keyName]=plan.newValue;return out;});const expected=transformed.map(canonical).sort();const actual=existing.map(canonical).sort();\nif(!oldRows.length)return [{json:{...plan,migrationWriteRequired:false,migrationNoRows:true,migrationAlreadyApplied:existing.length>0,migratedRows:existing.length,identityTableMigrationVerified:true}}];\nif(existing.length){if(expected.length!==actual.length||expected.some((x,i)=>x!==actual[i]))throw new Error(`identity_table_migration_existing_conflict:${plan.tableName}`);return [{json:{...plan,migrationWriteRequired:false,migrationAlreadyApplied:true,migratedRows:actual.length,identityTableMigrationVerified:true}}];}\nreturn transformed.map(json=>({json:{...json,migrationWriteRequired:true}}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        40
+      ],
+      "id": "0141e8f6-648e-4037-a2e5-8458fda9f96d",
+      "name": "Code | Transform Legacy Rows | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e352af03-3ffe-4410-a4c7-9e2db22255d3",
+              "leftValue": "={{ $json.migrationWriteRequired === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        340,
+        40
+      ],
+      "id": "52737184-95bc-4514-8952-34b5d46fe300",
+      "name": "If | Immutable Rows Write Required | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic identity migration table"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -80
+      ],
+      "id": "a838052e-42c3-4d65-b9a2-92f34bd927cb",
+      "name": "Insert | Immutable Rows | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic identity migration table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.keyName }}",
+              "keyValue": "={{ $('Code | Validate Migration Target | IdentityTableMigration').first().json.newValue }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        780,
+        -80
+      ],
+      "id": "39ae9aea-e6f8-4284-a02d-7be7eb935adf",
+      "name": "Read | Immutable Rows | IdentityTableMigration",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const plan=$('Code | Validate Migration Target | IdentityTableMigration').first().json;const oldRows=$('Read | Legacy Rows | IdentityTableMigration').all().map(i=>i.json||{}).filter(r=>Object.keys(r).length&&!r.error);const newRows=$input.all().map(i=>i.json||{}).filter(r=>Object.keys(r).length&&!r.error);\nfunction replace(v){if(Array.isArray(v))return v.map(replace);if(v&&typeof v==='object'){const o={};for(const k of Object.keys(v).sort())o[k]=replace(v[k]);return o;}if(typeof v!=='string')return v;const exact={[plan.legacyPrincipalKey]:plan.principalKey,[plan.legacyStorageUsername]:plan.storageUsername,[plan.legacyUserId]:plan.userId,[plan.legacyMemoryUserId]:plan.memoryUserId,[plan.legacyTenantId]:plan.tenantId,[plan.legacyMemoryTenantId]:plan.memoryTenantId,[plan.legacyQdrantCollection]:plan.qdrantCollection,[plan.legacySoulId]:plan.soulId};return Object.prototype.hasOwnProperty.call(exact,v)?exact[v]:v;}\nfunction canonical(v){if(Array.isArray(v))return '['+v.map(canonical).sort().join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).filter(k=>!['createdAt','updatedAt'].includes(k)).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';return JSON.stringify(v);}\nconst expected=oldRows.map(r=>{const x=replace(r);x[plan.keyName]=plan.newValue;return canonical(x)}).sort();const actual=newRows.map(canonical).sort();if(expected.length!==actual.length||expected.some((x,i)=>x!==actual[i]))throw new Error(`identity_table_migration_readback_mismatch:${plan.tableName}`);\nreturn [{json:{...plan,migratedRows:actual.length,identityTableMigrationVerified:true}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        -80
+      ],
+      "id": "174dfdf8-c5a6-437b-9a83-2fdcdbb0b278",
+      "name": "Code | Verify Immutable Rows | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic identity migration table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.keyName }}",
+              "keyValue": "={{ $json.oldValue }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        -80
+      ],
+      "id": "6a0262bf-a3b7-4ade-af14-0216a8e25a25",
+      "name": "Delete | Legacy Rows After Verify | IdentityTableMigration",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const p=$input.first()?.json||{};if(p.identityTableMigrationVerified!==true)throw new Error('identity_table_migration_receipt_unverified');return [{json:{success:true,adapter:'data_table_identity_migration',tableName:p.tableName,migratedRows:Number(p.migratedRows||0),alreadyApplied:p.migrationAlreadyApplied===true,oldValue:p.oldValue,newValue:p.newValue,verifiedAtIso:new Date().toISOString()}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -80
+      ],
+      "id": "f2cc0d54-6575-4963-8b5a-1fb04415feb7",
+      "name": "Code | Return Verified Table Receipt | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const p=$('Code | Validate Migration Target | IdentityTableMigration').first().json;return [{json:{success:true,adapter:'data_table_identity_migration',tableName:p.tableName,migratedRows:0,oldValue:p.oldValue,newValue:p.newValue,verifiedAtIso:new Date().toISOString()}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        180
+      ],
+      "id": "60d89386-c656-4e80-8e2c-89cb6edeed8b",
+      "name": "Code | Return Empty Table Receipt | IdentityTableMigration"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        40
+      ],
+      "id": "5c690865-dfa8-497f-aa05-345cdea64f5c",
+      "name": "End | Identity Table Migration | IdentityTableMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};if(x.identityTableMigrationVerified!==true||x.migrationWriteRequired===true)throw new Error('identity_table_migration_no_write_verification_failed');return [{json:x}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        180
+      ],
+      "id": "14d9bc4d-30b7-473d-9367-09fa63e223a5",
+      "name": "Code | Verify Existing Immutable Rows | IdentityTableMigration"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Migration Target | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Migration Target | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Read | Existing Immutable Rows Before Migration | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Legacy Rows | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Transform Legacy Rows | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Transform Legacy Rows | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "If | Immutable Rows Write Required | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert | Immutable Rows | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Read | Immutable Rows | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Immutable Rows | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Immutable Rows | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Immutable Rows | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Delete | Legacy Rows After Verify | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete | Legacy Rows After Verify | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Verified Table Receipt | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Verified Table Receipt | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Table Migration | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Empty Table Receipt | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Table Migration | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Existing Immutable Rows Before Migration | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Read | Legacy Rows | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Immutable Rows Write Required | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Insert | Immutable Rows | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Verify Existing Immutable Rows | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Existing Immutable Rows | IdentityTableMigration": {
+      "main": [
+        [
+          {
+            "node": "Delete | Legacy Rows After Verify | IdentityTableMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "337e0703-38d9-4ee2-8907-ec1ccde2e18a",
+  "meta": null,
+  "tags": []
+}

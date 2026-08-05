@@ -1,0 +1,182 @@
+{
+  "id": "CNS4mT8qL2vR7pXa",
+  "name": "Chelsea Privacy Consent Intake v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "principalKey"
+            },
+            {
+              "name": "consentType"
+            },
+            {
+              "name": "action"
+            },
+            {
+              "name": "policyVersion"
+            },
+            {
+              "name": "source"
+            },
+            {
+              "name": "metadata",
+              "type": "object"
+            },
+            {
+              "name": "telegramActorId"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -620,
+        0
+      ],
+      "id": "d5a05680-981a-569a-a092-09005574707a",
+      "name": "Trigger | Parent Workflow | PrivacyConsent"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};const t=(v,n=0)=>{const s=String(v??'').normalize('NFKC').trim();return n?s.slice(0,n):s};const principalKey=t(x.principalKey,100);if(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('consent_invalid_principal');const telegramActorId=t(x.telegramActorId,32);if(telegramActorId&&!/^\\d+$/.test(telegramActorId))throw new Error('consent_invalid_actor');const consentType=t(x.consentType);if(!['privacy_processing','memory_storage','proactive_messages','analytics','file_storage'].includes(consentType))throw new Error('consent_invalid_type');const action=t(x.action);if(!['grant','revoke'].includes(action))throw new Error('consent_invalid_action');const policyVersion=t(x.policyVersion,64);if(!/^[a-zA-Z0-9._-]{1,64}$/.test(policyVersion))throw new Error('consent_invalid_policy_version');const source=t(x.source||'telegram');if(!['telegram','web','admin','migration'].includes(source))throw new Error('consent_invalid_source');const metadata=x.metadata&&typeof x.metadata==='object'&&!Array.isArray(x.metadata)?x.metadata:{};return [{json:{principalKey,telegramActorId,consentType,action,policyVersion,source,metadata}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        0
+      ],
+      "id": "6fc1e8a7-e421-56e9-a4ef-6499295067eb",
+      "name": "Code | Validate Explicit Privacy Consent | PrivacyConsent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_consent_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_principal_key:$json.principalKey,p_consent_type:$json.consentType,p_action:$json.action,p_policy_version:$json.policyVersion,p_source:$json.source,p_metadata:$json.metadata,p_actor_id:$json.telegramActorId||null} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        0
+      ],
+      "id": "24f2b6ed-ffc7-573d-af59-a388809ad1db",
+      "name": "Call | Supabase | Record Explicit Privacy Consent | PrivacyConsent"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Validate Explicit Privacy Consent | PrivacyConsent').first().json;const raw=$input.first()?.json||{};const body=raw.body??raw.data??raw;const row=Array.isArray(body)?body[0]:body;if(!row||row.success!==true||!row.consentEventId)throw new Error('consent_receipt_missing');return [{json:{...source,recorded:true,consentReceipt:row}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        0
+      ],
+      "id": "c8e02e5b-e326-5632-9474-2e0aff5c0dff",
+      "name": "Code | Verify Privacy Consent Receipt | PrivacyConsent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "id": "55f6b362-e8eb-5efc-a4db-91bb178f32c3",
+      "name": "End | Privacy Consent Recorded | PrivacyConsent"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyConsent": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Explicit Privacy Consent | PrivacyConsent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Explicit Privacy Consent | PrivacyConsent": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Explicit Privacy Consent | PrivacyConsent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Explicit Privacy Consent | PrivacyConsent": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Privacy Consent Receipt | PrivacyConsent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Privacy Consent Receipt | PrivacyConsent": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Consent Recorded | PrivacyConsent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "timezone": "Asia/Novosibirsk",
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "5b66c6d7-968d-564a-bc08-9bfac9e42eca",
+  "meta": {
+    "hardening": "v4",
+    "staged": true
+  },
+  "tags": []
+}

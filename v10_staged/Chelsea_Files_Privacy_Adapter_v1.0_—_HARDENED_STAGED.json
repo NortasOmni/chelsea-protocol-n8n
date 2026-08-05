@@ -1,0 +1,127 @@
+{
+  "id": "FPR5xC9mN2qL7vBd",
+  "name": "Chelsea Files Privacy Adapter v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "1281cf21-5f63-5476-b322-aa1ca18b3d83",
+      "name": "Trigger | Parent Workflow | PrivacyFiles",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -700,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "c06e2df1-c803-5249-aab8-52550268ed68",
+      "name": "Code | Validate Restricted Files Privacy Request | PrivacyFiles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};const p=x.payload||{};const t=v=>String(v??'').normalize('NFKC').trim();const raw=t(x.requestType||x.operation).toLowerCase();const operation=raw==='delete_confirm'?'delete':(raw==='delete_preview'?'preview':raw);const storageUsername=t(x.storageUsername||p.storage_username||p.storageUsername);const tenantId=t(x.tenantId||p.tenant_id||p.tenantId||(storageUsername?`tenant_${storageUsername}`:''));const requestId=t(x.requestId||p.request_id||p.requestId);if(!['export','preview','delete'].includes(operation))throw new Error('privacy_files_invalid_operation');if(!/^actor_[a-f0-9]{32}$/.test(storageUsername)||tenantId!==`tenant_${storageUsername}`)throw new Error('privacy_files_identity_contract_invalid');if(!/^[A-Za-z0-9_.:-]{8,160}$/.test(requestId))throw new Error('privacy_files_request_id_invalid');return [{json:{...x,requestType:operation,requestId,storageUsername,tenantId,adapter:'files'}}];"
+      }
+    },
+    {
+      "id": "b5733680-7471-5200-82cc-3fa2b4595454",
+      "name": "Execute Command | Export or Delete Restricted Tenant Files | PrivacyFiles",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        0
+      ],
+      "parameters": {
+        "command": "=set -euo pipefail; ROOT=\"${CHELSEA_USER_FILES_ROOT:-/files/chelsea}\"; EXPORT_ROOT=\"${CHELSEA_PRIVACY_EXPORTS_ROOT:-/files/chelsea_privacy_exports}\"; TENANT='{{ $json.tenantId }}'; REQUEST='{{ $json.requestId }}'; OP='{{ $json.requestType }}'; case \"$TENANT\" in tenant_actor_[a-f0-9]*) ;; *) echo '{\"success\":false,\"error\":\"invalid_tenant\"}'; exit 2;; esac; case \"$REQUEST\" in *[!A-Za-z0-9_.:-]*|'') echo '{\"success\":false,\"error\":\"invalid_request\"}'; exit 2;; esac; TARGET=\"$ROOT/$TENANT\"; OUTDIR=\"$EXPORT_ROOT/$REQUEST\"; [ \"${TARGET#\"$ROOT/\"}\" != \"$TARGET\" ] || exit 3; if [ -L \"$TARGET\" ]; then echo '{\"success\":false,\"error\":\"tenant_path_symlink_blocked\"}'; exit 4; fi; if [ \"$OP\" = preview ]; then if [ -d \"$TARGET\" ]; then COUNT=$(find \"$TARGET\" -mindepth 1 -print | wc -l); BYTES=$(du -sb \"$TARGET\" | awk '{print $1}'); else COUNT=0; BYTES=0; fi; printf '{\"success\":true,\"operation\":\"preview\",\"sourceEntries\":%s,\"sourceBytes\":%s,\"mutated\":false}\n' \"$COUNT\" \"$BYTES\"; elif [ \"$OP\" = export ]; then install -d -m 0700 \"$OUTDIR\"; OUT=\"$OUTDIR/files.tar.gz\"; if [ -d \"$TARGET\" ]; then tar -czf \"$OUT\" -C \"$ROOT\" \"$TENANT\"; EXPECTED=$(find \"$TARGET\" -mindepth 1 -print | wc -l); ACTUAL=$(tar -tzf \"$OUT\" | tail -n +2 | wc -l); [ \"$ACTUAL\" -ge \"$EXPECTED\" ] || { echo '{\"success\":false,\"error\":\"archive_content_incomplete\"}'; exit 6; }; else tar -czf \"$OUT\" --files-from /dev/null; EXPECTED=0; ACTUAL=0; fi; chmod 0600 \"$OUT\"; SHA=$(sha256sum \"$OUT\"|awk '{print $1}'); BYTES=$(stat -c %s \"$OUT\"); printf '{\"success\":true,\"operation\":\"export\",\"archivePath\":\"%s\",\"sha256\":\"%s\",\"bytes\":%s,\"sourceEntries\":%s,\"archiveEntries\":%s}\n' \"$OUT\" \"$SHA\" \"$BYTES\" \"$EXPECTED\" \"$ACTUAL\"; elif [ \"$OP\" = delete ]; then if [ -e \"$TARGET\" ]; then rm -rf --one-file-system \"$TARGET\"; fi; if [ -e \"$TARGET\" ]; then echo '{\"success\":false,\"error\":\"delete_readback_failed\"}'; exit 5; fi; printf '{\"success\":true,\"operation\":\"delete\",\"verifiedAbsent\":true}\n'; else exit 7; fi"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7dfbea0a-5267-5ef3-9f23-2784d1fcec5f",
+      "name": "Code | Verify Restricted Files Privacy Receipt | PrivacyFiles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const req=$('Code | Validate Restricted Files Privacy Request | PrivacyFiles').first().json;let r={};try{r=JSON.parse(String($json.stdout||'{}').trim())}catch{throw new Error('privacy_files_receipt_invalid_json')};if(r.success!==true||r.operation!==req.requestType)throw new Error(`privacy_files_adapter_failed:${r.error||'invalid_receipt'}`);if(req.requestType==='preview'&&(r.mutated!==false||!(Number(r.sourceEntries)>=0)||!(Number(r.sourceBytes)>=0)))throw new Error('privacy_files_preview_not_verified_non_destructive');if(req.requestType==='delete'&&r.verifiedAbsent!==true)throw new Error('privacy_files_delete_not_verified');if(req.requestType==='export'&&(!r.archivePath||!/^[a-f0-9]{64}$/.test(String(r.sha256))||!(Number(r.bytes)>=0)||Number(r.archiveEntries)<Number(r.sourceEntries)))throw new Error('privacy_files_export_receipt_incomplete');return [{json:{adapter:'files',success:true,retryable:false,receipt:{contractVersion:'chelsea_files_privacy_receipt_v3',...r,requestId:req.requestId,tenantId:req.tenantId,completedAt:new Date().toISOString()},errorMessage:''}}];"
+      }
+    },
+    {
+      "id": "8354f09a-1772-5785-97c6-964e0f7fd149",
+      "name": "End | Files Privacy Receipt | PrivacyFiles",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyFiles": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Restricted Files Privacy Request | PrivacyFiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Restricted Files Privacy Request | PrivacyFiles": {
+      "main": [
+        [
+          {
+            "node": "Execute Command | Export or Delete Restricted Tenant Files | PrivacyFiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command | Export or Delete Restricted Tenant Files | PrivacyFiles": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Restricted Files Privacy Receipt | PrivacyFiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Restricted Files Privacy Receipt | PrivacyFiles": {
+      "main": [
+        [
+          {
+            "node": "End | Files Privacy Receipt | PrivacyFiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "3a8e4840-ce0e-4f04-9ae5-93a843aa0be0"
+}

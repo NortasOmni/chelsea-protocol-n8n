@@ -1,0 +1,178 @@
+{
+  "id": "kq7AsKLn7RX1Viv7",
+  "name": "Chelsea Privacy Request Intake v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "c069e342-a6c1-5499-a7d8-14e586dcf9b9",
+      "name": "Trigger | Parent Workflow | PrivacyRequest",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -820,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "operation"
+            },
+            {
+              "name": "principalKey"
+            },
+            {
+              "name": "telegramActorId"
+            },
+            {
+              "name": "requestId"
+            },
+            {
+              "name": "confirmationToken"
+            },
+            {
+              "name": "dryRun",
+              "type": "boolean"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "aef2ceee-4617-5e3d-8f0c-2943cd0c5761",
+      "name": "Code | Validate Privacy Request | PrivacyRequest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const crypto=require('crypto');const input=$input.first()?.json||{};const text=(v,n=0)=>{const s=String(v??'').normalize('NFKC').trim();return n?s.slice(0,n):s};const operation=text(input.operation).toLowerCase();if(!['export','delete_preview','delete_confirm'].includes(operation))throw new Error('privacy_request_invalid_operation');const principalKey=text(input.principalKey,100);if(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('privacy_request_invalid_principal');const telegramActorId=text(input.telegramActorId,32);if(telegramActorId&&!/^\\d+$/.test(telegramActorId))throw new Error('privacy_request_invalid_actor');const requestId=text(input.requestId,160)||`privacy_${principalKey.slice(0,32)}_${Date.now()}`;if(!/^[A-Za-z0-9_.:-]{8,160}$/.test(requestId))throw new Error('privacy_request_invalid_request_id');const expectedToken=`delete:${requestId}:${principalKey.slice(-12)}`;const supplied=text(input.confirmationToken,240);const destructive=operation==='delete_confirm';const hash=s=>crypto.createHash('sha256').update(s,'utf8').digest('hex');if(destructive&&hash(supplied)!==hash(expectedToken))throw new Error('privacy_request_confirmation_mismatch');return [{json:{operation,principalKey,telegramActorId,requestId,dryRun:!destructive,confirmationTokenHash:destructive?hash(supplied):'',destructiveAllowed:destructive,expectedConfirmationToken:operation==='delete_preview'?expectedToken:'',requestedAt:new Date().toISOString(),privacySchemaVersion:'chelsea_privacy_request_v5'}}];"
+      }
+    },
+    {
+      "id": "6749483b-f5f0-5c29-9b35-b792aefd820e",
+      "name": "Call | Supabase RPC | Enqueue Privacy Request | PrivacyRequest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_privacy_request_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_request_id:$json.requestId,p_principal_key:$json.principalKey,p_operation:$json.operation,p_dry_run:$json.dryRun,p_actor_id:$json.telegramActorId||null,p_confirmation_token_hash:$json.confirmationTokenHash||null} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "2de22fad-c5c1-5f45-a0fc-315970ed7530",
+      "name": "Code | Verify Privacy Queue Receipt | PrivacyRequest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$('Code | Validate Privacy Request | PrivacyRequest').first().json;\nconst response=$input.first()?.json||{};\nconst body=response.body??response.data??response;\nlet parsed=body;\ntry{if(typeof body==='string')parsed=JSON.parse(body)}catch{}\nconst rows=Array.isArray(parsed)?parsed:[parsed];\nconst row=rows.find(r=>r&&String(r.request_id||r.requestId||'')===source.requestId)||null;\nif(!row)throw new Error('privacy_request_receipt_missing');\nconst {confirmationTokenHash,...safeSource}=source;\nreturn [{json:{...safeSource,queued:true,queueStatus:String(row.status||'pending'),confirmationProofStored:Boolean(row.confirmation_token_hash||row.confirmationTokenHash),privacyRequestReceipt:row}}];"
+      }
+    },
+    {
+      "id": "e13fe9cb-3269-58e3-807a-1c345d30e8e1",
+      "name": "End | Privacy Request Queued | PrivacyRequest",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyRequest": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Privacy Request | PrivacyRequest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Privacy Request | PrivacyRequest": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Enqueue Privacy Request | PrivacyRequest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Enqueue Privacy Request | PrivacyRequest": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Privacy Queue Receipt | PrivacyRequest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Privacy Queue Receipt | PrivacyRequest": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Request Queued | PrivacyRequest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 120,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "b81c29b0-90f9-4f10-9590-a289674e2b7f"
+}

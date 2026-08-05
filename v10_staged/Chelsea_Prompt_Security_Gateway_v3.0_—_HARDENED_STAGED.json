@@ -1,0 +1,96 @@
+{
+  "id": "PromptSecGwV1a8LmN",
+  "name": "Chelsea Prompt Security Gateway v3.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Chelsea Prompt Security Gateway v3.0 — HARDENED STAGED\nПолитика prompt-injection v3: нормализация, taint boundary, запрет tools, проверка входа/выхода и fail-closed.",
+        "height": 480,
+        "width": 1500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -220
+      ],
+      "id": "30b1b372-0761-4794-bb8a-19c1e2b95f77",
+      "name": "Описание | Prompt Security Gateway"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -560,
+        0
+      ],
+      "id": "8fe335c4-9ac4-4375-964c-5e5602ddf7b2",
+      "name": "Trigger | Parent Workflow | PromptSecurity"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nconst findings=[];\nconst MAX_TEXT=64000,MAX_ARRAY=300,MAX_DEPTH=14;\nconst SECRET=[\n ['telegram_token',/\\b\\d{7,12}:[A-Za-z0-9_-]{30,}\\b/g],\n ['openai_key',/\\b(?:sk|sess)-[A-Za-z0-9_-]{20,}\\b/g],\n ['bearer',/\\bBearer\\s+[A-Za-z0-9._~+\\/-]{16,}\\b/gi],\n ['jwt',/\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b/g],\n ['credential_assignment',/\\b(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|token|secret|password|private[_ -]?key)\\s*[:=]\\s*[^\\s,;]{8,}/gi]\n];\nconst INJECTION=[\n ['override_policy',/(?:\\b(?:ignore|disregard|forget|override|bypass)\\b|(?:игнорируй|забудь|отмени|обойди|перепиши)).{0,180}(?:\\b(?:previous|prior|system|developer|policy|instructions?|rules?|guardrails?)\\b|(?:предыдущ|системн|разработчик|политик|инструкц|правил|ограничен))/giu],\n ['role_escalation',/(?:\\b(?:you are now|act as|pretend to be|switch role|new system message)\\b|(?:теперь ты|действуй как|представь что ты|смени роль|новое системное сообщение))/giu],\n ['prompt_exfiltration',/(?:\\b(?:reveal|show|print|expose|dump|repeat verbatim)\\b|(?:раскрой|покажи|выведи|процитируй дословно)).{0,180}(?:\\b(?:system prompt|developer message|hidden instructions?|chain of thought|credentials?|api keys?|tokens?)\\b|(?:системн(?:ый|ого) промпт|внутренн(?:ие|их) инструкц|секрет|ключ|токен))/giu],\n ['tool_or_runtime_control',/(?:\\$env\\.|\\$credentials|\\$node\\[|\\$execution\\.|execute\\s+(?:workflow|command|shell)|выполни\\s+(?:workflow|команд|скрипт)|tool_calls?|function_call|computer_use)/giu],\n ['data_exfiltration',/(?:send|upload|post|forward|exfiltrate|отправь|загрузи|перешли).{0,120}(?:secret|credential|token|key|environment|history|memory|секрет|ключ|токен|памят|истори).{0,160}(?:https?:\\/\\/|webhook|endpoint|сервер|адрес)/giu],\n ['role_tag',/<\\/?(?:system|assistant|developer|tool|function|instructions?)[^>]*>/giu],\n ['delimiter_breakout',/<\\/(?:untrusted_[a-z_]+|user_saved_response_template|application_policy|trusted_policy)>/giu],\n ['encoded_follow',/(?:decode|base64|hex|url[- ]?decode|расшифруй|декодируй).{0,100}(?:follow|execute|obey|выполни|следуй)/giu]\n];\nconst CONFUSABLE={'а':'a','е':'e','о':'o','р':'p','с':'c','х':'x','у':'y','к':'k','м':'m','т':'t','в':'b','н':'h','і':'i','ј':'j','ѕ':'s'};\nfunction normalizeBase(v){return String(v??'').normalize('NFKC').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F\\u200B-\\u200F\\u202A-\\u202E\\u2060\\u2066-\\u2069\\uFEFF]/g,'').replace(/\\r\\n?/g,'\\n');}\nfunction skeleton(s){return [...s.toLowerCase()].map(c=>CONFUSABLE[c]||c).join('');}\nfunction htmlDecode(s){return s.replace(/&#(x?[0-9a-f]+);?/gi,(_,n)=>{try{return String.fromCodePoint(n[0].toLowerCase()==='x'?parseInt(n.slice(1),16):parseInt(n,10))}catch{return _}}).replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&quot;/gi,'\"').replace(/&#39;|&apos;/gi,\"'\").replace(/&amp;/gi,'&');}\nfunction percentDecode(s){let x=s;for(let i=0;i<2;i++){try{const y=decodeURIComponent(x);if(y===x)break;x=y}catch{break}}return x;}\nfunction base64Variants(s){const out=[];const re=/(?:^|[^A-Za-z0-9+/_=-])([A-Za-z0-9+/_-]{24,}={0,2})(?=$|[^A-Za-z0-9+/_=-])/g;let m,c=0;while((m=re.exec(s))&&c++<20){let raw=m[1].replace(/-/g,'+').replace(/_/g,'/');while(raw.length%4)raw+='=';try{const t=Buffer.from(raw,'base64').toString('utf8');if(/[\\p{L}\\p{N}]/u.test(t)&&!/[\\u0000-\\u0008]/.test(t))out.push(t.slice(0,12000));}catch{}}return out;}\nfunction variants(s){const n=normalizeBase(s);const arr=[n,skeleton(n),htmlDecode(n),percentDecode(n)];for(const x of [...arr])arr.push(...base64Variants(x));return [...new Set(arr.map(normalizeBase))].slice(0,40);}\nfunction scan(text,path){const vs=variants(text);const hits=[];for(const [id,re] of INJECTION){if(vs.some(v=>{re.lastIndex=0;return re.test(v)}))hits.push(id);}for(const [id,re] of SECRET){if(vs.some(v=>{re.lastIndex=0;return re.test(v)}))hits.push(id);}for(const id of [...new Set(hits)])findings.push({path,type:id,severity:SECRET.some(x=>x[0]===id)?'critical':'high'});return [...new Set(hits)];}\nfunction redactSecrets(s){let x=s;for(const [,re] of SECRET){re.lastIndex=0;x=x.replace(re,'[REDACTED_SECRET]');}return x;}\nfunction neutralizeEncoded(s){return s.replace(/([A-Za-z0-9+/_-]{40,}={0,2})/g,m=>{const hits=scan(m,'encoded_segment');return hits.length?'[ENCODED_UNTRUSTED_CONTENT_REMOVED]':m;}).replace(/(?:%[0-9a-f]{2}){8,}/gi,m=>scan(m,'percent_segment').length?'[ENCODED_UNTRUSTED_CONTENT_REMOVED]':m);}\nfunction cleanString(value,path){let s=normalizeBase(value).slice(0,MAX_TEXT);const hits=scan(s,path);s=redactSecrets(s);if(hits.some(id=>!SECRET.some(x=>x[0]===id))){for(const [,re] of INJECTION){re.lastIndex=0;s=s.replace(re,'[NEUTRALIZED_UNTRUSTED_INSTRUCTION]');}s=neutralizeEncoded(s);}return s.replace(/&/g,'＆').replace(/</g,'‹').replace(/>/g,'›');}\nfunction sanitize(v,path='root',depth=0){if(depth>MAX_DEPTH)return '[TRUNCATED_DEPTH]';if(typeof v==='string'||typeof v==='number'||typeof v==='boolean')return cleanString(v,path);if(Array.isArray(v))return v.slice(0,MAX_ARRAY).map((x,i)=>sanitize(x,`${path}[${i}]`,depth+1));if(v&&typeof v==='object'){const o={};for(const [k,x] of Object.entries(v)){if(/(?:credential|secret|password|api.?key|access.?token|refresh.?token|private.?key)$/i.test(k)){findings.push({path:`${path}.${k}`,type:'secret_field_removed',severity:'critical'});continue;}o[k]=sanitize(x,`${path}.${k}`,depth+1);}return o;}return v;}\nconst out={...input};\nconst explicit=new Set(['selectedMemoryBlock','selectedUserProfileMemoryBlock','stateSummaryBlock','tagGuidanceBlock','contextBlock','triggeredInstructionResponseText','assistantArtifactText','relevantNotes','selectedNotes','matchedTriggeredInstructions','triggeredInstructionMatches','chatHistory','profileMemory','retrievedContext','toolOutput','fileContent','knowledgeContext']);\nlet sanitizedFields=0;\nfor(const key of Object.keys(out)){if(explicit.has(key)||/(?:memory|history|retrieved|note|context|template|artifact|stateSummary|profile|toolOutput|fileContent|knowledge)/i.test(key)){out[key]=sanitize(out[key],key);sanitizedFields++;}}\nout.promptSecurity={policyVersion:'chelsea_prompt_security_v3',sanitizedFields,findings:findings.slice(0,300),criticalFindings:findings.filter(f=>f.severity==='critical').length,highFindings:findings.filter(f=>f.severity==='high').length,normalization:'nfkc_controls_bidi_strip_confusable_scan_html_percent_base64_scan',neutralized:true,validatedAtIso:new Date().toISOString()};\nout.promptSecurityReady=true;\nreturn [{json:out}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        0
+      ],
+      "id": "3c17e282-bf1d-4cfd-b3fb-8691c6d5db83",
+      "name": "Code | Sanitize Untrusted Prompt Data | PromptSecurity"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4cfbceda-6d78-4454-9fa7-c416218eb4c0",
+      "name": "End | Prompt Security Gateway | PromptSecurity"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PromptSecurity": {
+      "main": [
+        [
+          {
+            "node": "Code | Sanitize Untrusted Prompt Data | PromptSecurity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Sanitize Untrusted Prompt Data | PromptSecurity": {
+      "main": [
+        [
+          {
+            "node": "End | Prompt Security Gateway | PromptSecurity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 60,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "a954064e-b48b-4d07-aeb8-9af864c796b2",
+  "meta": null,
+  "tags": []
+}

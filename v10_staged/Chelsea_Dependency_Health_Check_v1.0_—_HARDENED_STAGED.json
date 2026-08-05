@@ -1,0 +1,274 @@
+{
+  "id": "DJmQO3G2NwsP9Cbf",
+  "name": "Chelsea Dependency Health Check v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "a198b255-943b-592d-a35b-89b76fc9e986",
+      "name": "Trigger | Manual Start | DependencyHealth",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -820,
+        -100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d9b239b7-aede-50c0-92a2-9207c44aa706",
+      "name": "Trigger | Parent Workflow | DependencyHealth",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -820,
+        100
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "n8nBaseUrl"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "df50cabf-18fc-5490-9c67-2e845ac1c0ec",
+      "name": "Code | Build Dependency Checks | DependencyHealth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const required=['Qdrant загрузка и контроль знаний v6.1 — HARDENED STAGED','Создать папки пользователя v3.1 — HARDENED STAGED','Chelsea Privacy Telegram Router v1.0 — HARDENED STAGED','Chelsea Consent Gate v1.0 — HARDENED STAGED','Chelsea Reliability Monitor v1.0 — HARDENED STAGED','Chelsea Privacy Artifact Cleanup Worker v1.0 — HARDENED STAGED','Chelsea Privacy Export Delivery v1.0 — HARDENED STAGED'];const base=String($env.CHELSEA_N8N_API_URL||$env.CHELSEA_N8N_BASE_URL||'').replace(/\\/$/,'');return required.map(name=>({json:{dependencyName:name,n8nApiUrl:base,configured:Boolean(base)}}));"
+      }
+    },
+    {
+      "id": "c4e39e2b-9e60-5ce3-8d0a-264572287ccb",
+      "name": "If | Dependency Check Configured | DependencyHealth",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -300,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "230f5a5d-0c3b-549f-8092-cc2975358aed",
+              "leftValue": "={{ $json.checkReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "66df6d59-c73f-5228-977c-db2eb8aacde2",
+      "name": "Call | n8n API | Read Dependency Workflow | DependencyHealth",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        -100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.n8nApiUrl + '/api/v1/workflows?limit=250' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $env.CHELSEA_N8N_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "94896a23-480c-5bfe-9ab0-367ff3eede5a",
+      "name": "Code | Build Missing Dependency Config Result | DependencyHealth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        100
+      ],
+      "parameters": {
+        "jsCode": "'use strict';return $input.all().map(item=>({json:{...item.json,dependencyFound:false,dependencyStatus:'not_checked',failureCode:'n8n_api_configuration_missing'}}));"
+      }
+    },
+    {
+      "id": "c982e119-a24d-56de-99c6-be2b30b8c760",
+      "name": "Code | Normalize Dependency Check Result | DependencyHealth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Build Dependency Checks | DependencyHealth').item.json;const raw=$input.first()?.json||{};const body=raw.body??raw.data??raw;const rows=Array.isArray(body)?body:(Array.isArray(body?.data)?body.data:[]);const hit=rows.find(r=>String(r?.name||'')===source.dependencyName);return [{json:{dependencyName:source.dependencyName,configured:true,found:Boolean(hit),workflowId:String(hit?.id||''),active:hit?.active===true}}];"
+      }
+    },
+    {
+      "id": "1dc4c17e-24db-5142-b860-7229238b82b4",
+      "name": "Code | Aggregate Dependency Health | DependencyHealth",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const rows=$input.all().map(x=>x.json||{});const missing=rows.filter(r=>!r.dependencyFound||r.nameMatches===false);return [{json:{ok:missing.length===0,checked:rows.length,missingCount:missing.length,dependencies:rows,checkedAt:new Date().toISOString()}}];"
+      }
+    },
+    {
+      "id": "a6984514-5172-5d54-a4cd-7f8386507b45",
+      "name": "End | Dependency Health Result | DependencyHealth",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        740,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Manual Start | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Dependency Checks | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Parent Workflow | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Dependency Checks | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Dependency Checks | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "If | Dependency Check Configured | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Dependency Check Configured | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "Call | n8n API | Read Dependency Workflow | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Missing Dependency Config Result | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | n8n API | Read Dependency Workflow | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Dependency Check Result | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Dependency Check Result | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "Code | Aggregate Dependency Health | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Missing Dependency Config Result | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "Code | Aggregate Dependency Health | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Aggregate Dependency Health | DependencyHealth": {
+      "main": [
+        [
+          {
+            "node": "End | Dependency Health Result | DependencyHealth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 120,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "33012d13-b8aa-4191-b668-d6e0c9520080"
+}

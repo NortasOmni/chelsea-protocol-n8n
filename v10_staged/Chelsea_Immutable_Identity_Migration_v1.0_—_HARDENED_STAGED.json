@@ -1,0 +1,638 @@
+{
+  "id": "IdMigMainV1p7Z4cD",
+  "name": "Chelsea Immutable Identity Migration v2.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Immutable identity migration\nПереводит legacy username namespace в actor namespace. Вход должен быть заморожен cutover-процедурой. Создаёт Qdrant alias, переносит tenant files, мигрирует legacy Data Tables, обновляет PostgreSQL principal/record store и возвращает проверенный receipt.",
+        "height": 900,
+        "width": 4200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        -420
+      ],
+      "id": "0082d096-ff6a-416e-b063-cd42b7bbebf7",
+      "name": "Описание | Immutable Identity Migration"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -880,
+        20
+      ],
+      "id": "a37ed227-9a22-419f-a922-fabe62577bf1",
+      "name": "Trigger | Parent Workflow | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();\nif(!/^tgactor_[a-f0-9]{64}$/.test(t(x.principalKey))||!/^actor_[a-f0-9]{32}$/.test(t(x.storageUsername))||x.identitySchemaVersion!=='chelsea_actor_identity_v3')throw new Error('identity_migration_actor_v3_required');\nconst required=x.identityStorageMigrationRequired===true;const fields=['legacyPrincipalKey','legacyStorageUsername','legacyTenantId','legacyQdrantCollection','legacySoulId'];if(required)for(const k of fields)if(!t(x[k]))throw new Error(`identity_migration_missing_${k}`);\nreturn [{json:{...x,identityMigrationRequired:required,identityMigrationToken:`idmig_${x.principalKey.slice(8,32)}_${$execution.id}`,identityMigrationStartedAtIso:new Date().toISOString()}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        20
+      ],
+      "id": "d71c8e8b-1de6-4884-a0e2-f8f45b049101",
+      "name": "Code | Validate Immutable Migration | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "38a46870-bd7a-4f48-802c-a022f33d4ab5",
+              "leftValue": "={{ $json.identityMigrationRequired === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -440,
+        20
+      ],
+      "id": "601fa368-70d6-4307-bf3b-9502448f592b",
+      "name": "If | Immutable Migration Required | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333').replace(/\\/+$/,'') + '/collections/' + encodeURIComponent($json.legacyQdrantCollection) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        -160
+      ],
+      "id": "7b8e1102-d2ca-4aed-9ad7-a3b1c9ea3ac4",
+      "name": "Call | Qdrant | Verify Legacy Collection | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333').replace(/\\/+$/,'') + '/aliases' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "4d0c75fd-e9d1-411c-ba33-c2b32dbc3541",
+      "name": "Call | Qdrant | Check Immutable Alias | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const req=$('Code | Validate Immutable Migration | IdentityMigration').first().json;const status=Number($json.statusCode||$json.status||0);const body=$json.body??$json;if(status&&status>=400)throw new Error(`identity_migration_qdrant_alias_list_failed:${status}`);const aliases=body?.result?.aliases||body?.aliases||[];if(!Array.isArray(aliases))throw new Error('identity_migration_qdrant_alias_list_invalid');const found=aliases.filter(a=>String(a.alias_name||a.aliasName||'')===req.qdrantCollection);if(found.length>1)throw new Error('identity_migration_qdrant_alias_duplicate');if(found.length===1){const target=String(found[0].collection_name||found[0].collectionName||'');if(target!==req.legacyQdrantCollection)throw new Error('identity_migration_qdrant_alias_owned_by_other_collection');return [{json:{...req,qdrantAliasCreateRequired:false,qdrantAliasExistingTarget:target}}];}return [{json:{...req,qdrantAliasCreateRequired:true,qdrantAliasBody:{actions:[{create_alias:{collection_name:req.legacyQdrantCollection,alias_name:req.qdrantCollection}}]}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        -160
+      ],
+      "id": "6921a1ee-d0b8-4311-b0eb-884e3b1b2407",
+      "name": "Code | Plan Immutable Qdrant Alias | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0d58f642-b98c-4559-9254-43ff5f11331c",
+              "leftValue": "={{ $json.qdrantAliasCreateRequired === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        -160
+      ],
+      "id": "22c849e9-5f82-4a5a-af21-f922e3f8df23",
+      "name": "If | Qdrant Alias Create Required | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333').replace(/\\/+$/,'') + '/collections/aliases' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.qdrantAliasBody) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        -240
+      ],
+      "id": "1b41836d-ad07-4ca1-8e06-837d7bdfe7ce",
+      "name": "Call | Qdrant | Create Immutable Alias | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333').replace(/\\/+$/,'') + '/aliases' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        -160
+      ],
+      "id": "dcdb43d4-8d8c-412c-8bc4-a5a4c31e138a",
+      "name": "Call | Qdrant | Verify Immutable Alias | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const req=$('Code | Validate Immutable Migration | IdentityMigration').first().json;const body=$json.body??$json;const aliases=body?.result?.aliases||body?.aliases||[];if(!Array.isArray(aliases))throw new Error('identity_migration_qdrant_alias_readback_invalid');const found=aliases.filter(a=>String(a.alias_name||a.aliasName||'')===req.qdrantCollection);if(found.length!==1||String(found[0].collection_name||found[0].collectionName||'')!==req.legacyQdrantCollection)throw new Error('identity_migration_qdrant_alias_readback_mismatch');return [{json:{...req,qdrantAliasVerified:true,qdrantAliasTarget:req.legacyQdrantCollection}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        -160
+      ],
+      "id": "aefe19ac-2ea0-411a-830d-891355ee422d",
+      "name": "Code | Verify Immutable Qdrant Alias | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "command": "=set -euo pipefail; ROOT=${CHELSEA_USER_FILES_ROOT:-/files/chelsea}; OLD='{{ $json.legacyTenantId }}'; NEW='{{ $json.tenantId }}'; case \"$OLD:$NEW\" in tenant_[a-z0-9_]*:tenant_actor_[a-f0-9]*) ;; *) echo '{\"success\":false,\"error\":\"invalid_identity_paths\"}'; exit 2;; esac; O=\"$ROOT/$OLD\"; N=\"$ROOT/$NEW\"; for P in \"$O\" \"$N\"; do [ ! -L \"$P\" ] || { echo '{\"success\":false,\"error\":\"symlink_blocked\"}'; exit 3; }; done; mkdir -p \"$ROOT\"; if [ -d \"$O\" ] && [ ! -e \"$N\" ]; then mv \"$O\" \"$N\"; elif [ -d \"$O\" ] && [ -d \"$N\" ]; then cp -a \"$O\"/. \"$N\"/; rm -rf --one-file-system \"$O\"; elif [ ! -e \"$N\" ]; then mkdir -p \"$N\"; fi; [ -d \"$N\" ] && [ ! -e \"$O\" ] || { echo '{\"success\":false,\"error\":\"file_migration_readback_failed\"}'; exit 4; }; printf '{\"success\":true,\"newTenantPath\":\"%s\",\"legacyAbsent\":true}\\n' \"$N\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        -160
+      ],
+      "id": "34935c7a-8eec-436f-ac42-b7e02b02ef02",
+      "name": "Execute Command | Move Tenant Files to Immutable Namespace | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const req=$('Code | Validate Immutable Migration | IdentityMigration').first().json;let r={};try{r=JSON.parse(String($json.stdout||'{}').trim())}catch{throw new Error('identity_migration_files_receipt_invalid')};if(r.success!==true||r.legacyAbsent!==true)throw new Error(`identity_migration_files_failed:${r.error||'unknown'}`);return [{json:{...req,qdrantAliasVerified:true,filesMigrationVerified:true,filesMigrationReceipt:r}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        -160
+      ],
+      "id": "99ee687a-a368-4a1b-8da5-60e8ad31df30",
+      "name": "Code | Verify Immutable Files Namespace | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first().json;const defs=[\n ['BD ProfileAnswers','telegramUserId',x.legacyStorageUsername,String(x.telegramActorId)],\n ['Obsidian RAG Chat Memory','userId',x.legacyUserId,x.userId],\n ['Obsidian RAG User Profile Memory','userId',x.legacyUserId,x.userId],\n ['Obsidian RAG Interaction Log','userId',x.legacyUserId,x.userId],\n ['Obsidian RAG Diagnostics Log','userId',x.legacyUserId,x.userId],\n ['Chelsea Soul','userId',x.legacyUserId,x.userId]\n];return defs.filter(d=>d[2]&&d[3]&&d[2]!==d[3]).map(([tableName,keyName,oldValue,newValue])=>({json:{...x,tableName,keyName,oldValue,newValue}}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -160
+      ],
+      "id": "f38fe109-749e-42c9-b917-fe41a3c62bd7",
+      "name": "Code | Build Legacy Data Table Targets | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IdMigTblV1x9Q2aB",
+          "mode": "list",
+          "cachedResultName": "Chelsea Identity Data Table Migration Target v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1980,
+        -160
+      ],
+      "id": "1ecda800-9f12-47bf-b7a3-8e02f8d9b512",
+      "name": "Call | Chelsea Identity Data Table Migration Target | Migrate Legacy Rows | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Verify Immutable Files Namespace | IdentityMigration').first().json;const receipts=$input.all().map(i=>i.json||{});if(receipts.some(r=>r.success!==true))throw new Error('identity_migration_data_table_receipt_failed');const names=new Set(receipts.map(r=>r.tableName));const expected=['BD ProfileAnswers','Obsidian RAG Chat Memory','Obsidian RAG User Profile Memory','Obsidian RAG Interaction Log','Obsidian RAG Diagnostics Log','Chelsea Soul'];for(const n of expected)if(!names.has(n))throw new Error(`identity_migration_missing_table_receipt:${n}`);return [{json:{...source,dataTableMigrationVerified:true,dataTableReceipts:receipts}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        -160
+      ],
+      "id": "398d5504-1a21-4ca4-a54a-924805713835",
+      "name": "Code | Verify Data Table Migration Receipts | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_complete_identity_migration_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ `Bearer ${$env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY}` }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({p_principal_key:$json.principalKey,p_principal_uuid:$json.principalUuid,p_telegram_actor_id:Number($json.telegramActorId),p_storage_key:$json.storageUsername,p_current_username:$json.currentUsername||null,p_timezone:$json.timeZone,p_legacy_principal_key:$json.legacyPrincipalKey,p_legacy_storage_key:$json.legacyStorageUsername,p_migration_token:$json.identityMigrationToken}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        -160
+      ],
+      "id": "d0aa85dd-07d9-4ba5-b176-cef400eeb7f2",
+      "name": "Call | Supabase | Complete Immutable Identity Migration | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Verify Data Table Migration Receipts | IdentityMigration').first().json;const body=$json.body??$json;const receipt=Array.isArray(body)?body[0]:body;if(receipt?.success!==true||receipt?.verified!==true||receipt?.migrationStatus!=='completed')throw new Error('identity_migration_postgres_receipt_failed');const ready=String(receipt.registrationState||source.registrationState||'')==='ready';return [{json:{...source,identityStorageMigrationRequired:false,identityMigrationVerified:true,identityClaimsVerified:true,identityAuthorityVerified:true,identityUsable:ready,identityMigrationReceipt:{contractVersion:'chelsea_identity_migration_receipt_v2',qdrantAliasVerified:true,filesMigrationVerified:true,dataTableMigrationVerified:true,postgresVerified:true,details:receipt,completedAtIso:new Date().toISOString()},registrationState:ready?'ready':String(receipt.registrationState||source.registrationState||'processing'),registrationStage:ready?'ready':String(receipt.registrationStage||'immutable_storage_migrated')}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -160
+      ],
+      "id": "80e0edab-4b14-4288-a7ca-92be416e0764",
+      "name": "Code | Return Verified Immutable Identity | IdentityMigration"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first().json;return [{json:{...x,identityStorageMigrationRequired:false,identityMigrationVerified:true,identityMigrationReceipt:{contractVersion:'chelsea_identity_migration_receipt_v2',alreadyImmutable:true,completedAtIso:new Date().toISOString()}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        220
+      ],
+      "id": "9c213a38-8744-43f0-aab4-f0fed1ec7510",
+      "name": "Code | Return Already Immutable Identity | IdentityMigration"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        20
+      ],
+      "id": "0fdd4efc-6413-4d98-9e7f-4a42c67d1c07",
+      "name": "End | Identity Migration | IdentityMigration"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Immutable Migration | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Immutable Migration | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "If | Immutable Migration Required | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Immutable Migration Required | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Verify Legacy Collection | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Return Already Immutable Identity | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Verify Legacy Collection | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Check Immutable Alias | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Check Immutable Alias | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Plan Immutable Qdrant Alias | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Plan Immutable Qdrant Alias | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "If | Qdrant Alias Create Required | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Qdrant Alias Create Required | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Create Immutable Alias | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Qdrant | Verify Immutable Alias | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Create Immutable Alias | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Verify Immutable Alias | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Verify Immutable Alias | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Immutable Qdrant Alias | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Immutable Qdrant Alias | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Execute Command | Move Tenant Files to Immutable Namespace | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command | Move Tenant Files to Immutable Namespace | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Immutable Files Namespace | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Immutable Files Namespace | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Legacy Data Table Targets | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Legacy Data Table Targets | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Identity Data Table Migration Target | Migrate Legacy Rows | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Identity Data Table Migration Target | Migrate Legacy Rows | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Data Table Migration Receipts | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Data Table Migration Receipts | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Complete Immutable Identity Migration | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Complete Immutable Identity Migration | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Verified Immutable Identity | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Verified Immutable Identity | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Migration | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Already Immutable Identity | IdentityMigration": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Migration | IdentityMigration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 900,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "aece1294-7814-4db7-968a-b0744b1d10f6",
+  "meta": null,
+  "tags": []
+}

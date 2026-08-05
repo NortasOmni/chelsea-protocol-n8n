@@ -1,0 +1,324 @@
+{
+  "id": "rY0nkke3WnwcTnf7",
+  "name": "Chelsea Integration Smoke Tests v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "8928b054-69e0-5b51-adef-6b6ed867e28d",
+      "name": "Trigger | Manual Start | SmokeTests",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2c0e45be-1f91-5511-aaa4-ca56a611cfd5",
+      "name": "Trigger | Parent Workflow | SmokeTests",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1200,
+        160
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "3d0db61b-1009-5d6a-8afa-03fbc176254f",
+      "name": "Code | Build Smoke Test Config | SmokeTests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        80
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst clean=v=>String(v??'').trim();\nreturn [{json:{\n  qdrantUrl:clean($env.CHELSEA_QDRANT_URL).replace(/\\/+$/,''),\n  n8nBaseUrl:clean($env.CHELSEA_N8N_API_URL).replace(/\\/+$/,''),\n  expectedWorkflowNames:['Qdrant загрузка и контроль знаний','Создать папки пользователя'],\n  credentialChecks:'performed_by_http_requests_without_exposing_secret_values'\n}}];"
+      }
+    },
+    {
+      "id": "6a6f5b43-7211-532c-9d0f-c63b93349366",
+      "name": "Call | Telegram | Get Me | SmokeTests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        -200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.telegram.org/bot' + $env.CHELSEA_TELEGRAM_BOT_TOKEN + '/getMe' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "22f8f76a-624e-53e5-994b-6e0ddf2de22c",
+      "name": "Call | Qdrant | List Collections | SmokeTests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        -40
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Code | Build Smoke Test Config | SmokeTests').first().json.qdrantUrl + '/collections' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "68aa6088-3e10-55c1-8410-e815bfbf5abb",
+      "name": "Call | Supabase | Read Principal Schema | SmokeTests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        120
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/chelsea_principals?select=principal_id&limit=1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "b057c22a-31b8-5c93-91f6-05adf93b06cb",
+      "name": "Call | n8n API | List Imported Workflows | SmokeTests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        280
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Code | Build Smoke Test Config | SmokeTests').first().json.n8nBaseUrl + '/api/v1/workflows?limit=250' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $env.CHELSEA_N8N_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "f50217d7-3a88-5e5e-bc38-5cdc2d58458d",
+      "name": "Code | Aggregate Smoke Test Results | SmokeTests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        120
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst cfg=$('Code | Build Smoke Test Config | SmokeTests').first().json;\nconst read=name=>{try{return $(name).first().json||{}}catch{return {missing:true}}};\nconst body=x=>x?.body??x?.data??x;\nconst sanitize=x=>JSON.parse(JSON.stringify(x,(k,v)=>/(token|key|secret|password|authorization)/i.test(k)?'[REDACTED]':v));\nconst telegram=body(read('Call | Telegram | Get Me | SmokeTests'));\nconst qdrant=body(read('Call | Qdrant | List Collections | SmokeTests'));\nconst supabase=body(read('Call | Supabase | Read Principal Schema | SmokeTests'));\nconst n8n=body(read('Call | n8n API | List Imported Workflows | SmokeTests'));\nconst workflows=Array.isArray(n8n)?n8n:(Array.isArray(n8n?.data)?n8n.data:[]);\nconst normalized=workflows.map(x=>({id:String(x?.id||''),name:String(x?.name||'')}));\nconst dependencies=cfg.expectedWorkflowNames.map(expectedName=>{\n const clean=s=>String(s||'').toLowerCase().replace(/\\bv\\d+(?:\\.\\d+)*\\b/g,'').trim();\n const match=normalized.find(x=>clean(x.name).includes(clean(expectedName)))||null;\n return {expectedName,found:Boolean(match),workflowId:match?.id||'',actualName:match?.name||''};\n});\nconst checks={\n telegram:Boolean(telegram?.ok===true),\n qdrant:Boolean(Array.isArray(qdrant?.result?.collections)||Array.isArray(qdrant?.collections)),\n supabase:Boolean(Array.isArray(supabase)),\n dependencies:dependencies.every(x=>x.found)\n};\nreturn [{json:{ok:Object.values(checks).every(Boolean),configured:{credentialChecks:cfg.credentialChecks},checks,dependencies,tests:sanitize({telegram,qdrant,supabase,n8nWorkflowCount:normalized.length}),smokeVersion:'chelsea_integration_smoke_v4',noWrite:true,checkedAt:new Date().toISOString()}}];"
+      }
+    },
+    {
+      "id": "8c607c30-9dc9-5a50-bc31-fbce19cb5c10",
+      "name": "End | Smoke Test Results | SmokeTests",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        120
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Manual Start | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Smoke Test Config | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Parent Workflow | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Smoke Test Config | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Smoke Test Config | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Get Me | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Get Me | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | List Collections | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | List Collections | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Read Principal Schema | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Read Principal Schema | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Call | n8n API | List Imported Workflows | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | n8n API | List Imported Workflows | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "Code | Aggregate Smoke Test Results | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Aggregate Smoke Test Results | SmokeTests": {
+      "main": [
+        [
+          {
+            "node": "End | Smoke Test Results | SmokeTests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 120,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "8c27d4cd-19fc-5ae7-bc73-db415f867452"
+}

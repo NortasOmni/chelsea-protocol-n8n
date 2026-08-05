@@ -1,0 +1,207 @@
+{
+  "id": "PRIVDLV7b523f9511cf4",
+  "name": "Chelsea Privacy Export Delivery v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "a638ed91-0089-5a5a-9e0a-83f242923a93",
+      "name": "Trigger | Parent Workflow | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "9a732d0b-b07f-502f-9833-a83b2412dfe4",
+      "name": "Code | Validate Privacy Export Delivery Request | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();const requestId=t(x.requestId);const principalKey=t(x.principalKey);const actor=t(x.telegramActorId);if(!/^[A-Za-z0-9_.:-]{8,160}$/.test(requestId))throw new Error('privacy_delivery_request_id_invalid');if(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('privacy_delivery_principal_invalid');if(!/^\\d+$/.test(actor))throw new Error('privacy_delivery_actor_invalid');return [{json:{requestId,principalKey,telegramActorId:actor}}];"
+      }
+    },
+    {
+      "id": "fabdeae7-5c5e-5f3e-b253-a8f0f6c4cbd6",
+      "name": "Execute Command | Build and Deliver Privacy Bundle | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -350,
+        0
+      ],
+      "parameters": {
+        "command": "=set -euo pipefail; ROOT=\"${CHELSEA_PRIVACY_EXPORTS_ROOT:-/files/chelsea_privacy_exports}\"; REQUEST='{{ $json.requestId }}'; PRINCIPAL='{{ $json.principalKey }}'; ACTOR='{{ $json.telegramActorId }}'; case \"$REQUEST\" in *[!A-Za-z0-9_.:-]*|'') exit 2;; esac; case \"$PRINCIPAL\" in tgactor_[a-f0-9]*) ;; *) exit 2;; esac; case \"$ACTOR\" in *[!0-9]*|'') exit 2;; esac; OUTDIR=\"$ROOT/$REQUEST/delivery\"; WORK=\"$OUTDIR/work\"; BUNDLE=\"$OUTDIR/chelsea_privacy_export_${REQUEST}.tar.gz\"; install -d -m 0700 \"$WORK\"; BODY=$(printf '{\"p_request_id\":\"%s\",\"p_principal_key\":\"%s\",\"p_actor_id\":%s}' \"$REQUEST\" \"$PRINCIPAL\" \"$ACTOR\"); curl -fsS --connect-timeout 10 --max-time 120 -X POST -H \"Content-Type: application/json\" -H \"apikey: $CHELSEA_SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $CHELSEA_SUPABASE_SERVICE_ROLE_KEY\" --data \"$BODY\" \"${CHELSEA_SUPABASE_URL%/}/rest/v1/rpc/chelsea_privacy_export_delivery_payload_v1\" -o \"$WORK/payload.json\"; ROOT_ENV=\"$ROOT\" WORK_ENV=\"$WORK\" node <<'NODE'\nconst fs=require('fs'),path=require('path');const root=process.env.ROOT_ENV,work=process.env.WORK_ENV;let raw=JSON.parse(fs.readFileSync(path.join(work,'payload.json'),'utf8'));if(Array.isArray(raw))raw=raw[0];if(!raw||raw.success!==true)throw new Error('delivery_payload_invalid');fs.writeFileSync(path.join(work,'supabase.json'),JSON.stringify(raw.supabaseExport||{},null,2));fs.writeFileSync(path.join(work,'data_tables.json'),JSON.stringify(raw.targetReceipts?.data_tables||{},null,2));fs.writeFileSync(path.join(work,'manifest.json'),JSON.stringify({requestId:raw.requestId,manifest:raw.manifest,targetReceipts:raw.targetReceipts,expiresAt:raw.expiresAt},null,2));function copySafe(src,name){if(!src)return;const resolved=fs.realpathSync(src),rr=fs.realpathSync(root);if(!(resolved===rr||resolved.startsWith(rr+path.sep)))throw new Error('artifact_path_outside_root');if(fs.lstatSync(resolved).isSymbolicLink())throw new Error('artifact_symlink_blocked');fs.copyFileSync(resolved,path.join(work,name));}copySafe(raw.targetReceipts?.files?.archivePath,'files.tar.gz');copySafe(raw.targetReceipts?.qdrant?.snapshotLocalPath,'qdrant.snapshot');fs.unlinkSync(path.join(work,'payload.json'));\nNODE\ntar -czf \"$BUNDLE\" -C \"$WORK\" .; chmod 0600 \"$BUNDLE\"; rm -rf \"$WORK\"; BYTES=$(stat -c %s \"$BUNDLE\"); MAX=${CHELSEA_TELEGRAM_MAX_UPLOAD_BYTES:-45000000}; [ \"$BYTES\" -le \"$MAX\" ] || { echo '{\"success\":false,\"error\":\"bundle_too_large\"}'; exit 8; }; SHA=$(sha256sum \"$BUNDLE\"|awk '{print $1}'); REQUEST_ENV=\"$REQUEST\" PRINCIPAL_ENV=\"$PRINCIPAL\" ACTOR_ENV=\"$ACTOR\" BUNDLE_ENV=\"$BUNDLE\" SHA_ENV=\"$SHA\" BYTES_ENV=\"$BYTES\" node <<'NODE' > \"$OUTDIR/register-body.json\"\nconsole.log(JSON.stringify({p_request_id:process.env.REQUEST_ENV,p_principal_key:process.env.PRINCIPAL_ENV,p_actor_id:Number(process.env.ACTOR_ENV),p_bundle_path:process.env.BUNDLE_ENV,p_sha256:process.env.SHA_ENV,p_bytes:Number(process.env.BYTES_ENV)}));\nNODE\ncurl -fsS --connect-timeout 10 --max-time 60 -X POST -H \"Content-Type: application/json\" -H \"apikey: $CHELSEA_SUPABASE_SERVICE_ROLE_KEY\" -H \"Authorization: Bearer $CHELSEA_SUPABASE_SERVICE_ROLE_KEY\" --data-binary @\"$OUTDIR/register-body.json\" \"${CHELSEA_SUPABASE_URL%/}/rest/v1/rpc/chelsea_register_privacy_bundle_artifact_v1\" -o \"$OUTDIR/register.json\"; REGISTER_ENV=\"$OUTDIR/register.json\" node <<'NODE'\nconst fs=require('fs');let r=JSON.parse(fs.readFileSync(process.env.REGISTER_ENV,'utf8'));if(Array.isArray(r))r=r[0];if(r?.success!==true||!r.artifactId)throw new Error('privacy_bundle_pre_registration_failed');\nNODE\nrm -f \"$OUTDIR/register-body.json\" \"$OUTDIR/register.json\"; curl -fsS --connect-timeout 10 --max-time 300 -F \"chat_id=$ACTOR\" -F \"caption=Экспорт данных Челси. Автоматическое удаление через 7 дней.\" -F \"document=@$BUNDLE;type=application/gzip\" \"https://api.telegram.org/bot${CHELSEA_TELEGRAM_BOT_TOKEN}/sendDocument\" -o \"$OUTDIR/telegram.json\"; BUNDLE_ENV=\"$BUNDLE\" SHA_ENV=\"$SHA\" BYTES_ENV=\"$BYTES\" node <<'NODE'\nconst fs=require('fs');const r=JSON.parse(fs.readFileSync(process.env.BUNDLE_ENV.replace(/\\/[^/]+$/,'')+'/telegram.json','utf8'));if(r.ok!==true||!r.result?.message_id)throw new Error('telegram_bundle_delivery_failed');console.log(JSON.stringify({success:true,bundlePath:process.env.BUNDLE_ENV,sha256:process.env.SHA_ENV,bytes:Number(process.env.BYTES_ENV),telegramMessageId:r.result.message_id}));\nNODE\nrm -f \"$OUTDIR/telegram.json\""
+      }
+    },
+    {
+      "id": "2d6886f9-4629-5225-9f31-fbc93741c881",
+      "name": "Code | Verify Privacy Bundle Delivery | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Validate Privacy Export Delivery Request | PrivacyExportDelivery').first().json;let r={};try{r=JSON.parse(String($json.stdout||'{}').trim())}catch{throw new Error('privacy_delivery_receipt_invalid_json')};if(r.success!==true||!r.bundlePath||!/^[a-f0-9]{64}$/.test(String(r.sha256))||!(Number(r.bytes)>0)||!Number.isSafeInteger(Number(r.telegramMessageId)))throw new Error(`privacy_delivery_failed:${r.error||'invalid_receipt'}`);return [{json:{...source,...r,delivered:true}}];"
+      }
+    },
+    {
+      "id": "70cce62c-4cd4-5568-9af7-a63a3467df29",
+      "name": "Call | Supabase RPC | Mark Privacy Bundle Delivered | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        150,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_mark_privacy_bundle_delivered_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_request_id:$json.requestId,p_principal_key:$json.principalKey,p_actor_id:$json.telegramActorId,p_bundle_path:$json.bundlePath,p_telegram_message_id:$json.telegramMessageId} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "b42a8f84-18ef-5db8-9653-8a50b76daefe",
+      "name": "Code | Verify Privacy Bundle Delivery Acknowledgement | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Verify Privacy Bundle Delivery | PrivacyExportDelivery').first().json;const raw=$input.first()?.json||{};const body=raw.body??raw.data??raw;const r=Array.isArray(body)?body[0]:body;if(r?.success!==true||!r.artifactId)throw new Error('privacy_bundle_delivery_acknowledgement_failed');return [{json:{...source,bundleArtifactId:r.artifactId,bundleExpiresAt:r.expiresAt}}];"
+      }
+    },
+    {
+      "id": "7a50bad9-3edd-578e-a103-0fa4c9d60ac7",
+      "name": "End | Privacy Export Delivered | PrivacyExportDelivery",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        650,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyExportDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Privacy Export Delivery Request | PrivacyExportDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Privacy Export Delivery Request | PrivacyExportDelivery": {
+      "main": [
+        [
+          {
+            "node": "Execute Command | Build and Deliver Privacy Bundle | PrivacyExportDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command | Build and Deliver Privacy Bundle | PrivacyExportDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Privacy Bundle Delivery | PrivacyExportDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Privacy Bundle Delivery | PrivacyExportDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark Privacy Bundle Delivered | PrivacyExportDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark Privacy Bundle Delivered | PrivacyExportDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Privacy Bundle Delivery Acknowledgement | PrivacyExportDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Privacy Bundle Delivery Acknowledgement | PrivacyExportDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Export Delivered | PrivacyExportDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600
+  },
+  "versionId": "d8dcb4b8-131a-4dc4-a053-9cddb0ba010d",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

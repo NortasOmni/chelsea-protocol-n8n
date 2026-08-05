@@ -1,0 +1,352 @@
+{
+  "id": "DTP7mR4xK2qV9sLc",
+  "name": "Chelsea Legacy Data Tables Privacy Adapter v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "2da6eb1e-ff8c-5383-92bb-a1544ec033c8",
+      "name": "Trigger | Parent Workflow | PrivacyDataTables",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "350f9cb6-1db6-56e1-ad6f-720337cab653",
+      "name": "Code | Validate Actor Safe Privacy Identity | PrivacyDataTables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();\nconst raw=t(x.requestType||x.operation).toLowerCase();const operation=raw==='delete_confirm'?'delete':(raw==='delete_preview'?'preview':raw);\nif(!['export','preview','delete'].includes(operation)) throw new Error('privacy_data_tables_invalid_operation');\nconst principalKey=t(x.principalKey||x.payload?.principal_key||x.payload?.principalKey);\nconst storageUsername=t(x.storageUsername||x.payload?.storage_username||x.payload?.storageUsername);\nconst tenantId=t(x.tenantId||x.payload?.tenant_id||x.payload?.tenantId||(storageUsername?`tenant_${storageUsername}`:''));\nconst userId=t(x.userId||x.payload?.user_id||x.payload?.userId||storageUsername);\nconst telegramActorId=t(x.telegramActorId||x.telegramUserId||x.payload?.telegram_user_id||x.payload?.telegramUserId||x.payload?.telegram_actor_id);\nconst telegramUserId=telegramActorId;if(!/^\\d+$/.test(telegramActorId)||Number(telegramActorId)<=0) throw new Error('privacy_data_tables_numeric_actor_required');\nif(!/^tgactor_[a-f0-9]{64}$/.test(principalKey)) throw new Error('privacy_data_tables_actor_safe_principal_required');\nif(!/^actor_[a-f0-9]{32}$/.test(storageUsername)) throw new Error('privacy_data_tables_storage_username_invalid');\nif(tenantId!==`tenant_${storageUsername}`||userId!==storageUsername) throw new Error('privacy_data_tables_identity_contract_mismatch');\nreturn [{json:{...x,requestType:operation,principalKey,storageUsername,tenantId,userId,telegramActorId,telegramUserId,adapter:'data_tables',privacyDataTablesVersion:'chelsea_data_tables_privacy_v1'}}];"
+      }
+    },
+    {
+      "id": "9ee6d4b8-dcc6-5f8b-aeba-bf0eafdd962c",
+      "name": "Code | Build Exact Legacy Table Targets | PrivacyDataTables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first().json;\nconst defs=[\n ['Identity Registry','principalKey',x.principalKey,true],\n ['Username Claims','ownerPrincipalKey',x.principalKey,true],\n ['Folder users','principalKey',x.principalKey,true],\n ['Chelsea Soul','userId',x.userId,true],\n ['Chelsea Response Jobs','principalKey',x.principalKey,true],\n ['Chelsea Memory Jobs','principalKey',x.principalKey,true],\n ['Chelsea Resolution Questions','principalKey',x.principalKey,true],\n ['BD ProfileAnswers','telegramUserId',x.telegramUserId,true],\n ['Obsidian RAG Chat Memory','userId',x.userId,true],\n ['Obsidian RAG User Profile Memory','userId',x.userId,true],\n ['Obsidian RAG Interaction Log','userId',x.userId,true],\n ['Obsidian RAG Diagnostics Log','userId',x.userId,true],\n [`Chelsea Tasks ${x.tenantId}`,'tenantId',x.tenantId,true]\n];\nreturn defs.filter(d=>String(d[2]??'').trim()).map(([tableName,keyName,keyValue,required],i)=>({json:{...x,targetIndex:i,tableName,keyName,keyValue:String(keyValue),required}}));"
+      }
+    },
+    {
+      "id": "717de410-e4ca-581e-8b90-67a228a6d0ab",
+      "name": "If | Privacy Data Tables Delete | PrivacyDataTables",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -460,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6fd2c652-f1a4-5a60-9dab-4e0fd19f39d7",
+              "leftValue": "={{ $json.requestType }}",
+              "rightValue": "delete",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "214f3574-d137-5437-9193-5143a2fc1fd1",
+      "name": "Read | Legacy User Rows | PrivacyDataTables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        120
+      ],
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic privacy table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.keyName }}",
+              "keyValue": "={{ $json.keyValue }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c0f276f1-a6d6-5434-b941-5658df69ddb8",
+      "name": "Code | Decorate Legacy Export Rows | PrivacyDataTables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        120
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst row=$json||{};const target=$('Code | Build Exact Legacy Table Targets | PrivacyDataTables').item.json;\nconst error=String(row.error?.message||row.error||row.message||'').slice(0,2000);\nconst keys=Object.keys(row).filter(k=>k!=='error'&&k!=='message');\nreturn {json:{tableName:target.tableName,keyName:target.keyName,keyValue:target.keyValue,required:target.required,error,recordPresent:keys.length>0,row:keys.length?row:null,requestType:target.requestType,principalKey:target.principalKey,tenantId:target.tenantId,storageUsername:target.storageUsername}};",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "18d05435-738a-5e10-8c74-626a8b7501b0",
+      "name": "Delete | Exact Legacy User Rows | PrivacyDataTables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -120
+      ],
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic privacy table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $json.keyName }}",
+              "keyValue": "={{ $json.keyValue }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "2b755ebc-ec35-59cb-826b-975242d4e4f1",
+      "name": "Read | Verify Legacy User Rows Deleted | PrivacyDataTables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        20,
+        -120
+      ],
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $('Code | Build Exact Legacy Table Targets | PrivacyDataTables').item.json.tableName }}",
+          "mode": "name",
+          "cachedResultName": "Dynamic privacy table"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "={{ $('Code | Build Exact Legacy Table Targets | PrivacyDataTables').item.json.keyName }}",
+              "keyValue": "={{ $('Code | Build Exact Legacy Table Targets | PrivacyDataTables').item.json.keyValue }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "0bf5f270-47ed-5302-a5b2-1c2ecbcabae9",
+      "name": "Code | Decorate Legacy Delete Readback | PrivacyDataTables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        -120
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst row=$json||{};const target=$('Code | Build Exact Legacy Table Targets | PrivacyDataTables').item.json;\nconst error=String(row.error?.message||row.error||row.message||'').slice(0,2000);\nconst keys=Object.keys(row).filter(k=>k!=='error'&&k!=='message');\nreturn {json:{tableName:target.tableName,keyName:target.keyName,keyValue:target.keyValue,required:target.required,error,recordPresent:keys.length>0,requestType:target.requestType,principalKey:target.principalKey,tenantId:target.tenantId,storageUsername:target.storageUsername}};",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "893192bf-f8f0-5c64-90f8-474a5851d187",
+      "name": "Code | Build Verified Legacy Data Tables Receipt | PrivacyDataTables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const rows=$input.all().map(i=>i.json||{});const first=rows[0]||{};const operation=String(first.requestType||'');const isNotFound=e=>/table.*not found|does not exist|unknown table/i.test(String(e||''));const errors=rows.filter(r=>r.error&&!isNotFound(r.error)).map(r=>({tableName:r.tableName,error:r.error}));if(errors.length)throw new Error(`privacy_data_tables_adapter_failed_closed:${JSON.stringify(errors)}`);const targets=[...new Set(rows.map(r=>r.tableName).filter(Boolean))];if(targets.length<13)throw new Error('privacy_data_tables_target_coverage_incomplete');if(operation==='delete'){const remaining=rows.filter(r=>r.recordPresent===true).map(r=>r.tableName);if(remaining.length)throw new Error(`privacy_data_tables_delete_readback_not_empty:${remaining.join(',')}`);return [{json:{adapter:'data_tables',success:true,retryable:false,receipt:{contractVersion:'chelsea_data_tables_privacy_receipt_v3',operation,verifiedDeletedTables:targets,verifiedAbsent:true,completedAt:new Date().toISOString()},errorMessage:''}}];}if(operation==='preview'){const counts={};for(const r of rows)counts[r.tableName]=(counts[r.tableName]||0)+(r.recordPresent?1:0);return [{json:{adapter:'data_tables',success:true,retryable:false,receipt:{contractVersion:'chelsea_data_tables_privacy_receipt_v3',operation:'preview',verifiedTables:targets,rowCounts:counts,mutated:false,completedAt:new Date().toISOString()},errorMessage:''}}];}const grouped={};for(const r of rows){if(!grouped[r.tableName])grouped[r.tableName]=[];if(r.row)grouped[r.tableName].push(r.row)}return [{json:{adapter:'data_tables',success:true,retryable:false,receipt:{contractVersion:'chelsea_data_tables_privacy_receipt_v3',operation:'export',tables:grouped,verifiedTables:targets,completedAt:new Date().toISOString()},errorMessage:''}}];"
+      }
+    },
+    {
+      "id": "8371034c-0377-585c-95c3-7be7f373cad1",
+      "name": "End | Legacy Data Tables Privacy Receipt | PrivacyDataTables",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        740,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Actor Safe Privacy Identity | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Actor Safe Privacy Identity | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Exact Legacy Table Targets | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Exact Legacy Table Targets | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "If | Privacy Data Tables Delete | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Privacy Data Tables Delete | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Delete | Exact Legacy User Rows | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read | Legacy User Rows | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Legacy User Rows | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Code | Decorate Legacy Export Rows | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Decorate Legacy Export Rows | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Verified Legacy Data Tables Receipt | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete | Exact Legacy User Rows | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Read | Verify Legacy User Rows Deleted | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Verify Legacy User Rows Deleted | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Code | Decorate Legacy Delete Readback | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Decorate Legacy Delete Readback | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Verified Legacy Data Tables Receipt | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Verified Legacy Data Tables Receipt | PrivacyDataTables": {
+      "main": [
+        [
+          {
+            "node": "End | Legacy Data Tables Privacy Receipt | PrivacyDataTables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "1a209d10-6c67-46f7-8817-8c3b6bbba7c9"
+}

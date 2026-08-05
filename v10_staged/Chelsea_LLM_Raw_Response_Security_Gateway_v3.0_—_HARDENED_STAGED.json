@@ -1,0 +1,81 @@
+{
+  "id": "LLMRawSecV1e9PaT",
+  "name": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -520,
+        0
+      ],
+      "id": "869d7928-f395-4689-9aed-db0c73177b3c",
+      "name": "Trigger | Parent Workflow | LLMRawResponseSecurity"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst items=$input.all();\nconst SECRET=[['telegram_token',/\\b\\d{7,12}:[A-Za-z0-9_-]{30,}\\b/g],['openai_key',/\\b(?:sk|sess)-[A-Za-z0-9_-]{20,}\\b/g],['bearer',/\\bBearer\\s+[A-Za-z0-9._~+\\/-]{16,}\\b/gi],['jwt',/\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b/g],['credential',/\\b(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|token|secret|password|private[_ -]?key)\\s*[:=]\\s*[^\\s,;]{8,}/gi]];\nconst INTERNAL=[['policy_marker',/CHELSEA_SECURITY_POLICY_V\\d+/u],['runtime_expression',/(?:\\$env\\.|\\$credentials|\\$node\\[|\\$execution\\.|\\{\\{\\s*\\$)/u],['role_dump',/(?:^|\\n)\\s*(?:SYSTEM|DEVELOPER|TOOL)\\s*:/u],['prompt_delimiter',/<\\/?(?:untrusted_[a-z_]+|application_policy|trusted_policy|user_saved_response_template)>/iu],['prompt_disclosure',/(?:here (?:is|are)|вот|ниже).{0,80}(?:my |мои )?(?:system prompt|developer instructions?|системн(?:ый|ые) промпт|системн(?:ые|ая|ых) инструкц|внутренн(?:ие|яя) инструкц)/iu],['dangerous_scheme',/(?:javascript:|data:text\\/html|file:\\/\\/|gopher:\\/\\/|http:\\/\\/(?:127\\.0\\.0\\.1|localhost|169\\.254\\.169\\.254))/iu],['active_html',/<(?:script|iframe|object|embed|form|meta)\\b/iu]];\nfunction norm(v){return String(v??'').normalize('NFKC').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F\\u200B-\\u200F\\u202A-\\u202E\\u2060\\u2066-\\u2069\\uFEFF]/g,'');}\nfunction variants(s){const a=[norm(s)];try{a.push(decodeURIComponent(a[0]))}catch{};const re=/\\b[A-Za-z0-9+/_-]{24,}={0,2}\\b/g;let m,c=0;while((m=re.exec(a[0]))&&c++<10){let raw=m[0].replace(/-/g,'+').replace(/_/g,'/');while(raw.length%4)raw+='=';try{a.push(Buffer.from(raw,'base64').toString('utf8'))}catch{}}return a.map(norm);}\nfunction inspectText(s,path,findings){let x=norm(s);const vs=variants(x);for(const [id,re] of SECRET){if(vs.some(v=>{re.lastIndex=0;return re.test(v)})){findings.push({path,type:id,severity:'critical'});re.lastIndex=0;x=x.replace(re,'[REDACTED_SECRET]');}}\nfor(const [id,re] of INTERNAL)if(vs.some(v=>{re.lastIndex=0;return re.test(v)}))findings.push({path,type:id,severity:'high'});return x;}\nfunction clean(v,path='root',depth=0,findings=[]){if(depth>22)return '[TRUNCATED_DEPTH]';if(typeof v==='string')return inspectText(v,path,findings);if(Array.isArray(v))return v.slice(0,1200).map((x,i)=>clean(x,`${path}[${i}]`,depth+1,findings));if(v&&typeof v==='object'){const o={};for(const [k,x] of Object.entries(v)){if(/(?:credential|secret|password|api.?key|access.?token|refresh.?token|private.?key)$/i.test(k)){findings.push({path:`${path}.${k}`,type:'secret_field_removed',severity:'critical'});continue;}if(/^(?:tool_calls?|function_call|computer_call|computer_use|shell_command|commands?|browser_action)$/i.test(k)){findings.push({path:`${path}.${k}`,type:'structured_capability_call',severity:'high'});continue;}if(k==='role'&&['system','developer','tool'].includes(String(x).toLowerCase()))findings.push({path:`${path}.${k}`,type:'unexpected_privileged_role',severity:'high'});if(k==='type'&&/(?:function_call|tool_call|computer|shell|browser)/i.test(String(x)))findings.push({path:`${path}.${k}`,type:'structured_capability_type',severity:'high'});o[k]=clean(x,`${path}.${k}`,depth+1,findings);}return o;}return v;}\nreturn items.map(item=>{const findings=[];const cleaned=clean(item.json||{},'root',0,findings);const high=findings.filter(f=>f.severity==='high');if(high.length)throw new Error(`llm_raw_response_security_blocked:${[...new Set(high.map(f=>f.type))].join(',')}`);return {json:{...cleaned,llmRawResponseSecurity:{policyVersion:'chelsea_llm_raw_response_security_v3',verified:true,redacted:findings.some(f=>f.severity==='critical'),findings:findings.slice(0,300),validatedAtIso:new Date().toISOString()}}};});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "8cc0adae-8054-4bdd-9fe5-198261eb0c9f",
+      "name": "Code | Validate Raw Model Response | LLMRawResponseSecurity"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e3d568ea-9014-434c-9c84-c3ebc2d53747",
+      "name": "End | LLM Raw Response Security | LLMRawResponseSecurity"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | LLMRawResponseSecurity": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Raw Model Response | LLMRawResponseSecurity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Raw Model Response | LLMRawResponseSecurity": {
+      "main": [
+        [
+          {
+            "node": "End | LLM Raw Response Security | LLMRawResponseSecurity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 120,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "dda55b0b-0882-4eb2-a2d3-63bd9ad1ef5b",
+  "meta": null,
+  "tags": []
+}

@@ -1,0 +1,388 @@
+{
+  "id": "PRIVCLN7d4e5f6a7b8c",
+  "name": "Chelsea Privacy Artifact Cleanup Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "Trigger | Parent Workflo",
+      "name": "Trigger | Parent Workflow | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "Code | Build Privacy Art",
+      "name": "Code | Build Privacy Artifact Claim | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{worker:`n8n:${$execution.id}:privacy-artifact-cleanup`}}];"
+      }
+    },
+    {
+      "id": "Call | Supabase RPC | Cl",
+      "name": "Call | Supabase RPC | Claim Expired Privacy Artifacts | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_claim_expired_privacy_artifacts_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_worker:$json.worker,p_limit:10,p_lease_seconds:300} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "Code | Expand Expired Pr",
+      "name": "Code | Expand Expired Privacy Artifacts | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -150,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const worker=$('Code | Build Privacy Artifact Claim | PrivacyArtifactCleanup').first().json.worker;const raw=$input.first()?.json||{};const body=raw.body??raw.data??raw;const rows=Array.isArray(body)?body:(body?[body]:[]);return rows.filter(r=>r?.artifact_id).map(r=>({json:{...r,worker}}));"
+      }
+    },
+    {
+      "id": "If | Artifact Is Files |",
+      "name": "If | Artifact Is Files | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a84d9b7-bde3-4053-a4d8-2a364a89f43b",
+              "leftValue": "={{ $json.target === 'files' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Execute Command | Delete",
+      "name": "Execute Command | Delete Expired File Artifact | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        350,
+        -100
+      ],
+      "parameters": {
+        "command": "=set -euo pipefail; ROOT=\"${CHELSEA_PRIVACY_EXPORTS_ROOT:-/files/chelsea_privacy_exports}\"; TARGET='{{ $json.artifact_locator }}'; [ \"${TARGET#\"$ROOT/\"}\" != \"$TARGET\" ] || exit 2; [ ! -L \"$TARGET\" ] || exit 3; rm -f -- \"$TARGET\"; [ ! -e \"$TARGET\" ]; echo '{\"success\":true}'"
+      }
+    },
+    {
+      "id": "If | Artifact Is Qdrant ",
+      "name": "If | Artifact Is Qdrant | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        350,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2f326d01-e664-4f39-b2d8-3e63ba3ee414",
+              "leftValue": "={{ $json.target === 'qdrant' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Execute Command | Delete",
+      "name": "Execute Command | Delete Expired Qdrant Artifact | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        600,
+        100
+      ],
+      "parameters": {
+        "command": "=set -euo pipefail; ROOT=\"${CHELSEA_PRIVACY_EXPORTS_ROOT:-/files/chelsea_privacy_exports}\"; TARGET='{{ $json.artifact_locator }}'; COLLECTION='{{ $json.metadata.collection }}'; SNAP='{{ $json.metadata.snapshotName }}'; case \"$COLLECTION$SNAP\" in *[!A-Za-z0-9._-]*|'') echo '{\"success\":false,\"error\":\"invalid_qdrant_artifact_metadata\"}'; exit 2;; esac; [ \"${TARGET#\"$ROOT/\"}\" != \"$TARGET\" ] || exit 3; BASE=\"${CHELSEA_QDRANT_URL:-http://qdrant:6333}\"; TMP=$(mktemp); CODE=$(curl -sS -o \"$TMP\" -w '%{http_code}' --retry 2 --connect-timeout 10 --max-time 120 -X DELETE -H \"api-key: $CHELSEA_QDRANT_API_KEY\" \"$BASE/collections/$COLLECTION/snapshots/$SNAP\" || true); if [ \"$CODE\" != 200 ] && [ \"$CODE\" != 202 ] && [ \"$CODE\" != 404 ]; then cat \"$TMP\" >&2; rm -f \"$TMP\"; exit 4; fi; rm -f \"$TMP\"; rm -f -- \"$TARGET\"; [ ! -e \"$TARGET\" ] || exit 5; printf '{\"success\":true,\"remoteStatus\":%s,\"localDeleted\":true}\\n' \"$CODE\""
+      }
+    },
+    {
+      "id": "Code | Normalize Privacy",
+      "name": "Code | Normalize Privacy Artifact Cleanup | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=(()=>{try{return $('Code | Expand Expired Privacy Artifacts | PrivacyArtifactCleanup').item.json}catch{return $json}})();let r={};try{r=JSON.parse(String($json.stdout||'{}').trim())}catch{}return [{json:{...source,cleanupSuccess:r.success===true,cleanupError:r.success===true?'':'artifact_cleanup_failed'}}];"
+      }
+    },
+    {
+      "id": "Call | Supabase RPC | Fi",
+      "name": "Call | Supabase RPC | Finish Privacy Artifact | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_finish_privacy_artifact_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_artifact_id:$json.artifact_id,p_worker:$json.worker,p_success:$json.cleanupSuccess,p_error:$json.cleanupError||null} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "End | Privacy Artifact C",
+      "name": "End | Privacy Artifact Cleanup Receipt | PrivacyArtifactCleanup",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1350,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Privacy Artifact Claim | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Privacy Artifact Claim | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Expired Privacy Artifacts | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Expired Privacy Artifacts | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Code | Expand Expired Privacy Artifacts | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Expand Expired Privacy Artifacts | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "If | Artifact Is Files | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Artifact Is Files | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Execute Command | Delete Expired File Artifact | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Artifact Is Qdrant | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command | Delete Expired File Artifact | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Privacy Artifact Cleanup | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Artifact Is Qdrant | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Execute Command | Delete Expired Qdrant Artifact | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Normalize Privacy Artifact Cleanup | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command | Delete Expired Qdrant Artifact | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Privacy Artifact Cleanup | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Privacy Artifact Cleanup | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Finish Privacy Artifact | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Finish Privacy Artifact | PrivacyArtifactCleanup": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Artifact Cleanup Receipt | PrivacyArtifactCleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600
+  },
+  "versionId": "1cb454b9-261e-4c49-9187-b990c95f8170",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

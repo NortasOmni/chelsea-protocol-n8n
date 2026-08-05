@@ -1,0 +1,218 @@
+{
+  "id": "gSoMnSr3MCWcU7Ox",
+  "name": "Chelsea Error Handler v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "90cc84fd-546f-5f71-924e-c078bbad138c",
+      "name": "Trigger | Error Workflow | ErrorHandling",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "00aac2e4-f3af-5f49-898e-290f8c30d1e7",
+      "name": "Code | Normalize and Redact Error | ErrorHandling",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nconst clean=(v,n=0)=>{let s=String(v??'').normalize('NFKC');\ns=s.replace(/(bot)[0-9]{6,}:[A-Za-z0-9_-]{20,}/gi,'$1[REDACTED]')\n .replace(/(Bearer\\s+)[A-Za-z0-9._~+\\/-]{16,}/gi,'$1[REDACTED]')\n .replace(/((?:^|[?&\\s;,\\[{(\\\"'])?(?:api[_-]?key|token|secret|password|key)\\s*[:=]\\s*)[^&\\s,;\\]}\\)\\\"']+/gi,'$1[REDACTED]')\n .replace(/\\bsk-[A-Za-z0-9_-]{16,}\\b/g,'[REDACTED_OPENAI_KEY]');\nreturn (n?s.slice(0,n):s).trim();};\nconst execution=input.execution||{};const workflow=input.workflow||{};const trigger=input.trigger||{};\nconst err=execution.error||input.error||{};const executionId=clean(execution.id||input.executionId,160);\nconst workflowId=clean(workflow.id||input.workflowId,160);const occurredAt=new Date().toISOString();\nconst raw=[workflowId,executionId,clean(err.message||input.message,4000),clean(execution.lastNodeExecuted,300)].join('|');\nlet h=2166136261;for(let i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619);}const hash=(h>>>0).toString(16).padStart(8,'0');\nconst eventId=`err_${workflowId||'unknown'}_${executionId||hash}`.slice(0,240);\nconst message=clean(err.message||input.message||'Unknown workflow error',4000);\nconst retryable=!/(invalid identity|permission|unauthori[sz]ed|forbidden|schema mismatch|unknown fields)/i.test(message);\nreturn [{json:{eventId,occurredAt,workflowId,workflowName:clean(workflow.name||input.workflowName,300),executionId,executionUrl:clean(execution.url,1000),lastNode:clean(execution.lastNodeExecuted,300),errorName:clean(err.name||'Error',160),errorMessage:message,errorStack:clean(err.stack,12000),severity:'error',status:'open',retryable,payloadHash:hash,source:clean(trigger.error||trigger.mode||'n8n_error_workflow',200)}}];"
+      }
+    },
+    {
+      "id": "ea5d2210-b36e-582a-bc1b-307048bfd819",
+      "name": "End | Error Recorded | ErrorHandling",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        320,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "Call | Supabase RPC | Re",
+      "name": "Call | Supabase RPC | Record Redacted Error | ErrorHandling",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:$json} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "If | Immediate Error Ale",
+      "name": "If | Immediate Error Alert Configured | ErrorHandling",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e25d8aca-ae78-47b8-abca-36ead9e06caa",
+              "leftValue": "={{ !!$env.CHELSEA_ADMIN_TELEGRAM_CHAT_ID }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Call | Telegram | Send I",
+      "name": "Call | Telegram | Send Immediate Error Alert | ErrorHandling",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        -80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.CHELSEA_TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {chat_id:$env.CHELSEA_ADMIN_TELEGRAM_CHAT_ID,text:(\"Chelsea error: \"+$json.workflowName+\"\\n\"+$json.errorMessage).slice(0,3900)} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Error Workflow | ErrorHandling": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize and Redact Error | ErrorHandling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize and Redact Error | ErrorHandling": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Record Redacted Error | ErrorHandling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Record Redacted Error | ErrorHandling": {
+      "main": [
+        [
+          {
+            "node": "If | Immediate Error Alert Configured | ErrorHandling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Immediate Error Alert Configured | ErrorHandling": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Immediate Error Alert | ErrorHandling",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Error Recorded | ErrorHandling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Immediate Error Alert | ErrorHandling": {
+      "main": [
+        [
+          {
+            "node": "End | Error Recorded | ErrorHandling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 90
+  },
+  "pinData": {},
+  "versionId": "1ab6c389-86cb-42bb-8a57-b6d2d3bf62de"
+}

@@ -1,0 +1,234 @@
+{
+  "id": "CONSENT7A2b3c4d5e6f",
+  "name": "Chelsea Consent Gate v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "Trigger | Parent Workflo",
+      "name": "Trigger | Parent Workflow | ConsentGate",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -700,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "Code | Validate Consent ",
+      "name": "Code | Validate Consent Gate Request | ConsentGate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -450,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};const clean=v=>String(v??'').normalize('NFKC').trim();\nconst principalKey=clean(x.principalKey||x.ownerPrincipalKey);const telegramActorId=clean(x.telegramActorId||x.telegramUserId);\nconst consentType=clean(x.consentType);const required=x.consentRequired!==false;\nif(!required)return [{json:{...x,consentRequired:false,consentGranted:true,consentBypass:true}}];\nif(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('consent_gate_principal_invalid');\nif(!/^\\d+$/.test(telegramActorId))throw new Error('consent_gate_actor_invalid');\nif(!['privacy_processing','memory_storage','proactive_messages','analytics','file_storage'].includes(consentType))throw new Error('consent_gate_type_invalid');\nreturn [{json:{...x,principalKey,telegramActorId,consentType,consentRequired:true,consentBypass:false}}];"
+      }
+    },
+    {
+      "id": "If | Consent Check Requi",
+      "name": "If | Consent Check Required | ConsentGate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -200,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8cd5ebb9-8dee-4175-95ac-454561139a09",
+              "leftValue": "={{ $json.consentRequired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Call | Supabase RPC | Ch",
+      "name": "Call | Supabase RPC | Check Explicit Consent | ConsentGate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        50,
+        -80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_consent_check_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_principal_key:$json.principalKey,p_consent_type:$json.consentType,p_actor_id:$json.telegramActorId} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "Code | Verify Explicit C",
+      "name": "Code | Verify Explicit Consent | ConsentGate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        -80
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Validate Consent Gate Request | ConsentGate').first().json;const raw=$input.first()?.json||{};const body=raw.body??raw.data??raw;const r=Array.isArray(body)?body[0]:body;if(!r||typeof r.granted!=='boolean')throw new Error('consent_gate_receipt_invalid');return [{json:{...source,consentGranted:r.granted===true,consentReceipt:r,consentBypass:false}}];"
+      }
+    },
+    {
+      "id": "Code | Build Consent Byp",
+      "name": "Code | Build Consent Bypass Receipt | ConsentGate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        50,
+        120
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,consentGranted:true,consentBypass:true}}];"
+      }
+    },
+    {
+      "id": "End | Consent Gate Resul",
+      "name": "End | Consent Gate Result | ConsentGate",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ConsentGate": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Consent Gate Request | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Consent Gate Request | ConsentGate": {
+      "main": [
+        [
+          {
+            "node": "If | Consent Check Required | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Consent Check Required | ConsentGate": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Check Explicit Consent | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Consent Bypass Receipt | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Check Explicit Consent | ConsentGate": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Explicit Consent | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Explicit Consent | ConsentGate": {
+      "main": [
+        [
+          {
+            "node": "End | Consent Gate Result | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Consent Bypass Receipt | ConsentGate": {
+      "main": [
+        [
+          {
+            "node": "End | Consent Gate Result | ConsentGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 60
+  },
+  "versionId": "14576cd9-4e7b-4996-8d8f-6d6e37ee0ec5",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,757 @@
+{
+  "id": "BFL4mN8qR2vT7pXa",
+  "name": "Chelsea Critical Store Backfill v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1100,
+        0
+      ],
+      "id": "dd94744d-496c-5585-bd6a-e2660eae215a",
+      "name": "Trigger | Manual Start | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_folder_list_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        -360
+      ],
+      "id": "272c5e1b-713e-5ae3-a6e5-84fc89cea953",
+      "name": "Read | Folder users | Registered Tenants | TasksBackfill",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const r=$json||{};const storage=String(r.storageUsername||r.userId||'').trim();const tenant=String(r.tenantSafe||r.tenantId||(storage?'tenant_'+storage:'')).trim();if(!/^tenant_[a-z0-9_]{1,71}$/.test(tenant))throw new Error('backfill_invalid_task_tenant');return [{json:{__migrationTenantId:tenant,__migrationPrincipalKey:String(r.principalKey||''),__migrationOwnerUserId:String(r.userId||storage),sourceTableName:'Chelsea Tasks '+tenant}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        -360
+      ],
+      "id": "6d3a848c-5174-5342-bdbb-03a9687bfe84",
+      "name": "Code | Build Task Tenant Migration Context | TasksBackfill"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "={{ $json.sourceTableName }}",
+          "mode": "name",
+          "cachedResultName": "Chelsea Tasks dynamic"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -360
+      ],
+      "id": "942d7b70-d0ae-5e2e-a19f-831418e73dd9",
+      "name": "Read | Chelsea Tasks | All Source Rows | TasksBackfill",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const row=$json||{};let c={};try{c=$('Code | Build Task Tenant Migration Context | TasksBackfill').item.json||{}}catch{};return [{json:{record:row,recordId:String(row.recordId||row.taskId||''),tenantId:String(row.tenantId||c.__migrationTenantId||''),principalKey:String(row.principalKey||c.__migrationPrincipalKey||''),ownerUserId:String(row.ownerUserId||row.userId||c.__migrationOwnerUserId||'')}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -360
+      ],
+      "id": "51b0f573-5328-58de-a6c3-09118bcda944",
+      "name": "Code | Decorate Chelsea Tasks Source Rows | TasksBackfill"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n'use strict';\nfunction text(value){return String(value??'').normalize('NFKC').trim();}\nfunction canonicalUsername(value){const normalized=text(value).replace(/^@+/,'').toLowerCase();return /^[a-z0-9_]{1,64}$/.test(normalized)?normalized:'';}\nfunction utf8(value){return Array.from(unescape(encodeURIComponent(String(value)))).map(ch=>ch.charCodeAt(0));}\nfunction rotr(value,shift){return (value>>>shift)|(value<<(32-shift));}\nfunction sha256Bytes(messageBytes){const k=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];const h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];const bytes=messageBytes.slice();const bitLength=bytes.length*8;bytes.push(128);while((bytes.length%64)!==56)bytes.push(0);for(let i=7;i>=0;i--)bytes.push(Math.floor(bitLength/Math.pow(2,i*8))&255);for(let offset=0;offset<bytes.length;offset+=64){const w=new Array(64);for(let i=0;i<16;i++)w[i]=((bytes[offset+i*4]<<24)|(bytes[offset+i*4+1]<<16)|(bytes[offset+i*4+2]<<8)|bytes[offset+i*4+3])>>>0;for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];const s0=rotr(a,7)^rotr(a,18)^(a>>>3);const s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}let[a,b,c,dd,e,f,g,hh]=h;for(let i=0;i<64;i++){const s1=rotr(e,6)^rotr(e,11)^rotr(e,25);const ch=(e&f)^((~e)&g);const t1=(hh+s1+ch+k[i]+w[i])>>>0;const s0=rotr(a,2)^rotr(a,13)^rotr(a,22);const maj=(a&b)^(a&c)^(b&c);const t2=(s0+maj)>>>0;hh=g;g=f;f=e;e=(dd+t1)>>>0;dd=c;c=b;b=a;a=(t1+t2)>>>0;}h[0]=(h[0]+a)>>>0;h[1]=(h[1]+b)>>>0;h[2]=(h[2]+c)>>>0;h[3]=(h[3]+dd)>>>0;h[4]=(h[4]+e)>>>0;h[5]=(h[5]+f)>>>0;h[6]=(h[6]+g)>>>0;h[7]=(h[7]+hh)>>>0;}const out=[];for(const value of h)out.push((value>>>24)&255,(value>>>16)&255,(value>>>8)&255,value&255);return out;}\nfunction sha256Hex(value){return sha256Bytes(utf8(value)).map(v=>v.toString(16).padStart(2,'0')).join('');}\nconst rows=$input.all().map(i=>i.json||{});const out=[];for(const x of rows){const r=x.record&&typeof x.record==='object'?x.record:x;const id=String(x.recordId||r.recordId||'').trim();if(!id)continue;const tenant=String(x.tenantId||r.tenantId||r.memoryTenantId||'').trim();const principal=String(x.principalKey||r.principalKey||r.ownerPrincipalKey||'').trim();const owner=String(x.ownerUserId||r.ownerUserId||r.userId||r.memoryUserId||'').trim();const clean={...r};for(const k of Object.keys(clean))if(k.startsWith('__migration'))delete clean[k];out.push({recordId:id,tenantId:tenant,principalKey:principal,ownerUserId:owner,record:clean})}out.sort((a,b)=>(a.tenantId+'|'+a.recordId).localeCompare(b.tenantId+'|'+b.recordId));const key=out.map(x=>x.tenantId+'|'+x.recordId).join('\\n');return [{json:{namespace:'tasks',records:out,sourceCount:out.length,sourceIdHash:sha256Hex(key)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -360
+      ],
+      "id": "7598541d-025d-58b8-ad74-81f3d130b276",
+      "name": "Code | Build TasksBackfill Backfill Batch | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_store_bulk_backfill_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:$json.namespace,p_records:$json.records,p_source_count:$json.sourceCount,p_source_id_hash:$json.sourceIdHash,p_migration_token:\"BACKFILL_CHELSEA_V4\"} }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        -360
+      ],
+      "id": "55d80fdf-b654-53a8-8b80-d91df1ea352f",
+      "name": "Call | Supabase | Backfill TasksBackfill Record Store | CriticalStoreBackfill",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$input.first()?.json||{};const b=raw.body??raw.data??raw;const r=Array.isArray(b)?b[0]:b;if(raw.error||!r||r.success!==true||r.status!=='completed'||r.namespace!=='tasks'||Number(r.sourceCount)!==Number(r.targetCount)||r.sourceIdHash!==r.targetIdHash)throw new Error('tasks_backfill_receipt_invalid');return [{json:r}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -360
+      ],
+      "id": "f97bcb13-dfd4-572d-a647-1f9568e814b1",
+      "name": "Code | Verify TasksBackfill Backfill Receipt | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        -360
+      ],
+      "id": "46187908-b087-5219-ad56-50d13eae9096",
+      "name": "End | TasksBackfill Backfill Verified | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Chelsea Memory Jobs",
+          "mode": "name",
+          "cachedResultName": "Chelsea Memory Jobs"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -650,
+        -120
+      ],
+      "id": "bb03695a-72ed-5ba7-8dc2-64818e1bd9b1",
+      "name": "Read | Chelsea Memory Jobs | All Source Rows | MemoryJobsBackfill",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n'use strict';\nfunction text(value){return String(value??'').normalize('NFKC').trim();}\nfunction canonicalUsername(value){const normalized=text(value).replace(/^@+/,'').toLowerCase();return /^[a-z0-9_]{1,64}$/.test(normalized)?normalized:'';}\nfunction utf8(value){return Array.from(unescape(encodeURIComponent(String(value)))).map(ch=>ch.charCodeAt(0));}\nfunction rotr(value,shift){return (value>>>shift)|(value<<(32-shift));}\nfunction sha256Bytes(messageBytes){const k=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];const h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];const bytes=messageBytes.slice();const bitLength=bytes.length*8;bytes.push(128);while((bytes.length%64)!==56)bytes.push(0);for(let i=7;i>=0;i--)bytes.push(Math.floor(bitLength/Math.pow(2,i*8))&255);for(let offset=0;offset<bytes.length;offset+=64){const w=new Array(64);for(let i=0;i<16;i++)w[i]=((bytes[offset+i*4]<<24)|(bytes[offset+i*4+1]<<16)|(bytes[offset+i*4+2]<<8)|bytes[offset+i*4+3])>>>0;for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];const s0=rotr(a,7)^rotr(a,18)^(a>>>3);const s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}let[a,b,c,dd,e,f,g,hh]=h;for(let i=0;i<64;i++){const s1=rotr(e,6)^rotr(e,11)^rotr(e,25);const ch=(e&f)^((~e)&g);const t1=(hh+s1+ch+k[i]+w[i])>>>0;const s0=rotr(a,2)^rotr(a,13)^rotr(a,22);const maj=(a&b)^(a&c)^(b&c);const t2=(s0+maj)>>>0;hh=g;g=f;f=e;e=(dd+t1)>>>0;dd=c;c=b;b=a;a=(t1+t2)>>>0;}h[0]=(h[0]+a)>>>0;h[1]=(h[1]+b)>>>0;h[2]=(h[2]+c)>>>0;h[3]=(h[3]+dd)>>>0;h[4]=(h[4]+e)>>>0;h[5]=(h[5]+f)>>>0;h[6]=(h[6]+g)>>>0;h[7]=(h[7]+hh)>>>0;}const out=[];for(const value of h)out.push((value>>>24)&255,(value>>>16)&255,(value>>>8)&255,value&255);return out;}\nfunction sha256Hex(value){return sha256Bytes(utf8(value)).map(v=>v.toString(16).padStart(2,'0')).join('');}\nconst rows=$input.all().map(i=>i.json||{});const out=[];for(const x of rows){const r=x.record&&typeof x.record==='object'?x.record:x;const id=String(x.recordId||r.jobId||'').trim();if(!id)continue;const tenant=String(x.tenantId||r.tenantId||r.memoryTenantId||'').trim();const principal=String(x.principalKey||r.principalKey||r.ownerPrincipalKey||'').trim();const owner=String(x.ownerUserId||r.ownerUserId||r.userId||r.memoryUserId||'').trim();const clean={...r};for(const k of Object.keys(clean))if(k.startsWith('__migration'))delete clean[k];out.push({recordId:id,tenantId:tenant,principalKey:principal,ownerUserId:owner,record:clean})}out.sort((a,b)=>(a.tenantId+'|'+a.recordId).localeCompare(b.tenantId+'|'+b.recordId));const key=out.map(x=>x.tenantId+'|'+x.recordId).join('\\n');return [{json:{namespace:'memory_jobs',records:out,sourceCount:out.length,sourceIdHash:sha256Hex(key)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -120
+      ],
+      "id": "2fcaf819-f4f4-5df7-84f5-cdd7559c6634",
+      "name": "Code | Build MemoryJobsBackfill Backfill Batch | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_store_bulk_backfill_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:$json.namespace,p_records:$json.records,p_source_count:$json.sourceCount,p_source_id_hash:$json.sourceIdHash,p_migration_token:\"BACKFILL_CHELSEA_V4\"} }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        -120
+      ],
+      "id": "7e4af748-d390-5c20-ace4-f30710b89f14",
+      "name": "Call | Supabase | Backfill MemoryJobsBackfill Record Store | CriticalStoreBackfill",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$input.first()?.json||{};const b=raw.body??raw.data??raw;const r=Array.isArray(b)?b[0]:b;if(raw.error||!r||r.success!==true||r.status!=='completed'||r.namespace!=='memory_jobs'||Number(r.sourceCount)!==Number(r.targetCount)||r.sourceIdHash!==r.targetIdHash)throw new Error('memory_jobs_backfill_receipt_invalid');return [{json:r}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -120
+      ],
+      "id": "7dcd3f33-c474-53e6-9b7c-3c5a6fac34d9",
+      "name": "Code | Verify MemoryJobsBackfill Backfill Receipt | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        -120
+      ],
+      "id": "982bf4d1-005c-57ff-93ec-2d256ffe192a",
+      "name": "End | MemoryJobsBackfill Backfill Verified | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Chelsea Resolution Questions",
+          "mode": "name",
+          "cachedResultName": "Chelsea Resolution Questions"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -650,
+        120
+      ],
+      "id": "c295f1fe-8986-5ebc-bbc9-5b58376c618f",
+      "name": "Read | Chelsea Resolution Questions | All Source Rows | ResolutionQuestionsBackfill",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n'use strict';\nfunction text(value){return String(value??'').normalize('NFKC').trim();}\nfunction canonicalUsername(value){const normalized=text(value).replace(/^@+/,'').toLowerCase();return /^[a-z0-9_]{1,64}$/.test(normalized)?normalized:'';}\nfunction utf8(value){return Array.from(unescape(encodeURIComponent(String(value)))).map(ch=>ch.charCodeAt(0));}\nfunction rotr(value,shift){return (value>>>shift)|(value<<(32-shift));}\nfunction sha256Bytes(messageBytes){const k=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];const h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];const bytes=messageBytes.slice();const bitLength=bytes.length*8;bytes.push(128);while((bytes.length%64)!==56)bytes.push(0);for(let i=7;i>=0;i--)bytes.push(Math.floor(bitLength/Math.pow(2,i*8))&255);for(let offset=0;offset<bytes.length;offset+=64){const w=new Array(64);for(let i=0;i<16;i++)w[i]=((bytes[offset+i*4]<<24)|(bytes[offset+i*4+1]<<16)|(bytes[offset+i*4+2]<<8)|bytes[offset+i*4+3])>>>0;for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];const s0=rotr(a,7)^rotr(a,18)^(a>>>3);const s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}let[a,b,c,dd,e,f,g,hh]=h;for(let i=0;i<64;i++){const s1=rotr(e,6)^rotr(e,11)^rotr(e,25);const ch=(e&f)^((~e)&g);const t1=(hh+s1+ch+k[i]+w[i])>>>0;const s0=rotr(a,2)^rotr(a,13)^rotr(a,22);const maj=(a&b)^(a&c)^(b&c);const t2=(s0+maj)>>>0;hh=g;g=f;f=e;e=(dd+t1)>>>0;dd=c;c=b;b=a;a=(t1+t2)>>>0;}h[0]=(h[0]+a)>>>0;h[1]=(h[1]+b)>>>0;h[2]=(h[2]+c)>>>0;h[3]=(h[3]+dd)>>>0;h[4]=(h[4]+e)>>>0;h[5]=(h[5]+f)>>>0;h[6]=(h[6]+g)>>>0;h[7]=(h[7]+hh)>>>0;}const out=[];for(const value of h)out.push((value>>>24)&255,(value>>>16)&255,(value>>>8)&255,value&255);return out;}\nfunction sha256Hex(value){return sha256Bytes(utf8(value)).map(v=>v.toString(16).padStart(2,'0')).join('');}\nconst rows=$input.all().map(i=>i.json||{});const out=[];for(const x of rows){const r=x.record&&typeof x.record==='object'?x.record:x;const id=String(x.recordId||r.questionId||'').trim();if(!id)continue;const tenant=String(x.tenantId||r.tenantId||r.memoryTenantId||'').trim();const principal=String(x.principalKey||r.principalKey||r.ownerPrincipalKey||'').trim();const owner=String(x.ownerUserId||r.ownerUserId||r.userId||r.memoryUserId||'').trim();const clean={...r};for(const k of Object.keys(clean))if(k.startsWith('__migration'))delete clean[k];out.push({recordId:id,tenantId:tenant,principalKey:principal,ownerUserId:owner,record:clean})}out.sort((a,b)=>(a.tenantId+'|'+a.recordId).localeCompare(b.tenantId+'|'+b.recordId));const key=out.map(x=>x.tenantId+'|'+x.recordId).join('\\n');return [{json:{namespace:'resolution_questions',records:out,sourceCount:out.length,sourceIdHash:sha256Hex(key)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        120
+      ],
+      "id": "9ae1be40-b59c-58f8-94e2-d08eb6c00816",
+      "name": "Code | Build ResolutionQuestionsBackfill Backfill Batch | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_store_bulk_backfill_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:$json.namespace,p_records:$json.records,p_source_count:$json.sourceCount,p_source_id_hash:$json.sourceIdHash,p_migration_token:\"BACKFILL_CHELSEA_V4\"} }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        120
+      ],
+      "id": "e0e6a2b5-0f9f-59c1-9a32-628d8ce489ba",
+      "name": "Call | Supabase | Backfill ResolutionQuestionsBackfill Record Store | CriticalStoreBackfill",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$input.first()?.json||{};const b=raw.body??raw.data??raw;const r=Array.isArray(b)?b[0]:b;if(raw.error||!r||r.success!==true||r.status!=='completed'||r.namespace!=='resolution_questions'||Number(r.sourceCount)!==Number(r.targetCount)||r.sourceIdHash!==r.targetIdHash)throw new Error('resolution_questions_backfill_receipt_invalid');return [{json:r}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        120
+      ],
+      "id": "2aace6a2-a683-55a8-9637-dced1e71ff51",
+      "name": "Code | Verify ResolutionQuestionsBackfill Backfill Receipt | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        120
+      ],
+      "id": "5fa9bb7b-bc4c-576f-a2c4-6529682e88fa",
+      "name": "End | ResolutionQuestionsBackfill Backfill Verified | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Io3w7du803xTaJVZ",
+          "mode": "list",
+          "cachedResultName": "Chelsea Response Jobs"
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -650,
+        360
+      ],
+      "id": "fae7fd1f-6a75-5100-bf22-3dc520f3083f",
+      "name": "Read | Chelsea Response Jobs | All Source Rows | ResponseJobsBackfill",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n'use strict';\nfunction text(value){return String(value??'').normalize('NFKC').trim();}\nfunction canonicalUsername(value){const normalized=text(value).replace(/^@+/,'').toLowerCase();return /^[a-z0-9_]{1,64}$/.test(normalized)?normalized:'';}\nfunction utf8(value){return Array.from(unescape(encodeURIComponent(String(value)))).map(ch=>ch.charCodeAt(0));}\nfunction rotr(value,shift){return (value>>>shift)|(value<<(32-shift));}\nfunction sha256Bytes(messageBytes){const k=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];const h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];const bytes=messageBytes.slice();const bitLength=bytes.length*8;bytes.push(128);while((bytes.length%64)!==56)bytes.push(0);for(let i=7;i>=0;i--)bytes.push(Math.floor(bitLength/Math.pow(2,i*8))&255);for(let offset=0;offset<bytes.length;offset+=64){const w=new Array(64);for(let i=0;i<16;i++)w[i]=((bytes[offset+i*4]<<24)|(bytes[offset+i*4+1]<<16)|(bytes[offset+i*4+2]<<8)|bytes[offset+i*4+3])>>>0;for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2];const s0=rotr(a,7)^rotr(a,18)^(a>>>3);const s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}let[a,b,c,dd,e,f,g,hh]=h;for(let i=0;i<64;i++){const s1=rotr(e,6)^rotr(e,11)^rotr(e,25);const ch=(e&f)^((~e)&g);const t1=(hh+s1+ch+k[i]+w[i])>>>0;const s0=rotr(a,2)^rotr(a,13)^rotr(a,22);const maj=(a&b)^(a&c)^(b&c);const t2=(s0+maj)>>>0;hh=g;g=f;f=e;e=(dd+t1)>>>0;dd=c;c=b;b=a;a=(t1+t2)>>>0;}h[0]=(h[0]+a)>>>0;h[1]=(h[1]+b)>>>0;h[2]=(h[2]+c)>>>0;h[3]=(h[3]+dd)>>>0;h[4]=(h[4]+e)>>>0;h[5]=(h[5]+f)>>>0;h[6]=(h[6]+g)>>>0;h[7]=(h[7]+hh)>>>0;}const out=[];for(const value of h)out.push((value>>>24)&255,(value>>>16)&255,(value>>>8)&255,value&255);return out;}\nfunction sha256Hex(value){return sha256Bytes(utf8(value)).map(v=>v.toString(16).padStart(2,'0')).join('');}\nconst rows=$input.all().map(i=>i.json||{});const out=[];for(const x of rows){const r=x.record&&typeof x.record==='object'?x.record:x;const id=String(x.recordId||r.responseJobId||'').trim();if(!id)continue;const tenant=String(x.tenantId||r.tenantId||r.memoryTenantId||'').trim();const principal=String(x.principalKey||r.principalKey||r.ownerPrincipalKey||'').trim();const owner=String(x.ownerUserId||r.ownerUserId||r.userId||r.memoryUserId||'').trim();const clean={...r};for(const k of Object.keys(clean))if(k.startsWith('__migration'))delete clean[k];out.push({recordId:id,tenantId:tenant,principalKey:principal,ownerUserId:owner,record:clean})}out.sort((a,b)=>(a.tenantId+'|'+a.recordId).localeCompare(b.tenantId+'|'+b.recordId));const key=out.map(x=>x.tenantId+'|'+x.recordId).join('\\n');return [{json:{namespace:'response_jobs',records:out,sourceCount:out.length,sourceIdHash:sha256Hex(key)}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        360
+      ],
+      "id": "01f9c706-7c7a-58bf-9d18-0d492a9d9933",
+      "name": "Code | Build ResponseJobsBackfill Backfill Batch | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_store_bulk_backfill_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:$json.namespace,p_records:$json.records,p_source_count:$json.sourceCount,p_source_id_hash:$json.sourceIdHash,p_migration_token:\"BACKFILL_CHELSEA_V4\"} }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        360
+      ],
+      "id": "232e44e1-cdf5-5745-a9bb-dde8776e16ab",
+      "name": "Call | Supabase | Backfill ResponseJobsBackfill Record Store | CriticalStoreBackfill",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$input.first()?.json||{};const b=raw.body??raw.data??raw;const r=Array.isArray(b)?b[0]:b;if(raw.error||!r||r.success!==true||r.status!=='completed'||r.namespace!=='response_jobs'||Number(r.sourceCount)!==Number(r.targetCount)||r.sourceIdHash!==r.targetIdHash)throw new Error('response_jobs_backfill_receipt_invalid');return [{json:r}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        360
+      ],
+      "id": "6c86c2f8-f7e3-5993-bed0-9805465e8863",
+      "name": "Code | Verify ResponseJobsBackfill Backfill Receipt | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        860,
+        360
+      ],
+      "id": "8fca276f-e735-5047-9f4b-873682f667dd",
+      "name": "End | ResponseJobsBackfill Backfill Verified | CriticalStoreBackfill"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$json.body??$json;const rows=Array.isArray(raw)?raw:(Array.isArray(raw?.rows)?raw.rows:(Object.keys(raw||{}).length?[raw]:[]));return rows.map(row=>({json:row}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        -360
+      ],
+      "id": "e7d0701f-c5e1-402b-bf73-f872e2ea34f6",
+      "name": "Code | Normalize PostgreSQL Folder Receipts | TasksBackfill"
+    }
+  ],
+  "connections": {
+    "Trigger | Manual Start | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Read | Folder users | Registered Tenants | TasksBackfill",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read | Chelsea Memory Jobs | All Source Rows | MemoryJobsBackfill",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read | Chelsea Resolution Questions | All Source Rows | ResolutionQuestionsBackfill",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read | Chelsea Response Jobs | All Source Rows | ResponseJobsBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Folder users | Registered Tenants | TasksBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize PostgreSQL Folder Receipts | TasksBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Task Tenant Migration Context | TasksBackfill": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | All Source Rows | TasksBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | All Source Rows | TasksBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Decorate Chelsea Tasks Source Rows | TasksBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Decorate Chelsea Tasks Source Rows | TasksBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Build TasksBackfill Backfill Batch | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build TasksBackfill Backfill Batch | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Backfill TasksBackfill Record Store | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Backfill TasksBackfill Record Store | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify TasksBackfill Backfill Receipt | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify TasksBackfill Backfill Receipt | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "End | TasksBackfill Backfill Verified | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Memory Jobs | All Source Rows | MemoryJobsBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Build MemoryJobsBackfill Backfill Batch | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build MemoryJobsBackfill Backfill Batch | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Backfill MemoryJobsBackfill Record Store | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Backfill MemoryJobsBackfill Record Store | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify MemoryJobsBackfill Backfill Receipt | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify MemoryJobsBackfill Backfill Receipt | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "End | MemoryJobsBackfill Backfill Verified | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Resolution Questions | All Source Rows | ResolutionQuestionsBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Build ResolutionQuestionsBackfill Backfill Batch | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build ResolutionQuestionsBackfill Backfill Batch | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Backfill ResolutionQuestionsBackfill Record Store | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Backfill ResolutionQuestionsBackfill Record Store | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify ResolutionQuestionsBackfill Backfill Receipt | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify ResolutionQuestionsBackfill Backfill Receipt | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "End | ResolutionQuestionsBackfill Backfill Verified | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Response Jobs | All Source Rows | ResponseJobsBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Build ResponseJobsBackfill Backfill Batch | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build ResponseJobsBackfill Backfill Batch | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Backfill ResponseJobsBackfill Record Store | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Backfill ResponseJobsBackfill Record Store | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify ResponseJobsBackfill Backfill Receipt | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify ResponseJobsBackfill Backfill Receipt | CriticalStoreBackfill": {
+      "main": [
+        [
+          {
+            "node": "End | ResponseJobsBackfill Backfill Verified | CriticalStoreBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize PostgreSQL Folder Receipts | TasksBackfill": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Task Tenant Migration Context | TasksBackfill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "timezone": "Asia/Novosibirsk",
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "cd9f01a8-0d97-56f6-b08c-81e310341183",
+  "meta": {
+    "hardening": "v4",
+    "staged": true,
+    "destructive": false,
+    "idempotent": true
+  },
+  "tags": []
+}

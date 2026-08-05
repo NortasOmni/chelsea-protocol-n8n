@@ -1,0 +1,899 @@
+{
+  "id": "PRIVRTR7b2c3d4e5f6a",
+  "name": "Chelsea Privacy Telegram Router v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "Trigger | Parent Workflo",
+      "name": "Trigger | Parent Workflow | PrivacyTelegram",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "Code | Parse Privacy Tel",
+      "name": "Code | Parse Privacy Telegram Command | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};const clean=v=>String(v??'').normalize('NFKC').trim();\nconst raw=clean(x.messageText||x.text||x.message?.text||x.callbackQueryData||x.callback_query?.data);const lower=raw.toLowerCase();\nconst principalKey=clean(x.principalKey);const actor=clean(x.telegramActorId||x.telegramUserId||x.message?.from?.id);const chatId=clean(x.chatId||x.message?.chat?.id);\nlet kind='none',payload={},reply='';\nif(['/privacy','/privacy_help'].includes(lower)){kind='help'}\nelse if(lower==='/privacy_export'){kind='request';payload={operation:'export',requestId:`privacy_${principalKey.slice(-16)}_${Date.now()}`}}\nelse if(lower==='/privacy_delete'){kind='request';payload={operation:'delete_preview',requestId:`privacy_${principalKey.slice(-16)}_${Date.now()}`}}\nelse if(lower.startsWith('/privacy_delete_confirm ')){const parts=raw.split(/\\s+/);if(parts.length===3){kind='request';payload={operation:'delete_confirm',requestId:parts[1],confirmationToken:parts[2]}}else{kind='help'}}\nelse if(lower.startsWith('/privacy_download ')){const parts=raw.split(/\\s+/);kind=parts[1]?'delivery':'help';payload={requestId:parts[1]||''}}\nelse if(lower.startsWith('/privacy_status ')){const parts=raw.split(/\\s+/);kind=parts[1]?'status':'help';payload={requestId:parts[1]||''}}\nelse if(lower.startsWith('/consent ')){const parts=lower.split(/\\s+/);const aliases={memory:'memory_storage',analytics:'analytics',proactivity:'proactive_messages',files:'file_storage',privacy:'privacy_processing'};const ct=aliases[parts[1]]||parts[1];if(parts.length===3&&['grant','revoke'].includes(parts[2])){kind='consent';payload={consentType:ct,action:parts[2]}}else kind='help'}\nreturn [{json:{...x,privacyHandled:kind!=='none',privacyCommandKind:kind,privacyPayload:payload,principalKey,telegramActorId:actor,chatId,privacyRawCommand:raw}}];"
+      }
+    },
+    {
+      "id": "If | Privacy Command Han",
+      "name": "If | Privacy Command Handled | PrivacyTelegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "89ea573a-07f9-4e74-9156-4df5b06ff4ef",
+              "leftValue": "={{ $json.privacyHandled }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "If | Privacy Request Com",
+      "name": "If | Privacy Request Command | PrivacyTelegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -150,
+        -100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0c09e32b-3d0e-45c6-8ed8-c027dfe7a69f",
+              "leftValue": "={{ $json.privacyCommandKind === 'request' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Call | Chelsea Privacy R",
+      "name": "Call | Chelsea Privacy Request Intake | Queue User Request | PrivacyTelegram",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        100,
+        -180
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "kq7AsKLn7RX1Viv7",
+          "mode": "id",
+          "cachedResultName": "Chelsea Privacy Request Intake v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operation": "={{ $json.privacyPayload.operation }}",
+            "requestId": "={{ $json.privacyPayload.requestId }}",
+            "confirmationToken": "={{ $json.privacyPayload.confirmationToken || \"\" }}",
+            "principalKey": "={{ $json.principalKey }}",
+            "telegramActorId": "={{ $json.telegramActorId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operation",
+              "displayName": "operation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requestId",
+              "displayName": "requestId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "confirmationToken",
+              "displayName": "confirmationToken",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "telegramActorId",
+              "displayName": "telegramActorId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "Code | Format Privacy Re",
+      "name": "Code | Format Privacy Request Reply | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        -180
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};let text='Запрос принят.';if(x.operation==='export')text=`Экспорт поставлен в очередь. ID: ${x.requestId}\nПроверить: /privacy_status ${x.requestId}`;else if(x.operation==='delete_preview'){const token=String(x.expectedConfirmationToken||'');if(!token)throw new Error('privacy_delete_preview_token_missing');text=`Предварительная проверка удаления поставлена в очередь.\nID: ${x.requestId}\nПосле проверки для подтверждения отправьте:\n/privacy_delete_confirm ${x.requestId} ${token}`;}else if(x.operation==='delete_confirm')text=`Подтверждённое удаление поставлено в очередь. ID: ${x.requestId}\nПроверить: /privacy_status ${x.requestId}`;return [{json:{...x,privacyReplyText:text,privacyHandled:true}}];"
+      }
+    },
+    {
+      "id": "If | Privacy Consent Com",
+      "name": "If | Privacy Consent Command | PrivacyTelegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        20
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "472ee222-44b6-4c10-86aa-481eabdaacb5",
+              "leftValue": "={{ $json.privacyCommandKind === 'consent' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Call | Chelsea Privacy C",
+      "name": "Call | Chelsea Privacy Consent Intake | Record Explicit Choice | PrivacyTelegram",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        350,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CNS4mT8qL2vR7pXa",
+          "mode": "id",
+          "cachedResultName": "Chelsea Privacy Consent Intake v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "principalKey": "={{ $json.principalKey }}",
+            "telegramActorId": "={{ $json.telegramActorId }}",
+            "consentType": "={{ $json.privacyPayload.consentType }}",
+            "action": "={{ $json.privacyPayload.action }}",
+            "policyVersion": "chelsea_privacy_policy_v1",
+            "source": "telegram",
+            "metadata": "={{ {command:$json.privacyRawCommand} }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "telegramActorId",
+              "displayName": "telegramActorId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "consentType",
+              "displayName": "consentType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "policyVersion",
+              "displayName": "policyVersion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "Code | Format Privacy Co",
+      "name": "Code | Format Privacy Consent Reply | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,privacyReplyText:`Согласие ${$json.consentType}: ${$json.action==='grant'?'разрешено':'отозвано'}.`,privacyHandled:true}}];"
+      }
+    },
+    {
+      "id": "If | Privacy Status Comm",
+      "name": "If | Privacy Status Command | PrivacyTelegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        350,
+        180
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e4a0857a-be4f-4a0b-950c-3f7cd29ce9a8",
+              "leftValue": "={{ $json.privacyCommandKind === 'status' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Call | Supabase RPC | Re",
+      "name": "Call | Supabase RPC | Read Privacy Status | PrivacyTelegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_privacy_request_status_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_request_id:$json.privacyPayload.requestId,p_principal_key:$json.principalKey,p_actor_id:$json.telegramActorId} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "Code | Format Privacy St",
+      "name": "Code | Format Privacy Status Reply | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        120
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Parse Privacy Telegram Command | PrivacyTelegram').first().json;const raw=$input.first()?.json||{};const body=raw.body??raw.data??raw;const r=Array.isArray(body)?body[0]:body;let text;if(!r?.found)text='Запрос не найден.';else{text=`Privacy-запрос ${r.requestId}\nОперация: ${r.operation}\nСтатус: ${r.status}`;const targets=r.targets&&typeof r.targets==='object'?r.targets:{};for(const [k,v] of Object.entries(targets))text+=`\n${k}: ${v.status}${v.error?` — ${String(v.error).slice(0,120)}`:''}`;}return [{json:{...source,privacyReplyText:text.slice(0,3900),privacyHandled:true}}];"
+      }
+    },
+    {
+      "id": "Code | Format Privacy He",
+      "name": "Code | Format Privacy Help | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,privacyReplyText:`Privacy-команды:\n/privacy_export — экспорт данных\n/privacy_delete — предварительная проверка удаления\n/privacy_delete_confirm <ID> <TOKEN> — подтвердить удаление\n/privacy_status <ID> — статус\\n/privacy_download <ID> — получить единый архив\n/consent memory|analytics|proactivity|files|privacy grant|revoke — согласие`,privacyHandled:true}}];"
+      }
+    },
+    {
+      "id": "Call | Telegram | Send P",
+      "name": "Call | Telegram | Send Privacy Reply | PrivacyTelegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.CHELSEA_TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {chat_id:$json.chatId,text:$json.privacyReplyText} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "Code | Verify Privacy Te",
+      "name": "Code | Verify Privacy Telegram Delivery | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$input.first()?.json||{};const body=source.body??source.data??source;if(body?.ok!==true)throw new Error('privacy_telegram_delivery_failed');return [{json:{...$('Code | Parse Privacy Telegram Command | PrivacyTelegram').first().json,privacyHandled:true,privacyDelivered:true}}];"
+      }
+    },
+    {
+      "id": "Code | Return Privacy Un",
+      "name": "Code | Return Privacy Unhandled | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -150,
+        220
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,privacyHandled:false,privacyDelivered:false}}];"
+      }
+    },
+    {
+      "id": "End | Privacy Telegram R",
+      "name": "End | Privacy Telegram Result | PrivacyTelegram",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3d50b2ad-7f79-5d85-bd1b-fad41573e55d",
+      "name": "If | Privacy Delivery Command | PrivacyTelegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        50,
+        250
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4f1f3690-3786-546e-844c-db65e094cd28",
+              "leftValue": "={{ $json.privacyKind }}",
+              "rightValue": "delivery",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b64b240a-40bf-506a-9d1b-e9fdba71e018",
+      "name": "Call | Chelsea Privacy Export Delivery | Send User Bundle | PrivacyTelegram",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        250
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PRIVDLV7b523f9511cf4",
+          "mode": "id",
+          "cachedResultName": "Chelsea Privacy Export Delivery v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "requestId": "={{ $json.privacyPayload.requestId }}",
+            "principalKey": "={{ $json.principalKey }}",
+            "telegramActorId": "={{ $json.telegramActorId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "requestId",
+              "displayName": "requestId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "telegramActorId",
+              "displayName": "telegramActorId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "70ab6b97-cd75-5901-8dc6-138a5a7c3193",
+      "name": "Code | Format Privacy Delivery Reply | PrivacyTelegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        250
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,privacyReplyText:`Экспорт ${$json.requestId} отправлен файлом. Автоматическое удаление: ${$json.bundleExpiresAt||'через 7 дней'}.`,privacyHandled:true}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse Privacy Telegram Command | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse Privacy Telegram Command | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "If | Privacy Command Handled | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Privacy Command Handled | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "If | Privacy Request Command | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Return Privacy Unhandled | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Privacy Request Command | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Privacy Request Intake | Queue User Request | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Privacy Consent Command | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Privacy Request Intake | Queue User Request | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Code | Format Privacy Request Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Format Privacy Request Reply | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Privacy Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Privacy Consent Command | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Privacy Consent Intake | Record Explicit Choice | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Privacy Delivery Command | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Privacy Consent Intake | Record Explicit Choice | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Code | Format Privacy Consent Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Format Privacy Consent Reply | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Privacy Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Privacy Status Command | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Read Privacy Status | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Format Privacy Help | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Read Privacy Status | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Code | Format Privacy Status Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Format Privacy Status Reply | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Privacy Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Format Privacy Help | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Privacy Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Privacy Reply | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Privacy Telegram Delivery | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Privacy Telegram Delivery | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Telegram Result | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Privacy Unhandled | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "End | Privacy Telegram Result | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Privacy Delivery Command | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Privacy Export Delivery | Send User Bundle | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Privacy Status Command | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Privacy Export Delivery | Send User Bundle | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Code | Format Privacy Delivery Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Format Privacy Delivery Reply | PrivacyTelegram": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Privacy Reply | PrivacyTelegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 120
+  },
+  "versionId": "1f2955b4-11c3-410a-a8f3-f474349bbc23",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

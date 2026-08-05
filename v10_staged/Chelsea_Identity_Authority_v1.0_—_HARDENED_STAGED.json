@@ -1,0 +1,250 @@
+{
+  "id": "IdAuthV1x7Nq4Kb",
+  "name": "Chelsea Identity Authority v2.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## PostgreSQL-only immutable identity authority v2\nOnly the trusted numeric Telegram actor ID and mutable username alias enter the authority. PostgreSQL derives principalKey, principalUuid, storage namespace, tenant, Qdrant collection and soulId atomically. No n8n Data Table participates in runtime identity resolution.",
+        "height": 620,
+        "width": 2300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -300
+      ],
+      "id": "a762aeb6-1638-4340-9219-ffd8e195769c",
+      "name": "Описание | Immutable Identity Authority"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -760,
+        20
+      ],
+      "id": "a924f8b5-5bc4-4b15-a037-2c608b2ad5b2",
+      "name": "Trigger | Parent Workflow | IdentityAuthority"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();\nconst actor=t(x.telegramActorId||x.telegramNumericUserId);if(!/^\\d+$/.test(actor)||Number(actor)<=0)throw new Error('identity_authority_numeric_actor_required');\nconst username=t(x.currentUsername||x.telegramUsername).replace(/^@+/,'').toLowerCase();if(username&&!/^[a-z0-9_]{1,64}$/.test(username))throw new Error('identity_authority_username_invalid');\nconst timezone=t(x.timeZone||x.timezone)||'Asia/Novosibirsk';try{new Intl.DateTimeFormat('en-US',{timeZone:timezone}).format(new Date(0));}catch{throw new Error('identity_authority_timezone_invalid');}\nconst chatId=t(x.chatId);if(chatId&&!/^-?\\d+$/.test(chatId))throw new Error('identity_authority_chat_invalid');\nreturn [{json:{...x,telegramActorId:actor,currentUsername:username,telegramUsername:username,timeZone:timezone,identityAuthorityEligible:true,identityAuthorityRequestBody:{p_telegram_actor_id:Number(actor),p_current_username:username||null,p_timezone:timezone,p_display_name:t(x.telegramFirstName||x.displayName)||null,p_chat_id:chatId?Number(chatId):null,p_source:chatId===actor?'telegram_private':'telegram'}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        20
+      ],
+      "id": "8af98a25-be00-47cf-b34a-58fccb0ed500",
+      "name": "Code | Validate Immutable Actor Identity | IdentityAuthority"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "30015520-b44b-4de6-83fe-0e97cd40476a",
+              "leftValue": "={{ $json.identityAuthorityEligible === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -280,
+        20
+      ],
+      "id": "b8f4fc16-a71c-4672-b2b8-0a31cc8930f4",
+      "name": "If | Identity Authority Eligible | IdentityAuthority"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_resolve_v3' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.identityAuthorityRequestBody }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        -100
+      ],
+      "id": "80392e51-f95c-45b2-952a-80ba1fe37ae7",
+      "name": "Call | Supabase | Authorize Actor Identity | IdentityAuthority"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$('Code | Validate Immutable Actor Identity | IdentityAuthority').first().json;const raw=$json.body??$json;const r=Array.isArray(raw)?raw[0]:raw;const t=v=>String(v??'').normalize('NFKC').trim();\nif(r?.success!==true||r?.verified!==true||t(r.identitySchemaVersion)!=='chelsea_actor_identity_v3')throw new Error('identity_authority_receipt_invalid');\nconst conflict=['identity_conflict','migration_review_required'].includes(t(r.identityStatus));\nif(conflict)return [{json:{...source,...r,telegramActorId:t(r.telegramActorId||source.telegramActorId),telegramUserId:t(r.telegramActorId||source.telegramActorId),currentUsername:t(r.currentUsername),identityAuthorityVerified:true,identityUsable:false,identityClaimsVerified:false,identityAuthorityReceipt:{contractVersion:'chelsea_identity_authority_receipt_v2',identityStatus:t(r.identityStatus),failureCode:t(r.failureCode),verifiedAtIso:new Date().toISOString()}}}];\nfor(const [k,re] of [['principalKey',/^tgactor_[a-f0-9]{64}$/],['principalUuid',/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/],['storageUsername',/^actor_[a-f0-9]{32}$/]])if(!re.test(t(r[k])))throw new Error(`identity_authority_receipt_invalid:${k}`);\nconst storage=t(r.storageUsername);const expected={userId:storage,memoryUserId:storage,tenantId:`tenant_${storage}`,memoryTenantId:`tenant_${storage}`,qdrantCollection:`kb_tenant_${storage}`,soulId:`chelsea_soul_${storage}`};for(const [k,v] of Object.entries(expected))if(t(r[k])!==v)throw new Error(`identity_authority_scope_mismatch:${k}`);\nif(t(r.telegramActorId)!==t(source.telegramActorId))throw new Error('identity_authority_actor_mismatch');\nreturn [{json:{...source,...r,...expected,telegramActorId:t(r.telegramActorId),telegramUserId:t(r.telegramActorId),actorPrincipalKey:t(r.principalKey),immutableStorageUsername:storage,tenantSafe:expected.tenantId,identityAuthorityVerified:true,identityClaimsVerified:true,identityAuthoritySkipped:false,identityAuthorityReceipt:{contractVersion:'chelsea_identity_authority_receipt_v2',principalId:t(r.principalId),principalKey:t(r.principalKey),principalUuid:t(r.principalUuid),storageKey:storage,currentUsername:t(r.currentUsername),migrationStatus:t(r.migrationStatus),registrationState:t(r.registrationState),verifiedAtIso:new Date().toISOString()}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -100
+      ],
+      "id": "2d3237c3-824f-4f12-b7ca-95dc30249cda",
+      "name": "Code | Verify Identity Authority Receipt | IdentityAuthority"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};return [{json:{...x,identityAuthorityVerified:false,identityAuthoritySkipped:true}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        160
+      ],
+      "id": "6531e149-37fa-49e0-b275-407addfa6b5a",
+      "name": "Code | Return Conflict Without Mutation | IdentityAuthority"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        520,
+        20
+      ],
+      "id": "69faf068-a20d-4c42-9865-96a84d11a968",
+      "name": "End | Identity Authority | IdentityAuthority"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | IdentityAuthority": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Immutable Actor Identity | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Immutable Actor Identity | IdentityAuthority": {
+      "main": [
+        [
+          {
+            "node": "If | Identity Authority Eligible | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Identity Authority Eligible | IdentityAuthority": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Authorize Actor Identity | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Return Conflict Without Mutation | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Authorize Actor Identity | IdentityAuthority": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Identity Authority Receipt | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Identity Authority Receipt | IdentityAuthority": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Authority | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Conflict Without Mutation | IdentityAuthority": {
+      "main": [
+        [
+          {
+            "node": "End | Identity Authority | IdentityAuthority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 180,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "b13b10f6-17aa-4d9e-9179-03cc64b0bbd0",
+  "meta": null,
+  "tags": []
+}
