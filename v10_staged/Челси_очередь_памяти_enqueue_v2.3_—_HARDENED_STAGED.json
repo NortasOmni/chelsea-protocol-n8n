@@ -1,0 +1,610 @@
+{
+  "updatedAt": "2026-07-26T10:00:15.189Z",
+  "createdAt": "2026-07-15T18:40:34.655Z",
+  "id": "tWHSD8lBIbiHA3D5",
+  "name": "Челси очередь памяти enqueue v2.3 [HARDENED STAGED]",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "71710000-0000-4000-8000-000000000001",
+      "name": "Trigger | Parent Workflow | Enqueue",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\n\nfunction text(value, limit = 0) {\n  const result = String(value ?? '').replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n').trim();\n  return limit > 0 ? result.slice(0, limit).trim() : result;\n}\nfunction canonicalize(value) {\n  if (value === null || typeof value === 'boolean' || typeof value === 'string') return value;\n  if (typeof value === 'number') {\n    if (!Number.isFinite(value)) throw new Error('Non-finite number in durable memory payload.');\n    return value;\n  }\n  if (Array.isArray(value)) return value.map(canonicalize);\n  if (value && typeof value === 'object') {\n    const out = {};\n    for (const key of Object.keys(value).sort()) {\n      if (value[key] !== undefined) out[key] = canonicalize(value[key]);\n    }\n    return out;\n  }\n  return String(value ?? '');\n}\nfunction canonicalJson(value) { return JSON.stringify(canonicalize(value)); }\nfunction normalizedJson(value, fallback = {}) {\n  if (value === null || value === undefined || value === '') return canonicalJson(fallback);\n  if (typeof value === 'string') {\n    try { return canonicalJson(JSON.parse(value)); }\n    catch (error) { throw new Error(`Invalid JSON context in durable memory job: ${error.message}`); }\n  }\n  return canonicalJson(value);\n}\nfunction sha256(value) {\n  const ascii = unescape(encodeURIComponent(String(value)));\n  const rightRotate = (v, a) => (v >>> a) | (v << (32 - a));\n  const maxWord = Math.pow(2, 32);\n  let result = '';\n  const words = [];\n  const bitLength = ascii.length * 8;\n  const hash = [];\n  const k = [];\n  const composite = {};\n  let primeCounter = 0;\n  for (let candidate = 2; primeCounter < 64; candidate++) {\n    if (!composite[candidate]) {\n      for (let i = 0; i < 313; i += candidate) composite[i] = candidate;\n      hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;\n      k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;\n    }\n  }\n  let data = ascii + '\\x80';\n  while (data.length % 64 !== 56) data += '\\x00';\n  for (let i = 0; i < data.length; i++) {\n    const code = data.charCodeAt(i);\n    if (code >> 8) throw new Error('SHA-256 input is not byte-normalized.');\n    words[i >> 2] |= code << ((3 - i) % 4) * 8;\n  }\n  words[words.length] = (bitLength / maxWord) | 0;\n  words[words.length] = bitLength;\n  for (let j = 0; j < words.length;) {\n    const chunk = words.slice(j, j += 16);\n    const oldHash = hash.slice(0);\n    let working = hash.slice(0, 8);\n    for (let i = 0; i < 64; i++) {\n      const w15 = chunk[i - 15];\n      const w2 = chunk[i - 2];\n      const a = working[0];\n      const e = working[4];\n      const temp1 = working[7]\n        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))\n        + ((e & working[5]) ^ ((~e) & working[6])) + k[i]\n        + (chunk[i] = i < 16 ? chunk[i] : (\n          chunk[i - 16]\n          + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))\n          + chunk[i - 7]\n          + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))\n        ) | 0);\n      const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))\n        + ((a & working[1]) ^ (a & working[2]) ^ (working[1] & working[2]));\n      working = [(temp1 + temp2) | 0].concat(working);\n      working[4] = (working[4] + temp1) | 0;\n      working.pop();\n    }\n    for (let i = 0; i < 8; i++) hash[i] = (working[i] + oldHash[i]) | 0;\n  }\n  for (let i = 0; i < 8; i++) {\n    for (let j = 3; j >= 0; j--) {\n      const byte = (hash[i] >> (j * 8)) & 255;\n      result += (byte < 16 ? '0' : '') + byte.toString(16);\n    }\n  }\n  return result;\n}\n\nconst raw = input.payload && typeof input.payload === 'object' && !Array.isArray(input.payload)\n  ? { ...input, ...input.payload }\n  : input;\nconst supportedKinds = new Set(['memory_compile', 'memory_conflict_resolution', 'person_resolution']);\nconst jobKind = text(raw.jobKind || 'memory_compile', 80);\nif (!supportedKinds.has(jobKind)) throw new Error(`Unsupported durable memory jobKind: ${jobKind}`);\n\nconst tenantId = text(raw.memoryTenantId || raw.tenantId, 160);\nconst chatId = text(raw.chatId || raw.telegramChatId || raw.telegramActorId || raw.telegramUserId, 160);\nconst messageId = text(raw.messageId, 200);\nconst telegramActorId = text(raw.telegramActorId || raw.telegramUserId, 80);\nconst telegramUserId = telegramActorId;\nconst memoryUserId = text(raw.memoryUserId, 160);\nconst memoryTenantId = text(raw.memoryTenantId || raw.tenantId, 160);\nconst qdrantCollection = text(raw.qdrantCollection, 200);\nconst question = text(raw.question, 12000);\nconst answerText = text(raw.answerText || raw.question, 12000);\nconst messageDateIso = text(raw.messageDateIso, 100);\nconst profileMemoryEnabled = raw.profileMemoryEnabled === true;\nconst universalMemoryEnabled = raw.universalMemoryEnabled === true;\nconst profileMemoryStoreSensitive = raw.profileMemoryStoreSensitive === true;\nconst profileMemoryExtractMaxItems = Math.max(1, Math.min(32, Number(raw.profileMemoryExtractMaxItems || 24) || 24));\nconst memoryWriteAllowed = raw.memoryWriteAllowed === true;\nconst resolutionQuestionId = text(raw.resolutionQuestionId, 200);\nconst resolutionQuestionType = text(raw.resolutionQuestionType, 120);\nconst resolutionTargetPointId = text(raw.resolutionTargetPointId, 240);\nconst resolutionContextJson = normalizedJson(raw.resolutionContextJson, {});\nconst maxAttempts = Math.max(1, Math.min(20, Number(raw.maxAttempts || 5) || 5));\nconst instructionArtifactRequested = raw.instructionArtifactRequested === true;\nconst memoryPayloadContractVersion = instructionArtifactRequested ? 'chelsea_memory_payload_v2_0_instruction_artifact' : '';\nconst assistantArtifactText = instructionArtifactRequested ? text(raw.assistantArtifactText || raw.aiAnswer || raw.originalAiAnswer, 32000) : '';\nconst suppliedAssistantArtifactHash = text(raw.assistantArtifactHash, 135).toLowerCase().replace(/^sha256:/, '');\nconst assistantArtifactHash = instructionArtifactRequested && assistantArtifactText ? sha256(assistantArtifactText) : '';\nconst sourceAnswerMessageId = instructionArtifactRequested ? text(raw.sourceAnswerMessageId || raw.answerMessageId, 100) : '';\nconst suppliedQueueSchemaVersion = text(raw.queueSchemaVersion || raw.durableMemoryQueueSchemaVersion, 120);\nconst suppliedArtifactType = text(raw.assistantArtifactType, 120);\nconst instructionQueueSchemaVersion = 'chelsea_memory_jobs_v1_1_instruction_artifact';\n\nif (instructionArtifactRequested) {\n  if (suppliedQueueSchemaVersion && suppliedQueueSchemaVersion !== instructionQueueSchemaVersion) {\n    throw new Error('Instruction artifact queue schema is inconsistent with instructionArtifactRequested=true.');\n  }\n  if (suppliedArtifactType && suppliedArtifactType !== 'triggered_instruction_candidate') {\n    throw new Error('Instruction artifact type is invalid.');\n  }\n} else if (suppliedQueueSchemaVersion === instructionQueueSchemaVersion\n  || suppliedArtifactType === 'triggered_instruction_candidate'\n  || text(raw.memoryPayloadContractVersion, 120) === 'chelsea_memory_payload_v2_0_instruction_artifact') {\n  throw new Error('Instruction artifact envelope cannot be downgraded by clearing instructionArtifactRequested.');\n}\n\nif (!tenantId || !chatId || !messageId || !messageDateIso) throw new Error('tenantId, chatId, messageId and messageDateIso are required for durable memory idempotency/order.');\nif (!/^\\d+$/.test(telegramUserId) || Number(telegramUserId)<=0 || !memoryUserId || !memoryTenantId || !qdrantCollection) {\n  throw new Error('numeric telegramActorId/telegramUserId, memoryUserId, memoryTenantId and qdrantCollection are required.');\n}\nif (tenantId !== memoryTenantId) throw new Error('tenantId must exactly match memoryTenantId.');\nif (jobKind === 'memory_compile') {\n  if (!question || !universalMemoryEnabled) {\n    throw new Error('memory_compile requires identity, Qdrant scope, question, messageDateIso and universalMemoryEnabled=true.');\n  }\n  if (instructionArtifactRequested) {\n    if (!assistantArtifactText || !sourceAnswerMessageId) throw new Error('Instruction artifact job requires assistantArtifactText and sourceAnswerMessageId.');\n    if (sourceAnswerMessageId === messageId) throw new Error('Instruction artifact sourceAnswerMessageId must identify Chelsea answer, not the incoming user message.');\n    if (suppliedAssistantArtifactHash && suppliedAssistantArtifactHash !== assistantArtifactHash) throw new Error('Instruction artifact supplied hash does not match the assistant answer.');\n  }\n} else {\n  const expectedQuestionType = jobKind === 'memory_conflict_resolution' ? 'memory_conflict' : 'person_resolution';\n  if (!resolutionQuestionId || !resolutionTargetPointId || !question || !answerText) {\n    throw new Error(`${jobKind} requires resolutionQuestionId, resolutionTargetPointId and a non-empty answer.`);\n  }\n  if (resolutionQuestionType !== expectedQuestionType) {\n    throw new Error(`${jobKind} requires resolutionQuestionType=${expectedQuestionType}.`);\n  }\n  if (jobKind === 'memory_conflict_resolution' && (!universalMemoryEnabled || !memoryWriteAllowed)) {\n    throw new Error('memory_conflict_resolution requires universalMemoryEnabled=true and memoryWriteAllowed=true.');\n  }\n}\n\nconst payload = {\n  principalKey: text(raw.principalKey, 80),\n  storageUsername: text(raw.storageUsername, 64),\n  currentUsername: text(raw.currentUsername, 64),\n  identitySchemaVersion: text(raw.identitySchemaVersion, 80),\n  identityStatus: text(raw.identityStatus || 'active', 40),\n  queueSchemaVersion: instructionArtifactRequested ? 'chelsea_memory_jobs_v1_1_instruction_artifact' : 'chelsea_memory_jobs_v1_0',\n  jobKind,\n  tenantId,\n  chatId,\n  messageId,\n  telegramActorId,\n  telegramUserId,\n  userId: text(raw.userId || raw.storageUsername || memoryUserId, 160),\n  memoryUserId,\n  memoryTenantId,\n  qdrantCollection,\n  question,\n  answerText,\n  profileMemoryEnabled,\n  universalMemoryEnabled,\n  profileMemoryStoreSensitive,\n  profileMemoryExtractMaxItems,\n  memoryWriteAllowed,\n  precedingAssistantQuestion: text(raw.precedingAssistantQuestion, 12000),\n  precedingAssistantContext: text(raw.precedingAssistantContext, 20000),\n  conversationContext: text(raw.conversationContext, 20000),\n  recentConversationContext: text(raw.recentConversationContext, 20000),\n  assistantContext: text(raw.assistantContext, 20000),\n  replyToText: text(raw.replyToText, 12000),\n  originalAiAnswer: text(raw.aiAnswer || raw.originalAiAnswer, 12000),\n  ...(instructionArtifactRequested ? {\n    memoryPayloadContractVersion,\n    instructionArtifactRequested: true,\n    assistantArtifactType: 'triggered_instruction_candidate',\n    assistantArtifactText,\n    assistantArtifactHash,\n    sourceAnswerMessageId,\n    answerMessageId: sourceAnswerMessageId\n  } : {}),\n  messageDateIso,\n  inputType: text(raw.inputType, 80),\n  eventType: text(raw.eventType, 80),\n  mediaType: text(raw.mediaType, 80),\n  source: text(raw.source, 120),\n  messageAuthorship: text(raw.messageAuthorship || 'user_authored', 80),\n  telegramUsername: text(raw.telegramUsername, 160),\n  telegramFirstName: text(raw.telegramFirstName, 160),\n  resolutionQuestionId,\n  resolutionQuestionType,\n  resolutionTargetPointId,\n  resolutionContextJson,\n  maxAttempts\n};\nconst payloadJson = canonicalJson(payload);\nconst payloadLimit = instructionArtifactRequested ? 160000 : 100000;\nif (payloadJson.length > payloadLimit) throw new Error(`Durable memory payload exceeds ${payloadLimit} characters.`);\nconst payloadHash = `sha256:${sha256(payloadJson)}`;\nconst identityHash = sha256(canonicalJson(instructionArtifactRequested\n  ? { tenantId, chatId, messageId, contractLane: 'instruction_artifact_v1' }\n  : { tenantId, chatId, messageId }));\nconst now = new Date().toISOString();\n\nreturn [{ json: {\n  ...payload,\n  jobId: `memory_job_${identityHash.slice(0, 32)}`,\n  idempotencyKey: instructionArtifactRequested ? `chelsea_memory_instruction_v1_${identityHash}` : `chelsea_memory_v1_${identityHash}`,\n  payloadHash,\n  payloadJson,\n  enqueuedAt: now,\n  status: 'queued',\n  attemptCount: 0,\n  nextAttemptAt: now,\n  leaseOwner: '',\n  leaseUntil: '',\n  claimedAt: '',\n  completedAt: '',\n  deadLetterAt: '',\n  lastError: '',\n  lastExecutionId: '',\n  resultJson: '',\n  enqueueContractReady: true,\n  enqueueContractVersion: 'chelsea_memory_enqueue_v2_2_instruction_fail_closed'\n} }];"
+      },
+      "id": "71710000-0000-4000-8000-000000000002",
+      "name": "Code | Normalize Durable Memory Job | Enqueue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "71710000-0000-4000-8000-000000000003",
+      "name": "Create | Data Table | Chelsea Memory Jobs | Enqueue",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"memory_jobs\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"idempotencyKey\":$('Code | Normalize Durable Memory Job | Enqueue').first().json.idempotencyKey},p_record:{},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "71710000-0000-4000-8000-000000000004",
+      "name": "Get | Existing Durable Memory Job | Enqueue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const normalized = $items('Code | Normalize Durable Memory Job | Enqueue')[0]?.json || {};\nconst existing = $input.first().json || {};\nif (!normalized.enqueueContractReady || !normalized.idempotencyKey || !normalized.payloadHash || !normalized.payloadJson) {\n  throw new Error('Normalized durable memory job contract is incomplete.');\n}\nif (!existing.idempotencyKey) {\n  return [{ json: { ...normalized, enqueueRequired: true, enqueueOutcome: 'new_job' } }];\n}\nif (String(existing.idempotencyKey) !== String(normalized.idempotencyKey)) {\n  throw new Error('Data Table returned a row with a different idempotencyKey.');\n}\nconst sameHash = String(existing.payloadHash || '') === String(normalized.payloadHash);\nconst samePayload = String(existing.payloadJson || '') === String(normalized.payloadJson);\nif (!sameHash || !samePayload) {\n  throw new Error(`Durable memory idempotency collision or key reuse for ${normalized.idempotencyKey}.`);\n}\nreturn [{ json: {\n  ...normalized,\n  enqueueRequired: false,\n  enqueueOutcome: 'idempotent_duplicate',\n  existingJobId: String(existing.jobId || normalized.jobId),\n  existingStatus: String(existing.status || '')\n} }];"
+      },
+      "id": "71710000-0000-4000-8000-000000000005",
+      "name": "Code | Decide Durable Memory Enqueue | Enqueue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6a405055-971d-4730-be0c-0e632318467e",
+              "leftValue": "={{ $json.enqueueRequired === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "71710000-0000-4000-8000-000000000006",
+      "name": "If | Durable Memory Job Is New | Enqueue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"memory_jobs\",p_operation:\"upsert\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"idempotencyKey\":$json.idempotencyKey},p_record:{\"jobId\":$json.jobId,\"idempotencyKey\":$json.idempotencyKey,\"payloadHash\":$json.payloadHash,\"payloadJson\":$json.payloadJson,\"jobKind\":$json.jobKind,\"tenantId\":$json.tenantId,\"chatId\":$json.chatId,\"messageId\":$json.messageId,\"messageDateIso\":$json.messageDateIso,\"telegramUserId\":$json.telegramUserId,\"memoryUserId\":$json.memoryUserId,\"memoryTenantId\":$json.memoryTenantId,\"qdrantCollection\":$json.qdrantCollection,\"resolutionQuestionId\":$json.resolutionQuestionId,\"resolutionQuestionType\":$json.resolutionQuestionType,\"resolutionTargetPointId\":$json.resolutionTargetPointId,\"resolutionContextJson\":$json.resolutionContextJson,\"queueSchemaVersion\":$json.queueSchemaVersion,\"enqueuedAt\":$json.enqueuedAt,\"maxAttempts\":$json.maxAttempts,\"status\":$json.status,\"attemptCount\":$json.attemptCount,\"nextAttemptAt\":$json.nextAttemptAt,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"claimedAt\":$json.claimedAt,\"completedAt\":$json.completedAt,\"deadLetterAt\":$json.deadLetterAt,\"lastError\":$json.lastError,\"lastExecutionId\":$json.lastExecutionId,\"resultJson\":$json.resultJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "71710000-0000-4000-8000-000000000007",
+      "name": "Upsert | Durable Memory Job | Enqueue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"memory_jobs\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"idempotencyKey\":$('Code | Decide Durable Memory Enqueue | Enqueue').first().json.idempotencyKey},p_record:{},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "71710000-0000-4000-8000-000000000008",
+      "name": "Get | Stored Durable Memory Job | Enqueue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        -128
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const expected = $items('Code | Decide Durable Memory Enqueue | Enqueue')[0]?.json || {};\nconst row = $input.first().json || {};\nconst immutable = [\n  'jobId','idempotencyKey','payloadHash','payloadJson','jobKind','tenantId','chatId','messageId','messageDateIso',\n  'telegramUserId','memoryUserId','memoryTenantId','qdrantCollection','resolutionQuestionId',\n  'resolutionQuestionType','resolutionTargetPointId','resolutionContextJson','queueSchemaVersion','enqueuedAt'\n];\nif (!row.idempotencyKey) throw new Error('Durable memory job was not found after upsert.');\nfor (const key of immutable) {\n  if (String(row[key] ?? '') !== String(expected[key] ?? '')) throw new Error(`Durable memory immutable read-back mismatch: ${key}.`);\n}\nlet storedPayload = {};\ntry { storedPayload = JSON.parse(String(row.payloadJson || '{}')); }\ncatch (error) { throw new Error('Stored durable memory payloadJson is invalid JSON.'); }\nconst storedInstructionQueue = String(row.queueSchemaVersion || '') === 'chelsea_memory_jobs_v1_1_instruction_artifact';\nconst storedInstructionEnvelope = storedPayload.instructionArtifactRequested === true\n  || storedPayload.memoryPayloadContractVersion === 'chelsea_memory_payload_v2_0_instruction_artifact'\n  || storedPayload.assistantArtifactType === 'triggered_instruction_candidate';\nif (storedInstructionQueue !== storedInstructionEnvelope) {\n  throw new Error('Instruction artifact queue row and payload envelope disagree after read-back.');\n}\nif (storedPayload.instructionArtifactRequested === true) {\n  if (storedPayload.memoryPayloadContractVersion !== 'chelsea_memory_payload_v2_0_instruction_artifact') throw new Error('Instruction artifact contract read-back mismatch.');\n  if (storedPayload.assistantArtifactType !== 'triggered_instruction_candidate') throw new Error('Instruction artifact type read-back mismatch.');\n  if (!storedPayload.assistantArtifactText || !/^[a-f0-9]{64}$/.test(String(storedPayload.assistantArtifactHash || '')) || !storedPayload.sourceAnswerMessageId) throw new Error('Instruction artifact immutable fields are incomplete after read-back.');\n  if (String(storedPayload.sourceAnswerMessageId) === String(storedPayload.messageId)) throw new Error('Instruction artifact answer provenance points to the incoming user message after read-back.');\n}\nif (Number(row.maxAttempts) !== Number(expected.maxAttempts) || Number(row.attemptCount) !== 0 || String(row.status) !== 'queued') {\n  throw new Error('Durable memory initial mutable state read-back mismatch.');\n}\nreturn [{ json: {\n  jobId: row.jobId,\n  idempotencyKey: row.idempotencyKey,\n  payloadHash: row.payloadHash,\n  status: row.status,\n  queueSchemaVersion: row.queueSchemaVersion,\n  memoryPayloadContractVersion: storedPayload.memoryPayloadContractVersion || '',\n  instructionArtifactRequested: storedPayload.instructionArtifactRequested === true,\n  assistantArtifactHash: storedPayload.assistantArtifactHash || '',\n  sourceAnswerMessageId: storedPayload.sourceAnswerMessageId || '',\n  enqueueContractVersion: 'chelsea_memory_enqueue_v2_2_instruction_fail_closed',\n  enqueueOutcome: 'enqueued_and_verified',\n  durableMemoryEnqueueVerified: true\n} }];"
+      },
+      "id": "71710000-0000-4000-8000-000000000009",
+      "name": "Code | Verify Durable Memory Enqueue | Enqueue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        -128
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "71710000-0000-4000-8000-000000000010",
+      "name": "End | Durable Memory Job Enqueued | Enqueue",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        -128
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "71710000-0000-4000-8000-000000000011",
+      "name": "End | Durable Memory Job Already Exists | Enqueue",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nconst text=v=>String(v??'').normalize('NFKC').trim();\nconst username=v=>text(v).replace(/^@+/,'').toLowerCase();\nconst principalKey=text(input.principalKey);\nconst storageUsername=username(input.storageUsername||input.userId||input.memoryUserId);\nconst currentUsername=username(input.currentUsername||input.telegramUsername);\nconst telegramActorId=text(input.telegramActorId||input.telegramUserId);\nif(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('identity boundary: invalid principalKey');\nif(!/^actor_[a-f0-9]{32}$/.test(storageUsername))throw new Error('identity boundary: invalid storageUsername');\nif(!/^\\d+$/.test(telegramActorId)||Number(telegramActorId)<=0)throw new Error('identity boundary: numeric Telegram actor required');\nif(text(input.telegramActorId)&&text(input.telegramUserId)&&text(input.telegramActorId)!==text(input.telegramUserId))throw new Error('identity boundary: Telegram actor fields mismatch');\nif(currentUsername&&!/^[a-z0-9_]{1,64}$/.test(currentUsername))throw new Error('identity boundary: invalid currentUsername');\nconst expected={userId:storageUsername,memoryUserId:storageUsername,tenantId:`tenant_${storageUsername}`,memoryTenantId:`tenant_${storageUsername}`,qdrantCollection:`kb_tenant_${storageUsername}`,soulId:`chelsea_soul_${storageUsername}`};\nfor(const [key,value] of Object.entries(expected)){if(text(input[key])!==value)throw new Error(`identity boundary: ${key} mismatch`);}\nconst schema=text(input.identitySchemaVersion);if(schema!=='chelsea_actor_identity_v3')throw new Error('identity boundary: schema mismatch');\nif(input.identityAuthorityVerified!==true&&input.identityClaimsVerified!==true)throw new Error('identity boundary: PostgreSQL authority verification required');\nreturn [{json:{...input,...expected,principalKey,storageUsername,currentUsername,telegramUsername:currentUsername,telegramActorId,telegramUserId:telegramActorId,identitySchemaVersion:schema,identityStatus:text(input.identityStatus)||'active',identityBoundaryVerified:true}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "7af6889c-0bb0-4430-4e4b-fde848ab09b5",
+      "name": "Code | Validate Username Identity | Enqueue"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "N3GFoezvVmoj0wyp",
+          "mode": "id",
+          "cachedResultName": "Челси обработчик очереди памяти v2.9 replacement [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "71710000-0000-4000-8000-000000000023",
+      "name": "Call | Челси обработчик очереди памяти replacement | Kick Durable Memory Worker | Enqueue",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2400,
+        0
+      ]
+    },
+    {
+      "id": "Call | Chelsea Consent G",
+      "name": "Call | Chelsea Consent Gate | Require Memory Storage | Enqueue",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -700,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CONSENT7A2b3c4d5e6f",
+          "mode": "id",
+          "cachedResultName": "Chelsea Consent Gate v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "principalKey": "={{ $json.principalKey }}",
+            "telegramActorId": "={{ $json.telegramActorId || $json.telegramUserId }}",
+            "consentType": "memory_storage",
+            "consentRequired": "={{ true }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "telegramActorId",
+              "displayName": "telegramActorId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "consentType",
+              "displayName": "consentType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "consentRequired",
+              "displayName": "consentRequired",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "If | Memory Storage Cons",
+      "name": "If | Memory Storage Consent Granted | Enqueue",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -450,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f0b53240-c27e-4fcd-9b11-02bd27ca2e6d",
+              "leftValue": "={{ $json.consentGranted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "End | Memory Storage Con",
+      "name": "End | Memory Storage Consent Required | Enqueue",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        160
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Consent Gate | Require Memory Storage | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Durable Memory Job | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Create | Data Table | Chelsea Memory Jobs | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create | Data Table | Chelsea Memory Jobs | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Get | Existing Durable Memory Job | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get | Existing Durable Memory Job | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Code | Decide Durable Memory Enqueue | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Decide Durable Memory Enqueue | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "If | Durable Memory Job Is New | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Durable Memory Job Is New | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Upsert | Durable Memory Job | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Durable Memory Job Already Exists | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert | Durable Memory Job | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Get | Stored Durable Memory Job | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get | Stored Durable Memory Job | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Durable Memory Enqueue | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Durable Memory Enqueue | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "End | Durable Memory Job Enqueued | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Username Identity | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Durable Memory Job | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Durable Memory Job Enqueued | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси обработчик очереди памяти replacement | Kick Durable Memory Worker | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Durable Memory Job Already Exists | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси обработчик очереди памяти replacement | Kick Durable Memory Worker | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Consent Gate | Require Memory Storage | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "If | Memory Storage Consent Granted | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Memory Storage Consent Granted | Enqueue": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Username Identity | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Memory Storage Consent Required | Enqueue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 120,
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "3d1d5473-294c-5586-90f2-7d6da22ecf7b",
+  "activeVersionId": null,
+  "versionCounter": 31,
+  "tags": []
+}

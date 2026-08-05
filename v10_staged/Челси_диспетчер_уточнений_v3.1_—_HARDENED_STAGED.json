@@ -1,0 +1,1141 @@
+{
+  "updatedAt": "2026-07-28T08:18:12.984Z",
+  "createdAt": "2026-07-16T06:00:01.232Z",
+  "id": "COC56dbrXhYqRgFP",
+  "name": "Челси диспетчер уточнений v3.1 [HARDENED STAGED]",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Dispatcher\\nВыбирает pending, просроченную dispatching или просроченный answer_claimed. Ответ восстанавливается через тот же idempotent enqueue; вопрос отправляется только после exact lease read-back.",
+        "height": 860,
+        "width": 1780,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -500
+      ],
+      "id": "afa974a1-8fc0-48ee-9d56-eaba2fe08564",
+      "name": "## Планировщик уточнений (DispatchResolution)"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -620,
+        -100
+      ],
+      "id": "bdd90600-bed6-43f6-8042-83de3918557e",
+      "name": "Trigger | Schedule | DispatchResolution",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        120
+      ],
+      "id": "2b112fe6-0800-4e62-a39e-ddcda4fb971d",
+      "name": "Trigger | Manual Start | DispatchResolution"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        0
+      ],
+      "id": "2cc5f08e-2ddf-4b2e-83cf-7eb668ed2d81",
+      "name": "Create | Data Table | Chelsea Resolution Questions | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{},p_record:{},p_limit:10000} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -360,
+        0
+      ],
+      "id": "2a6ce213-4af0-41a2-bf45-f6c0002021cc",
+      "name": "Read | Data Table | Resolution Dispatch Candidates | DispatchResolution",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = Date.now();\nconst rows = $input.all().map(item => item.json || {}).filter(row => String(row.questionId || '').trim());\nfunction time(value, fallback = 0) { const parsed = Date.parse(String(value || '')); return Number.isFinite(parsed) ? parsed : fallback; }\nfunction lane(row) {\n  return `${String(row.memoryTenantId || row.tenantId || '').trim()}\\u0000${String(row.chatId || '').trim()}`;\n}\nconst logicalCounts = new Map();\nfor (const row of rows) {\n  const tenant = String(row.memoryTenantId || row.tenantId || '').trim();\n  for (const identity of [String(row.questionId || '').trim(), String(row.questionRowKey || '').trim()].filter(Boolean)) {\n    const key = `${tenant}\\u0000${identity}`;\n    logicalCounts.set(key, Number(logicalCounts.get(key) || 0) + 1);\n  }\n}\nfor (const [key, count] of logicalCounts) {\n  if (count !== 1) throw new Error(`Resolution dispatcher found ${count} physical rows for logical key ${key}.`);\n}\nconst liveStatuses = new Set(['answer_queued', 'applying']);\nconst blockedLanes = new Set(rows.filter(row => {\n  const status = String(row.status || '').trim().toLowerCase();\n  if (liveStatuses.has(status)) return true;\n  if (status === 'asked') {\n    const askedAt = time(row.askedAt, 0);\n    const fallbackExpiry = askedAt ? askedAt + 72 * 60 * 60 * 1000 : 0;\n    return time(row.askedExpiresAt, fallbackExpiry) > now;\n  }\n  if (status === 'dispatching') return time(row.dispatchLeaseUntil, 0) > now;\n  if (status === 'answer_claimed') return time(row.answerClaimLeaseUntil, 0) > now;\n  return false;\n}).map(lane));\n\nconst eligible = rows.map(row => {\n  const status = String(row.status || '').trim().toLowerCase();\n  if (status === 'answer_claimed' && time(row.answerClaimLeaseUntil, 0) <= now\n    && String(row.answerMessageId || '').trim() && String(row.answerText || '').trim()) {\n    return { ...row, dispatcherAction: 'recover_answer', dispatcherActionPriority: 2 };\n  }\n  if (status === 'pending' || (status === 'dispatching' && time(row.dispatchLeaseUntil, 0) <= now)) {\n    return { ...row, dispatcherAction: 'ask_question', dispatcherActionPriority: 1 };\n  }\n  return null;\n}).filter(Boolean).filter(row => !blockedLanes.has(lane(row)))\n  .sort((a, b) => Number(b.dispatcherActionPriority || 0) - Number(a.dispatcherActionPriority || 0)\n    || Number(b.priority || 0) - Number(a.priority || 0)\n    || time(a.sourceMessageDateIso, Number.MAX_SAFE_INTEGER) - time(b.sourceMessageDateIso, Number.MAX_SAFE_INTEGER)\n    || String(a.questionId).localeCompare(String(b.questionId)));\n\nreturn [{ json: eligible.length\n  ? { ...eligible[0], hasPendingResolutionQuestion: true }\n  : { hasPendingResolutionQuestion: false, dispatcherStatus: 'idle' }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        0
+      ],
+      "id": "22ff75a6-a04d-4123-8560-19db9f628a8c",
+      "name": "Code | Select Pending Resolution Question | DispatchResolution | PreUsernameCutover"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c25c8a82-4b1b-4277-bbf0-0292f5026efc",
+              "leftValue": "={{ $json.hasPendingResolutionQuestion }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        0
+      ],
+      "id": "5f8f1cfe-b1ee-4f63-a88c-deaf8d242829",
+      "name": "If | Has Pending Resolution Question | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc1c8c38-d00f-47ff-afa3-07fe970f7ddb",
+              "leftValue": "={{ $json.dispatcherAction }}",
+              "rightValue": "recover_answer",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "singleValue": false
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        360,
+        0
+      ],
+      "id": "cbc1c037-84d7-4169-8742-66066f0310c1",
+      "name": "If | Recover Expired Answer Claim | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first()?.json || {};\nfunction text(value) { return String(value ?? '').trim(); }\nfunction time(value) { const parsed = Date.parse(text(value)); return Number.isFinite(parsed) ? parsed : 0; }\n\nif (row.dispatcherAction !== 'recover_answer' || text(row.status) !== 'answer_claimed') {\n  throw new Error('Dispatcher answer recovery requires an expired answer_claimed row.');\n}\nif (time(row.answerClaimLeaseUntil) > Date.now()) throw new Error('Dispatcher cannot recover a live answer claim.');\nif (!text(row.questionId) || !text(row.answerMessageId) || !text(row.answerText)\n  || !text(row.memoryTenantId || row.tenantId) || !text(row.chatId)) {\n  throw new Error('Dispatcher answer recovery identity is incomplete.');\n}\n\nreturn [{ json: {\n  operationMode: 'enqueue_answer',\n  resolutionQuestionId: text(row.questionId),\n  resolutionQuestionType: text(row.questionType),\n  resolutionQuestionJson: JSON.stringify(row),\n  resolutionTargetPointId: text(row.qdrantQuestionPointId),\n  resolutionContextJson: text(row.contextJson) || '{}',\n  answerText: text(row.answerText),\n  selectedRef: text(row.selectedRef),\n  answerMessageId: text(row.answerMessageId),\n  messageId: text(row.answerMessageId),\n  messageDateIso: text(row.answeredAt || row.sourceMessageDateIso),\n  callbackQueryId: '',\n  callbackData: '',\n  telegramUserId: text(row.telegramUserId),\n  chatId: text(row.chatId),\n  userId: text(row.userId),\n  memoryUserId: text(row.memoryUserId),\n  tenantId: text(row.tenantId || row.memoryTenantId),\n  memoryTenantId: text(row.memoryTenantId || row.tenantId),\n  qdrantCollection: text(row.qdrantCollection),\n  dispatcherRecoveryQuestionId: text(row.questionId),\n  dispatcherRecoveryAnswerMessageId: text(row.answerMessageId),\n  dispatcherRecoveryReady: true,\n  dispatcherRecoveryVersion: 'chelsea_resolution_dispatcher_recovery_v2_1'\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        180
+      ],
+      "id": "6b5e7880-09ad-47d0-b529-2a7c7177bf1a",
+      "name": "Code | Build Expired Answer Recovery | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "by3HcLFOyOHMZa6H",
+          "mode": "id",
+          "cachedResultName": "Челси применение уточнений v3.0 [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationMode": "={{ $json.operationMode }}",
+            "resolutionQuestionId": "={{ $json.resolutionQuestionId }}",
+            "resolutionQuestionType": "={{ $json.resolutionQuestionType }}",
+            "resolutionQuestionJson": "={{ $json.resolutionQuestionJson }}",
+            "resolutionTargetPointId": "={{ $json.resolutionTargetPointId }}",
+            "resolutionContextJson": "={{ $json.resolutionContextJson }}",
+            "answerText": "={{ $json.answerText }}",
+            "selectedRef": "={{ $json.selectedRef }}",
+            "answerMessageId": "={{ $json.answerMessageId }}",
+            "messageId": "={{ $json.messageId }}",
+            "messageDateIso": "={{ $json.messageDateIso }}",
+            "callbackQueryId": "={{ $json.callbackQueryId }}",
+            "callbackData": "={{ $json.callbackData }}",
+            "telegramUserId": "={{ $json.telegramUserId }}",
+            "chatId": "={{ $json.chatId }}",
+            "userId": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.userId }}",
+            "memoryUserId": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.memoryUserId }}",
+            "tenantId": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.tenantId }}",
+            "memoryTenantId": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.memoryTenantId }}",
+            "qdrantCollection": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.qdrantCollection }}",
+            "principalKey": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.principalKey }}",
+            "storageUsername": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.storageUsername }}",
+            "currentUsername": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.currentUsername }}",
+            "soulId": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.soulId }}",
+            "identitySchemaVersion": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.identitySchemaVersion }}",
+            "identityStatus": "={{ $('Code | Select Pending Resolution Question | DispatchResolution').first().json.identityStatus }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationMode",
+              "displayName": "operationMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "resolutionQuestionId",
+              "displayName": "resolutionQuestionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "resolutionQuestionType",
+              "displayName": "resolutionQuestionType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "resolutionQuestionJson",
+              "displayName": "resolutionQuestionJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "resolutionTargetPointId",
+              "displayName": "resolutionTargetPointId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "resolutionContextJson",
+              "displayName": "resolutionContextJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "answerText",
+              "displayName": "answerText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "selectedRef",
+              "displayName": "selectedRef",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "answerMessageId",
+              "displayName": "answerMessageId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "messageId",
+              "displayName": "messageId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "messageDateIso",
+              "displayName": "messageDateIso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "callbackQueryId",
+              "displayName": "callbackQueryId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "callbackData",
+              "displayName": "callbackData",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "telegramUserId",
+              "displayName": "telegramUserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chatId",
+              "displayName": "chatId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "memoryUserId",
+              "displayName": "memoryUserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tenantId",
+              "displayName": "tenantId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "memoryTenantId",
+              "displayName": "memoryTenantId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "qdrantCollection",
+              "displayName": "qdrantCollection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "storageUsername",
+              "displayName": "storageUsername",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "currentUsername",
+              "displayName": "currentUsername",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "soulId",
+              "displayName": "soulId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "identitySchemaVersion",
+              "displayName": "identitySchemaVersion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "identityStatus",
+              "displayName": "identityStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        840,
+        180
+      ],
+      "id": "de46f323-20bb-4266-aff1-4b99fc27e42e",
+      "name": "Call | Челси применение уточнений | Recover Durable Resolution Answer | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "jsCode": "const expected = $('Code | Build Expired Answer Recovery | DispatchResolution').first().json || {};\nconst response = $input.first()?.json || {};\nfunction text(value) { return String(value ?? '').trim(); }\n\nconst questionId = text(response.questionId || response.resolutionQuestionId);\nconst status = text(response.status || response.resolutionQuestionStatus).toLowerCase();\nconst answerMessageId = text(response.answerMessageId);\nconst jobId = text(response.jobId || response.resolutionQuestionJobId);\nconst acceptedStatuses = new Set(['answer_queued', 'applying', 'resolved', 'rejected', 'closed', 'pending']);\nif (questionId !== text(expected.dispatcherRecoveryQuestionId)\n  || answerMessageId !== text(expected.dispatcherRecoveryAnswerMessageId)\n  || !acceptedStatuses.has(status) || !jobId) {\n  throw new Error('Dispatcher could not verify recovered durable answer enqueue.');\n}\nreturn [{ json: {\n  questionId,\n  resolutionQuestionId: questionId,\n  answerMessageId,\n  jobId,\n  status,\n  dispatcherRecoveryVerified: true,\n  dispatcherRecoveryVerifiedAt: new Date().toISOString()\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        180
+      ],
+      "id": "748e598f-60bb-43d8-aca0-9923c19d25fa",
+      "name": "Code | Verify Expired Answer Recovery | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first()?.json || {};\nif (row.hasPendingResolutionQuestion !== true || !row.questionId || !row.questionToken) throw new Error('Dispatcher claim input is incomplete.');\nconst now = new Date();\nreturn [{ json: {\n  ...row,\n  previousDispatchStatus: String(row.status || ''),\n  previousDispatchLeaseOwner: String(row.dispatchLeaseOwner || ''),\n  previousDispatchLeaseUntil: String(row.dispatchLeaseUntil || ''),\n  previousDispatchAttemptCount: Number(row.dispatchAttemptCount || 0),\n  status: 'dispatching',\n  dispatchLeaseOwner: `dispatcher:${String($workflow.id)}:${String($execution.id)}`,\n  dispatchLeaseUntil: new Date(now.getTime() + 5 * 60 * 1000).toISOString(),\n  dispatchAttemptCount: Number(row.dispatchAttemptCount || 0) + 1,\n  dispatchClaimedAt: now.toISOString(),\n  stateChangedAt: now.toISOString()\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        -120
+      ],
+      "id": "4f20a309-9aca-4616-9d47-db61020e65c0",
+      "name": "Code | Build Resolution Dispatch Claim | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_claim_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_filters:{\"questionId\":$json.questionId,\"memoryTenantId\":$json.memoryTenantId,\"rowInstanceId\":$json.rowInstanceId,\"status\":$json.previousDispatchStatus,\"dispatchLeaseOwner\":$json.previousDispatchLeaseOwner,\"dispatchLeaseUntil\":$json.previousDispatchLeaseUntil,\"dispatchAttemptCount\":$json.previousDispatchAttemptCount},p_record:{\"status\":\"dispatching\",\"stateChangedAt\":$json.stateChangedAt,\"dispatchLeaseOwner\":$json.dispatchLeaseOwner,\"dispatchLeaseUntil\":$json.dispatchLeaseUntil,\"dispatchAttemptCount\":$json.dispatchAttemptCount,\"lastError\":\"\",\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_worker:String($json.dispatchLeaseOwner),p_lease_seconds:Number($json.resolutionDispatchLeaseSeconds || 300)} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        -120
+      ],
+      "id": "765ec17f-3f7e-4065-912e-0d9c0b287ef2",
+      "name": "Update | Data Table | Claim Resolution Dispatch | DispatchResolution",
+      "notes": "Chelsea Hardening v6: atomic PostgreSQL claim with FOR UPDATE SKIP LOCKED; stale candidates return zero rows."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"questionId\":$json.questionId,\"memoryTenantId\":$json.memoryTenantId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        -120
+      ],
+      "id": "018cff96-7f0a-4aea-a73e-c769ff034fb6",
+      "name": "Read | Data Table | Verify Resolution Dispatch Claim | DispatchResolution",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const expected = $('Code | Build Resolution Dispatch Claim | DispatchResolution').first().json || {};\nconst matchedRows = $input.all().map(item => item.json || {}).filter(item => String(item.questionId || '').trim());\nif (matchedRows.length !== 1) throw new Error(`Resolution dispatcher claim read-back cardinality is ${matchedRows.length}.`);\nconst row = matchedRows[0];\nif (String(row.questionId || '') !== String(expected.questionId || '')) throw new Error('Dispatcher claim questionId mismatch.');\nif (String(row.memoryTenantId || row.tenantId || '') !== String(expected.memoryTenantId || expected.tenantId || '')) throw new Error('Dispatcher claim tenant mismatch.');\nif (String(row.rowInstanceId || '') !== String(expected.rowInstanceId || '')) throw new Error('Dispatcher claim rowInstanceId mismatch.');\nif (String(row.status || '') !== 'dispatching') throw new Error('Dispatcher claim status was not persisted.');\nif (String(row.dispatchLeaseOwner || '') !== String(expected.dispatchLeaseOwner || '')) throw new Error('Dispatcher lease owner was not confirmed; another execution owns the question.');\nif (String(row.dispatchLeaseUntil || '') !== String(expected.dispatchLeaseUntil || '')) throw new Error('Dispatcher lease deadline mismatch.');\nreturn [{ json: { ...row, hasPendingResolutionQuestion: true, dispatchClaimVerified: true } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        -120
+      ],
+      "id": "5b958f65-9c2c-4f94-996e-3f0b97d08942",
+      "name": "Code | Verify Resolution Dispatch Claim | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "content": "## Telegram\\nСообщение содержит стабильный CQ-токен. Даже сбой между отправкой и receipt остаётся маршрутизируемым по тексту reply_to_message.",
+        "height": 720,
+        "width": 1420,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        -420
+      ],
+      "id": "f920ba3c-d2a2-40ac-9e68-2b1cb6c4b818",
+      "name": "## Telegram вопрос и корреляция (DispatchResolution)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.first()?.json || {};\nfunction text(value, fallback = '') { const result = String(value ?? '').trim(); return result || fallback; }\nfunction parse(value, fallback) { try { return typeof value === 'object' ? value : JSON.parse(String(value || '')); } catch (error) { return fallback; } }\n\nif (text(row.status).toLowerCase() !== 'dispatching' || row.dispatchClaimVerified !== true) {\n  throw new Error('Dispatcher received a question without a verified dispatch lease.');\n}\nif (!text(row.questionId) || !text(row.chatId) || !text(row.questionText)) {\n  throw new Error('Dispatcher question is missing questionId, chatId, or questionText.');\n}\nif (!['person_resolution', 'memory_conflict'].includes(text(row.questionType))) {\n  throw new Error('Dispatcher received an unsupported questionType.');\n}\n\nconst options = parse(row.callbackOptionsJson, []).filter(option => option && text(option.label) && text(option.callbackData)).slice(0, 8);\nconst rows = [];\nfor (let index = 0; index < options.length; index += 2) {\n  rows.push({ row: { buttons: options.slice(index, index + 2).map(option => ({\n    text: text(option.label).slice(0, 60),\n    additionalFields: { callback_data: text(option.callbackData).slice(0, 64) }\n  })) } });\n}\n\nconst instruction = row.questionType === 'memory_conflict'\n  ? 'Выберите вариант или ответьте на это сообщение своим текстом.'\n  : 'Выберите человека или ответьте на это сообщение, уточнив имя.';\nconst valueContext = row.questionType === 'memory_conflict'\n  ? `\\n\\nПрежнее значение: ${text(row.existingValue)}\\nНовое значение: ${text(row.incomingValue)}`\n  : '';\n\nreturn [{ json: {\n  ...row,\n  dispatchReady: true,\n  telegramText: `${text(row.questionText)}${valueContext}\\n\\n${instruction}\\n\\nКод вопроса: ${text(row.questionToken)}`.slice(0, 4000),\n  inlineKeyboard: { rows },\n  dispatchAttemptAt: new Date().toISOString(),\n  dispatcherVersion: 'chelsea_resolution_dispatcher_v2_0'\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        -120
+      ],
+      "id": "4a99f4fb-c9a3-4351-ad61-a2bfe4675f77",
+      "name": "Code | Build Telegram Resolution Question | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.telegramText }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": "={{ $json.inlineKeyboard }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1640,
+        -120
+      ],
+      "id": "0a490ec7-6677-4aa0-9384-fdcf9f32ffaf",
+      "name": "Call | Telegram | Send Resolution Question | DispatchResolution",
+      "credentials": {
+        "telegramApi": {
+          "id": "UcyKnC2iZoXPPYxc",
+          "name": "Протокол Челси"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $('Code | Build Telegram Resolution Question | DispatchResolution').first().json || {};\nconst response = $input.first()?.json || {};\nfunction text(value, fallback = '') { const result = String(value ?? '').trim(); return result || fallback; }\n\nconst telegramMessageId = text(response.message_id || response.result?.message_id || response.message?.message_id);\nconst responseChatId = text(response.chat?.id || response.result?.chat?.id, source.chatId);\nif (!telegramMessageId || !responseChatId) {\n  throw new Error('Telegram dispatcher did not return message_id and chat.id.');\n}\nconst askedAt = new Date();\n\nreturn [{ json: {\n  ...source,\n  status: 'asked',\n  telegramQuestionMessageId: telegramMessageId,\n  correlationKey: `tg:${responseChatId}:${telegramMessageId}`,\n  askedAt: askedAt.toISOString(),\n  askedExpiresAt: new Date(askedAt.getTime() + 72 * 60 * 60 * 1000).toISOString(),\n  stateChangedAt: askedAt.toISOString(),\n  dispatchResponseVerified: true\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        -120
+      ],
+      "id": "342b1341-e79b-41d7-b5cf-976670f947ba",
+      "name": "Code | Verify Telegram Resolution Receipt | DispatchResolution"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"questionId\":$json.questionId,\"memoryTenantId\":$json.memoryTenantId,\"rowInstanceId\":$json.rowInstanceId,\"status\":\"dispatching\",\"dispatchLeaseOwner\":$json.dispatchLeaseOwner},p_record:{\"status\":$json.status,\"stateChangedAt\":$json.stateChangedAt,\"telegramQuestionMessageId\":$json.telegramQuestionMessageId,\"correlationKey\":$json.correlationKey,\"askedAt\":$json.askedAt,\"askedExpiresAt\":$json.askedExpiresAt,\"dispatchLeaseOwner\":\"\",\"dispatchLeaseUntil\":\"\",\"lastError\":\"\",\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2120,
+        -120
+      ],
+      "id": "032fde9b-3843-4da3-ba5f-c6a0e851fe29",
+      "name": "Update | Data Table | Mark Resolution Asked | DispatchResolution",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"questionId\":$('Code | Verify Telegram Resolution Receipt | DispatchResolution').first().json.questionId,\"memoryTenantId\":$('Code | Verify Telegram Resolution Receipt | DispatchResolution').first().json.memoryTenantId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2360,
+        -120
+      ],
+      "id": "7fe9b47d-91f6-4d9e-b265-fdda967c9a51",
+      "name": "Read | Data Table | Verify Resolution Asked | DispatchResolution",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const expected = $('Code | Verify Telegram Resolution Receipt | DispatchResolution').first().json || {};\nconst rows = $input.all().map(item => item.json || {}).filter(row => String(row.questionId || '').trim());\nif (rows.length !== 1) throw new Error(`Resolution asked read-back cardinality is ${rows.length}.`);\nconst row = rows[0];\nfunction text(value) { return String(value ?? '').trim(); }\nfor (const field of [\n  'questionId', 'memoryTenantId', 'rowInstanceId', 'status', 'telegramQuestionMessageId',\n  'correlationKey', 'askedAt', 'askedExpiresAt', 'stateChangedAt'\n]) {\n  const actual = field === 'memoryTenantId' ? row.memoryTenantId || row.tenantId : row[field];\n  const wanted = field === 'memoryTenantId' ? expected.memoryTenantId || expected.tenantId : expected[field];\n  if (text(actual) !== text(wanted)) throw new Error(`Resolution asked ${field} mismatch.`);\n}\nif (text(row.dispatchLeaseOwner) || text(row.dispatchLeaseUntil)) throw new Error('Resolution asked dispatch lease was not released.');\nreturn [{ json: { ...row, resolutionAskedVerified: true } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        -120
+      ],
+      "id": "76089518-75f2-4be5-a81c-0f6c0cc57db5",
+      "name": "Code | Verify Resolution Asked | DispatchResolution"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2840,
+        -120
+      ],
+      "id": "a30a1180-7114-4b09-acac-eb0d0b2999ca",
+      "name": "End | Resolution Dispatcher | Finish"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        360,
+        320
+      ],
+      "id": "2e0fde98-cb47-4513-8735-cfebb9ab34a8",
+      "name": "End | Resolution Dispatcher Idle | Finish"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst rows=$input.all().map(item=>item.json||{});const out=[];\nconst text=v=>String(v??'').normalize('NFKC').trim();const username=v=>text(v).replace(/^@+/,'').toLowerCase();\nfor(const input of rows){\n  if(input.hasPendingResolutionQuestion===false){out.push({json:{...input,noPendingIdentityRequired:true}});continue;}\n  const storageUsername=username(input.storageUsername||input.userId||input.memoryUserId);\n  const telegramActorId=text(input.telegramActorId||input.telegramUserId);\n  if(!/^actor_[a-f0-9]{32}$/.test(storageUsername))throw new Error('stored actor identity: invalid storageUsername');\n  if(!/^\\d+$/.test(telegramActorId)||Number(telegramActorId)<=0)throw new Error('stored actor identity: numeric Telegram actor required');\n  const currentUsername=username(input.currentUsername||input.telegramUsername||'');if(currentUsername&&!/^[a-z0-9_]{1,64}$/.test(currentUsername))throw new Error('stored actor identity: invalid currentUsername alias');\n  const expected={userId:storageUsername,memoryUserId:storageUsername,tenantId:`tenant_${storageUsername}`,memoryTenantId:`tenant_${storageUsername}`,qdrantCollection:`kb_tenant_${storageUsername}`};\n  for(const key of ['userId','memoryUserId','tenantId','memoryTenantId','qdrantCollection']){if(text(input[key])&&text(input[key])!==expected[key])throw new Error(`stored actor identity: ${key} mismatch`);}\n  const principalKey=text(input.principalKey);if(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('stored actor identity: invalid principalKey');\n  out.push({json:{...input,...expected,principalKey,storageUsername,currentUsername,telegramUsername:currentUsername,telegramActorId,telegramUserId:telegramActorId,soulId:text(input.soulId)||`chelsea_soul_${storageUsername}`,identitySchemaVersion:'chelsea_actor_identity_v3',identityStatus:text(input.identityStatus)||'active',storedIdentityBoundaryVerified:true}});\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        0
+      ],
+      "id": "642301f2-755e-3d27-e470-965326a7be6b",
+      "name": "Code | Select Pending Resolution Question | DispatchResolution"
+    },
+    {
+      "id": "2ca88f1a-4a55-5633-8da8-fe74fd0e2e58",
+      "name": "Trigger | Parent Workflow | SchedulerWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -620,
+        40
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Schedule | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Create | Data Table | Chelsea Resolution Questions | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Create | Data Table | Chelsea Resolution Questions | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create | Data Table | Chelsea Resolution Questions | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Read | Data Table | Resolution Dispatch Candidates | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Data Table | Resolution Dispatch Candidates | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Select Pending Resolution Question | DispatchResolution | PreUsernameCutover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Has Pending Resolution Question | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "If | Recover Expired Answer Claim | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Resolution Dispatcher Idle | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Recover Expired Answer Claim | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Expired Answer Recovery | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Resolution Dispatch Claim | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Expired Answer Recovery | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси применение уточнений | Recover Durable Resolution Answer | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Expired Answer Recovery | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "End | Resolution Dispatcher | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Resolution Dispatch Claim | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Update | Data Table | Claim Resolution Dispatch | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Data Table | Claim Resolution Dispatch | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Read | Data Table | Verify Resolution Dispatch Claim | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Data Table | Verify Resolution Dispatch Claim | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Resolution Dispatch Claim | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Resolution Dispatch Claim | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Telegram Resolution Question | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Telegram Resolution Question | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Resolution Question | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Resolution Question | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Telegram Resolution Receipt | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Telegram Resolution Receipt | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Update | Data Table | Mark Resolution Asked | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Data Table | Mark Resolution Asked | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Read | Data Table | Verify Resolution Asked | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Data Table | Verify Resolution Asked | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Resolution Asked | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Resolution Asked | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "End | Resolution Dispatcher | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Select Pending Resolution Question | DispatchResolution | PreUsernameCutover": {
+      "main": [
+        [
+          {
+            "node": "Code | Select Pending Resolution Question | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Select Pending Resolution Question | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "If | Has Pending Resolution Question | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Челси применение уточнений | Recover Durable Resolution Answer | DispatchResolution": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Expired Answer Recovery | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Parent Workflow | SchedulerWorker": {
+      "main": [
+        [
+          {
+            "node": "Create | Data Table | Chelsea Resolution Questions | DispatchResolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 1080,
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": {
+    "node:Trigger | Schedule | DispatchResolution": {
+      "recurrenceRules": []
+    }
+  },
+  "pinData": {},
+  "versionId": "4ac1998a-1c0b-5df2-b3b4-b5ae248c82d5",
+  "activeVersionId": null,
+  "versionCounter": 14,
+  "tags": []
+}

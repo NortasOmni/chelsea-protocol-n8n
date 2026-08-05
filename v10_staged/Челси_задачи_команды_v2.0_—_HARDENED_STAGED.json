@@ -1,0 +1,2729 @@
+{
+  "updatedAt": "2026-08-01T14:58:35.659Z",
+  "createdAt": "2026-07-19T10:58:31.374Z",
+  "id": "iG8uV66FHyyQZyn8",
+  "name": "Челси задачи команды v2.0 [HARDENED STAGED]",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Доверенный вход (TaskInput)\nIdentity вычисляется локально; дешёвый gate выполняется до OpenAI.",
+        "height": 720,
+        "width": 1650,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2720,
+        640
+      ],
+      "id": "6ef5fb3e-a08a-49f7-bdbd-043dc2117bb4",
+      "name": "## Доверенный вход и локальный gate (TaskInput)"
+    },
+    {
+      "parameters": {
+        "content": "## Provisioning\nImmutable user/folder mapping читается только из PostgreSQL RPC `chelsea_identity_folder_lookup_v1`. Mutable `Folder users` Data Table не участвует в runtime identity.",
+        "height": 720,
+        "width": 1900,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        640
+      ],
+      "id": "ac707917-5241-41ec-a128-69a06c79a6fb",
+      "name": "## Exact allowlist и ленивое создание (ProvisionTaskTable)"
+    },
+    {
+      "parameters": {
+        "content": "## Семантика (TaskSemantic)\nOpenAI HTTP JSON вызывается только после консервативного локального gate.",
+        "height": 720,
+        "width": 1850,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        640
+      ],
+      "id": "00511439-b273-4e53-ae63-435ef53a4717",
+      "name": "## Семантика команды (TaskSemantic)"
+    },
+    {
+      "parameters": {
+        "content": "## Применение (ApplyTaskMutation)\nIdentity, recordId, status и разрешение мутации остаются локальными.",
+        "height": 900,
+        "width": 2350,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3040,
+        640
+      ],
+      "id": "2f5a1e33-581b-4454-a954-c771855e563d",
+      "name": "## CAS запись и exact read-back (ApplyTaskMutation)"
+    },
+    {
+      "parameters": {
+        "content": "## Ответ (TaskResponse)\nReceipt обязателен; callback использует namespace chelsea_task:.",
+        "height": 900,
+        "width": 2350,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5584,
+        640
+      ],
+      "id": "81f9b662-a50d-4948-ac5d-458bbbeb16a5",
+      "name": "## Telegram подтверждение (TaskResponse)"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "eventType"
+            },
+            {
+              "name": "chatId"
+            },
+            {
+              "name": "telegramUserId"
+            },
+            {
+              "name": "userId"
+            },
+            {
+              "name": "telegramUsername"
+            },
+            {
+              "name": "telegramFirstName"
+            },
+            {
+              "name": "messageText"
+            },
+            {
+              "name": "question"
+            },
+            {
+              "name": "inputType"
+            },
+            {
+              "name": "sourceType"
+            },
+            {
+              "name": "callbackQueryId"
+            },
+            {
+              "name": "callbackData"
+            },
+            {
+              "name": "messageId"
+            },
+            {
+              "name": "replyToMessageId"
+            },
+            {
+              "name": "replyToText"
+            },
+            {
+              "name": "messageDateIso"
+            },
+            {
+              "name": "sourceUpdateId"
+            },
+            {
+              "name": "memoryWriteAllowed",
+              "type": "boolean"
+            },
+            {
+              "name": "isForwarded",
+              "type": "boolean"
+            },
+            {
+              "name": "messageAuthorship"
+            },
+            {
+              "name": "transcript"
+            },
+            {
+              "name": "principalKey"
+            },
+            {
+              "name": "storageUsername"
+            },
+            {
+              "name": "currentUsername"
+            },
+            {
+              "name": "memoryUserId"
+            },
+            {
+              "name": "tenantId"
+            },
+            {
+              "name": "memoryTenantId"
+            },
+            {
+              "name": "qdrantCollection"
+            },
+            {
+              "name": "soulId"
+            },
+            {
+              "name": "identitySchemaVersion"
+            },
+            {
+              "name": "identityStatus"
+            },
+            {
+              "name": "timeZone"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2528,
+        1008
+      ],
+      "id": "1575ca49-5d8d-4d70-80fd-6bc102e9b852",
+      "name": "Trigger | Parent Workflow | TaskInput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "226c9ef1-189e-b9f2-a76b-d1e7c90c2ae4",
+              "name": "taskDefaultTimezone",
+              "value": "={{ String($json.timeZone || 'Asia/Novosibirsk') }}",
+              "type": "string"
+            },
+            {
+              "id": "552693f3-5175-6af8-9dc3-225a0f0b11ca",
+              "name": "taskOpenAiModel",
+              "value": "gpt-4.1-mini",
+              "type": "string"
+            },
+            {
+              "id": "d65d0689-1cfb-0c77-ba6a-31d4bd29f977",
+              "name": "taskSemanticSystemPrompt",
+              "value": "You are a conservative semantic parser for Chelsea Tasks. Return only the strict JSON schema supplied by the API. Classify a task command only when the user is clearly creating, listing, completing, rescheduling, snoozing, skipping, cancelling, or changing a task/reminder/series. Ordinary conversation is not_a_task_command. Use only opaque candidate refs supplied by the server; never invent a target ref. Never output tenant IDs, table names, record IDs, statuses, row versions, tokens, or permissions. Relative dates are interpreted from sourceMessageDateIso in the supplied trusted timezone. Never choose another timezone. If date, time, target, recurrence scope, or task-vs-dialog intent remains ambiguous, set clarificationNeeded=true and do not guess. Daily/weekly recurrence only. A date-only task uses schedule.kind=date and does not invent a time. A create_reminder must have an exact/date schedule; otherwise set clarificationNeeded=true. For mutation operations put null/empty placeholders in required-but-omitted schema fields and list only explicitly requested patch fields in fieldPresence. An empty tags array clears tags only when fieldPresence contains tags. A reminder-only item uses create_reminder/taskKind=reminder/completionRequired=false unless the wording clearly asks to verify completion. A big or long-term goal is create_task with taskKind=goal, schedule.kind=none, recurrence=null, reminderPolicy=null and completionRequired=false. A goal has no deadline. Tasks contributing to a goal use add_subtask with the exact opaque goal targetRef. Listing big goals uses listKind=goals.",
+              "type": "string"
+            },
+            {
+              "id": "454b79ab-ff32-579d-160b-6b365c544440",
+              "name": "taskSemanticSchemaJson",
+              "value": "{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"contractVersion\",\"operation\",\"targetRef\",\"title\",\"description\",\"taskKind\",\"priority\",\"tags\",\"schedule\",\"recurrence\",\"reminderPolicy\",\"completionRequired\",\"seriesMutationScope\",\"listKind\",\"answerAction\",\"clarificationNeeded\",\"clarificationReason\",\"fieldPresence\"],\"properties\":{\"contractVersion\":{\"type\":\"string\",\"enum\":[\"chelsea_task_command_v1\"]},\"operation\":{\"type\":\"string\",\"enum\":[\"create_task\",\"create_reminder\",\"add_reminder\",\"update_task\",\"reschedule_task\",\"complete_task\",\"snooze_task\",\"skip_occurrence\",\"cancel_task\",\"list_tasks\",\"add_subtask\",\"pause_series\",\"resume_series\",\"cancel_series\",\"answer_task_question\",\"not_a_task_command\"]},\"targetRef\":{\"type\":[\"string\",\"null\"],\"maxLength\":160},\"title\":{\"type\":\"string\",\"maxLength\":240},\"description\":{\"type\":\"string\",\"maxLength\":4000},\"taskKind\":{\"type\":[\"string\",\"null\"],\"enum\":[\"action\",\"reminder\",\"wish\",\"habit\",\"goal\",null]},\"priority\":{\"type\":[\"integer\",\"null\"],\"minimum\":0,\"maximum\":4},\"tags\":{\"anyOf\":[{\"type\":\"null\"},{\"type\":\"array\",\"maxItems\":32,\"items\":{\"type\":\"string\",\"maxLength\":64}}]},\"schedule\":{\"anyOf\":[{\"type\":\"null\"},{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"kind\",\"timeRole\",\"localDate\",\"localTime\",\"timezone\",\"windowStartLocal\",\"windowEndLocal\",\"preferredTimeOfDay\"],\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"exact\",\"date\",\"window\",\"none\"]},\"timeRole\":{\"type\":\"string\",\"enum\":[\"start\",\"deadline\",\"reminder\",\"window\",\"none\"]},\"localDate\":{\"type\":[\"string\",\"null\"]},\"localTime\":{\"type\":[\"string\",\"null\"]},\"timezone\":{\"type\":[\"string\",\"null\"]},\"windowStartLocal\":{\"type\":[\"string\",\"null\"]},\"windowEndLocal\":{\"type\":[\"string\",\"null\"]},\"preferredTimeOfDay\":{\"type\":\"string\",\"enum\":[\"morning\",\"day\",\"evening\",\"any\"]}}}]},\"recurrence\":{\"anyOf\":[{\"type\":\"null\"},{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"version\",\"frequency\",\"interval\",\"byWeekday\",\"byMonthDay\",\"localTime\",\"allDay\",\"maxOccurrences\",\"timezone\",\"dstGapPolicy\",\"dstOverlapPolicy\",\"startLocalDate\",\"endLocalDate\"],\"properties\":{\"version\":{\"type\":\"string\",\"enum\":[\"chelsea_recurrence_v1\"]},\"frequency\":{\"type\":\"string\",\"enum\":[\"daily\",\"weekly\"]},\"interval\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":365},\"byWeekday\":{\"type\":\"array\",\"items\":{\"type\":\"string\",\"enum\":[\"MO\",\"TU\",\"WE\",\"TH\",\"FR\",\"SA\",\"SU\"]}},\"byMonthDay\":{\"type\":\"array\",\"maxItems\":0,\"items\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":31}},\"localTime\":{\"type\":[\"string\",\"null\"]},\"allDay\":{\"type\":\"boolean\"},\"maxOccurrences\":{\"type\":[\"integer\",\"null\"],\"minimum\":1},\"timezone\":{\"type\":\"string\"},\"dstGapPolicy\":{\"type\":\"string\",\"enum\":[\"shift_forward\"]},\"dstOverlapPolicy\":{\"type\":\"string\",\"enum\":[\"earlier_offset\"]},\"startLocalDate\":{\"type\":[\"string\",\"null\"]},\"endLocalDate\":{\"type\":[\"string\",\"null\"]}}}]},\"reminderPolicy\":{\"anyOf\":[{\"type\":\"null\"},{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"version\",\"steps\",\"completionCheck\",\"defaultSnoozeMinutes\",\"maxDeliveryAttempts\",\"quietHoursMode\"],\"properties\":{\"version\":{\"type\":\"string\",\"enum\":[\"chelsea_reminder_policy_v1\"]},\"steps\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"kind\",\"offsetMinutes\"],\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"before_due\",\"at_due\"]},\"offsetMinutes\":{\"type\":\"integer\",\"minimum\":0}}}},\"completionCheck\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"enabled\",\"delayMinutes\",\"answerTtlMinutes\",\"repeatAfterMinutes\",\"maxQuestions\"],\"properties\":{\"enabled\":{\"type\":\"boolean\"},\"delayMinutes\":{\"type\":\"integer\",\"minimum\":0},\"answerTtlMinutes\":{\"type\":\"integer\",\"minimum\":1},\"repeatAfterMinutes\":{\"type\":\"integer\",\"minimum\":1},\"maxQuestions\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":20}}},\"defaultSnoozeMinutes\":{\"type\":\"integer\",\"minimum\":1},\"maxDeliveryAttempts\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":10},\"quietHoursMode\":{\"type\":\"string\",\"enum\":[\"inherit\",\"bypass\"]}}}]},\"completionRequired\":{\"type\":[\"boolean\",\"null\"]},\"seriesMutationScope\":{\"type\":[\"string\",\"null\"],\"enum\":[\"current_occurrence\",\"current_and_future\",\"future_only\",\"entire_series\",null]},\"listKind\":{\"type\":[\"string\",\"null\"],\"enum\":[\"today\",\"tomorrow\",\"week\",\"overdue\",\"backlog\",\"reminders\",\"recurring\",\"goals\",null]},\"answerAction\":{\"type\":[\"string\",\"null\"],\"enum\":[\"done\",\"not_done\",\"snooze\",\"reschedule\",\"cancel\",\"skip_occurrence\",null]},\"clarificationNeeded\":{\"type\":\"boolean\"},\"clarificationReason\":{\"type\":[\"string\",\"null\"],\"maxLength\":500},\"fieldPresence\":{\"type\":\"array\",\"items\":{\"type\":\"string\",\"enum\":[\"title\",\"description\",\"taskKind\",\"priority\",\"tags\",\"schedule\",\"recurrence\",\"reminderPolicy\",\"completionRequired\",\"seriesMutationScope\"]}}}}",
+              "type": "string"
+            },
+            {
+              "id": "2d96b34a-9ab4-2f89-11e6-0331ab92166b",
+              "name": "taskCallbackNamespace",
+              "value": "chelsea_task:",
+              "type": "string"
+            },
+            {
+              "id": "b1683063-9493-16ca-4a42-b5a3b2f27656",
+              "name": "taskContractVersion",
+              "value": "chelsea_task_command_v1",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2272,
+        1008
+      ],
+      "id": "fdbe2f20-3502-4302-a015-957ff021319c",
+      "name": "Set | Task Runtime Defaults | TaskInput"
+    },
+    {
+      "id": "d7b597a6-bdb0-4d33-8aad-170d391c4cc6",
+      "name": "Call | Chelsea Task Domain Runtime | Normalize Trusted Task Input | TaskGate",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2016,
+        1008
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_normalize_trusted_task_input_taskgate_92baa798",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3036fa6e-c33c-f3be-e88f-2fce5eaff0eb",
+              "leftValue": "={{ $json._taskCandidate === true && $json._taskFailure !== true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1760,
+        1008
+      ],
+      "id": "c119e239-89c3-482d-9c4d-f4c85dd3bb43",
+      "name": "If | Conservative Task Candidate | TaskGate"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1488,
+        1216
+      ],
+      "id": "1833ff88-c7a4-40b2-9e3d-902546488b22",
+      "name": "End | Not a Task Command | Finish"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_folder_lookup_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_tenant_id:String($json.tenantId||\"\"),p_principal_key:String($json.principalKey||\"\")||null} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -816,
+        1008
+      ],
+      "id": "1d93438b-7641-4c9d-a95e-8ac48f6d0c99",
+      "name": "Search | Folder users | Exact Tenant | ProvisionTaskTable",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "e16903a5-1dbd-4006-a853-2d96bf605946",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Folder User Identity | ProvisionTaskTable",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        1008
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_folder_user_identity_provisiontasktable_e4198056",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Normalize Trusted Task Input | TaskGate\": $items(\"Call | Chelsea Task Domain Runtime | Normalize Trusted Task Input | TaskGate\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91ceeb1c-dc64-c873-5a23-35984e2c7372",
+              "leftValue": "={{ $json._registryExact === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        1008
+      ],
+      "id": "b4792568-c727-4106-9e34-d5744c4ddbec",
+      "name": "If | Folder User Identity Exact | ProvisionTaskTable"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        1216
+      ],
+      "id": "2a52afdc-0e79-4cf8-a585-c8e8fb498fc4",
+      "name": "End | Task Command Failed Closed | Finish"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        1008
+      ],
+      "id": "388d6ddc-a708-4026-a851-6673c69521ef",
+      "name": "Create | Chelsea Tasks Table | ProvisionTaskTable",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst EXPECTED_TASK_FIELD_TYPES = Object.freeze({\n  recordId: 'string', recordType: 'string', rowRole: 'string', taskId: 'string', seriesId: 'string', occurrenceKey: 'string', tenantId: 'string', ownerUserId: 'string', telegramUserId: 'string', chatId: 'string', schemaVersion: 'string',\n  taskKind: 'string', title: 'string', description: 'string', originalText: 'string', priority: 'number', tagsJson: 'string', parentTaskId: 'string', rootTaskId: 'string', sortOrder: 'number', requiredForParent: 'boolean', autoCompleteParent: 'boolean',\n  scheduleKind: 'string', timeRole: 'string', dueDate: 'string', dueAt: 'string', windowStartAt: 'string', windowEndAt: 'string', preferredTimeOfDay: 'string', timezone: 'string', snoozedUntil: 'string',\n  recurrenceRuleJson: 'string', recurrenceStartLocalDate: 'string', recurrenceEndLocalDate: 'string', nextOccurrenceAt: 'string', currentOccurrenceId: 'string', occurrenceScheduledFor: 'string', occurrenceOrdinal: 'number', seriesCompletedCount: 'number', seriesSkippedCount: 'number', seriesMissedCount: 'number', lastOccurrenceAt: 'string',\n  reminderEnabled: 'boolean', reminderPolicyJson: 'string', reminderCursor: 'number', lastReminderAt: 'string', reminderCount: 'number', completionRequired: 'boolean', completionCheckAt: 'string', nextActionType: 'string', nextActionAt: 'string', actionSequence: 'number', actionToken: 'string', lastActionType: 'string', lastActionAt: 'string',\n  status: 'string', statusReason: 'string', stateChangedAt: 'string', completedAt: 'string', terminalAt: 'string', completionNote: 'string', lastAnswerText: 'string', draftKind: 'string', pendingCommandJson: 'string', candidateTaskIdsJson: 'string', expectedAnswerType: 'string', correlationToken: 'string', askedMessageId: 'string', answerMessageId: 'string', answerExpiresAt: 'string', answerIdempotencyKey: 'string', telegramActionMessageId: 'string', telegramActionChatId: 'string', callbackScope: 'string',\n  sourceUpdateId: 'string', sourceMessageId: 'string', sourceMessageDateIso: 'string', sourceInputType: 'string', idempotencyKey: 'string', rowVersion: 'number', lastMutationToken: 'string', leaseOwner: 'string', leaseUntil: 'string', dispatchToken: 'string', lastDeliveredActionToken: 'string', lastDeliveryOutcome: 'string', attemptCount: 'number', nextRetryAt: 'string', lastError: 'string', lastErrorAt: 'string', historyJson: 'string',\n});\n\nconst registry = $items('Call | Chelsea Task Domain Runtime | Verify Folder User Identity | ProvisionTaskTable')[0]?.json || {};\nconst metadata = $input.first()?.json || {};\nconst expectedTableName = String(registry.taskTableName || '').trim();\n\nfunction fail(reason) {\n  return [{ json: {\n    ...registry,\n    _taskTableSchemaExact: false,\n    taskHandled: true,\n    taskOperation: 'task_table_schema_failed_review',\n    taskErrorCode: 'task_table_schema_mismatch',\n    taskSchemaFailureReason: String(reason || 'schema_mismatch').slice(0, 120),\n    memoryWriteAllowed: false,\n  } }];\n}\n\ntry {\n  if (metadata.error || metadata.statusCode >= 400) throw new Error('table_create_or_lookup_failed');\n  if (!expectedTableName || String(metadata.name || '').trim() !== expectedTableName) throw new Error('table_name_mismatch');\n  if (!String(metadata.id || '').trim()) throw new Error('table_id_missing');\n\n  const columns = Array.isArray(metadata.columns)\n    ? metadata.columns\n    : (Array.isArray(metadata.columns?.column) ? metadata.columns.column : []);\n  if (!columns.length) throw new Error('columns_missing');\n\n  const actual = new Map();\n  for (const column of columns) {\n    const name = String(column?.name || '').trim();\n    const type = String(column?.type || 'string').trim();\n    if (!name) throw new Error('column_name_missing');\n    if (actual.has(name)) throw new Error(`duplicate_column:${name}`);\n    actual.set(name, type);\n  }\n\n  const expectedNames = Object.keys(EXPECTED_TASK_FIELD_TYPES);\n  if (expectedNames.length !== 91) throw new Error('validator_field_count_mismatch');\n  for (const name of expectedNames) {\n    if (!actual.has(name)) throw new Error(`missing_column:${name}`);\n    if (actual.get(name) !== EXPECTED_TASK_FIELD_TYPES[name]) throw new Error(`column_type_mismatch:${name}`);\n  }\n\n  // Data Table system fields are not custom schema columns in current n8n, but\n  // tolerate them if a future API includes them in table metadata.\n  const allowedSystemColumns = new Set(['id', 'createdAt', 'updatedAt']);\n  for (const name of actual.keys()) {\n    if (!Object.prototype.hasOwnProperty.call(EXPECTED_TASK_FIELD_TYPES, name) && !allowedSystemColumns.has(name)) {\n      throw new Error(`unexpected_column:${name}`);\n    }\n  }\n\n  return [{ json: {\n    ...registry,\n    _taskTableSchemaExact: true,\n    taskTableId: String(metadata.id),\n    taskTableSchemaFieldCount: expectedNames.length,\n    memoryWriteAllowed: false,\n  } }];\n} catch (error) {\n  return fail(error.message);\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        1008
+      ],
+      "id": "ce0518f9-64f7-4e3c-83e6-6e27aa3f6193",
+      "name": "Code | Verify Chelsea Tasks Schema | ProvisionTaskTable"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75f63816-b6a9-d276-4c39-8b781330048d",
+              "leftValue": "={{ $json._taskTableSchemaExact === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        1008
+      ],
+      "id": "344ff8de-dab1-49e9-bc18-ab813117ccdd",
+      "name": "If | Chelsea Tasks Schema Exact | ProvisionTaskTable"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{},p_record:{},p_limit:10000} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        1008
+      ],
+      "id": "7af94288-7e9b-46dd-9f3b-d4887f445549",
+      "name": "Read | Chelsea Tasks Rows | TaskState",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "4ecc8030-366a-4609-82a8-c631712d7d57",
+      "name": "Call | Chelsea Task Domain Runtime | Route Task Operation | TaskSemantic",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        1008
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_route_task_operation_tasksemantic_ab8c875a",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Verify Folder User Identity | ProvisionTaskTable\": $items(\"Call | Chelsea Task Domain Runtime | Verify Folder User Identity | ProvisionTaskTable\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ddc0bd12-61d7-2952-ddde-169483867da3",
+              "leftValue": "={{ $json._semanticNeeded === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        1008
+      ],
+      "id": "57afd2c5-ce7d-4e17-b28b-1c8e2c82b319",
+      "name": "If | Paid Task Semantic Call Required | TaskSemantic"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().length ? $input.all().map(item => ({ json: { ...item.json, credentialSource: 'environment', credentialReady: true } })) : [{ json: { credentialSource: 'environment', credentialReady: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        928
+      ],
+      "id": "58d76831-d520-4004-a653-184ac29bea5b",
+      "name": "Config | Key | OpenAI API | TaskSemantic",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.taskSemanticRequestBody }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1968,
+        928
+      ],
+      "id": "a39ee888-df36-4428-9cdf-d2f8b7f95802",
+      "name": "Call | OpenAI | Parse Task Command JSON | TaskSemantic",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        1216
+      ],
+      "id": "b79e148a-2bac-4ab1-b2f5-811b75ab1523",
+      "name": "NoOp | Use Local Task Correlation | TaskSemantic"
+    },
+    {
+      "id": "35da30d0-f3c6-4ed4-b58e-822e6c7f94df",
+      "name": "Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3088,
+        1008
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_plan_trusted_task_mutation_applytaskmutation_73a6f57f",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Route Task Operation | TaskSemantic\": $items(\"Call | Chelsea Task Domain Runtime | Route Task Operation | TaskSemantic\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5c249b77-f4d8-f99d-4fd8-2701124f2ae9",
+              "leftValue": "={{ $json._mutationNeeded === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3344,
+        1008
+      ],
+      "id": "9bbbb5e1-2aed-4e46-bf90-d334fe214cc7",
+      "name": "If | Task Mutation Required | ApplyTaskMutation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "958c37af-c7b5-577e-fff1-edb6fea774f2",
+              "leftValue": "={{ $json.taskHandled === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3600,
+        1296
+      ],
+      "id": "5f805e51-45f4-47ce-9cec-d1693a0a9764",
+      "name": "If | Task Outcome Handled | TaskResponse"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ad4e4ab-a92c-4e1b-266a-27446a177bf8",
+              "leftValue": "={{ $json._commandSaga === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3472,
+        720
+      ],
+      "id": "331d1f09-68e8-4739-9221-37c7237f6514",
+      "name": "If | Task Mutation Uses Verified Saga | ApplyTaskSaga"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3744,
+        640
+      ],
+      "id": "e4119c3c-5660-4f1a-8586-15336f5970f8",
+      "name": "Loop | Task Command Saga Mutations | ApplyTaskSaga"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "96b6ae36-5a27-a67f-3e3c-9f4d1bfdf2b3",
+              "leftValue": "={{ $json._writeMode === \"upsert\" }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4000,
+        640
+      ],
+      "id": "c5ac3d52-acc1-43a5-beec-3979ed1ac51d",
+      "name": "If | Task Saga Row Is New | ApplyTaskSaga"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"upsert\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"idempotencyKey\":$json.idempotencyKey},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4256,
+        544
+      ],
+      "id": "4505e987-2adb-4019-81df-dc26e3c54da4",
+      "name": "Upsert | Chelsea Tasks | Task Saga Row | ApplyTaskSaga"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4256,
+        752
+      ],
+      "id": "8d453456-b31f-4de8-895a-514edf059b58",
+      "name": "Update | Chelsea Tasks | Task Saga CAS Row | ApplyTaskSaga",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Loop | Task Command Saga Mutations | ApplyTaskSaga').item.json.recordId,\"tenantId\":$('Loop | Task Command Saga Mutations | ApplyTaskSaga').item.json.tenantId,\"ownerUserId\":$('Loop | Task Command Saga Mutations | ApplyTaskSaga').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4512,
+        640
+      ],
+      "id": "abc9a9f2-8a84-421e-9c06-8739a96d4a47",
+      "name": "Read | Chelsea Tasks | Verify Task Saga Mutation | ApplyTaskSaga",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "02c16067-9192-46c0-a8a0-4e332606ce70",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Task Command Saga Mutation | ApplyTaskSaga",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4784,
+        640
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_task_command_saga_mutation_applytasksaga_223432ba",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Loop | Task Command Saga Mutations | ApplyTaskSaga\": $items(\"Loop | Task Command Saga Mutations | ApplyTaskSaga\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "abab84ba-f037-2829-4af5-09a4886a98b0",
+              "leftValue": "={{ $json._commandSagaVerified === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        640
+      ],
+      "id": "9b57c42b-dc8a-428d-8d66-10d290f860a0",
+      "name": "If | Task Command Saga Mutation Verified | ApplyTaskSaga"
+    },
+    {
+      "id": "939691fc-b645-4d97-ac45-e86dee1d5743",
+      "name": "Call | Chelsea Task Domain Runtime | Finalize Verified Task Command Saga | ApplyTaskSaga",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        5296,
+        752
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_finalize_verified_task_command_saga_applytasksaga_49d0b183",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Verify Task Command Saga Mutation | ApplyTaskSaga\": $items(\"Call | Chelsea Task Domain Runtime | Verify Task Command Saga Mutation | ApplyTaskSaga\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f521662b-cfbb-23cc-7ca1-68d6a39a88c0",
+              "leftValue": "={{ $json._writeMode === \"upsert\" }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3600,
+        928
+      ],
+      "id": "deda1631-297e-438c-87a7-5188ce35e27e",
+      "name": "If | Task Row Is New | ApplyTaskMutation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"upsert\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"idempotencyKey\":$json.idempotencyKey},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3872,
+        848
+      ],
+      "id": "142e2992-a295-43cd-97c2-90917b435178",
+      "name": "Upsert | Chelsea Tasks | Deterministic Task Rows | ApplyTaskMutation"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3872,
+        1040
+      ],
+      "id": "cf1101d7-99a1-4377-9ac3-2d203607f518",
+      "name": "Update | Chelsea Tasks | CAS Task Row | ApplyTaskMutation",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation').item.json.recordId,\"tenantId\":$('Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation').item.json.tenantId,\"ownerUserId\":$('Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4128,
+        944
+      ],
+      "id": "5ae805c8-b3fc-4fea-9094-900a7461e554",
+      "name": "Read | Chelsea Tasks | Verify Task Mutation | ApplyTaskMutation",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "f5033e76-d418-4299-b309-933fd38f98b2",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Task Mutation Read Back | ApplyTaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4384,
+        944
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_task_mutation_read_back_applytaskmutation_b67d03ac",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Plan Trusted Task Mutation | ApplyTaskMutation\": $items(\"Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().length ? $input.all().map(item => ({ json: { ...item.json, credentialSource: 'environment', credentialReady: true } })) : [{ json: { credentialSource: 'environment', credentialReady: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5648,
+        1008
+      ],
+      "id": "57452541-9254-4f5c-9ccc-3afe7ecdf8b0",
+      "name": "Config | Key | Telegram Bot | TaskResponse",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "a723f30d-6954-4c95-9563-d8600b6a66cd",
+      "name": "Call | Chelsea Task Domain Runtime | Build Telegram Task Response | TaskResponse",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        5904,
+        1008
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_build_telegram_task_response_taskresponse_4b4b6306",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "775d21d5-bb16-9231-dfcf-e1e2f89b83bb",
+              "leftValue": "={{ $json._isTaskCallback === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6160,
+        1008
+      ],
+      "id": "f0e83b88-2459-4bac-bff6-337e89cee2b1",
+      "name": "If | Task Response Is Callback | TaskResponse"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/answerCallbackQuery\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramTaskCallbackAckBody }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6432,
+        912
+      ],
+      "id": "1e9ca02b-502f-42d1-99ca-5db55cba4253",
+      "name": "Call | Telegram | Acknowledge Task Callback | TaskResponse",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/sendMessage\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $(\"Call | Chelsea Task Domain Runtime | Build Telegram Task Response | TaskResponse\").first().json.telegramTaskResponseBody }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6688,
+        1008
+      ],
+      "id": "85431c16-ede2-4928-8aca-f548f99757b7",
+      "name": "Call | Telegram | Send Task Response | TaskResponse",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "f31264a7-bb6c-4c6a-98a4-b52e77c579b4",
+      "name": "Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        6944,
+        1008
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_finalize_telegram_task_receipt_taskresponse_875dcc0c",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Build Telegram Task Response | TaskResponse\": $items(\"Call | Chelsea Task Domain Runtime | Build Telegram Task Response | TaskResponse\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "429a1236-0077-5c34-4157-37d56993360f",
+              "leftValue": "={{ $json._receiptMutationNeeded === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7200,
+        1008
+      ],
+      "id": "dca0a9ce-f20f-4f6c-b3a4-3ce14fd03b89",
+      "name": "If | Task Question Receipt Mutation Required | TaskResponse"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7472,
+        912
+      ],
+      "id": "a8d633c2-faaa-48c9-b91e-fef9303fb3d4",
+      "name": "Update | Chelsea Tasks | Store Task Question Receipt | TaskResponse",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse').item.json.recordId,\"tenantId\":$('Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse').item.json.tenantId,\"ownerUserId\":$('Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7728,
+        912
+      ],
+      "id": "2849995c-b1dc-4e85-ae2c-c8af5dd8091c",
+      "name": "Read | Chelsea Tasks | Verify Task Question Receipt | TaskResponse",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "6e37ceda-0f6d-4c77-851a-f04d867ee24b",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Task Question Receipt | TaskResponse",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        7984,
+        912
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_task_question_receipt_taskresponse_6eba41dd",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Finalize Telegram Task Receipt | TaskResponse\": $items(\"Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        8240,
+        1072
+      ],
+      "id": "24c47448-b462-442c-a65e-8862e3482db3",
+      "name": "End | Task Command Handled | Finish"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nconst text=v=>String(v??'').normalize('NFKC').trim();\nconst username=v=>text(v).replace(/^@+/,'').toLowerCase();\nconst principalKey=text(input.principalKey);\nconst storageUsername=username(input.storageUsername||input.userId||input.memoryUserId);\nconst currentUsername=username(input.currentUsername||input.telegramUsername);\nconst telegramActorId=text(input.telegramActorId||input.telegramUserId);\nif(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('identity boundary: invalid principalKey');\nif(!/^actor_[a-f0-9]{32}$/.test(storageUsername))throw new Error('identity boundary: invalid storageUsername');\nif(!/^\\d+$/.test(telegramActorId)||Number(telegramActorId)<=0)throw new Error('identity boundary: numeric Telegram actor required');\nif(text(input.telegramActorId)&&text(input.telegramUserId)&&text(input.telegramActorId)!==text(input.telegramUserId))throw new Error('identity boundary: Telegram actor fields mismatch');\nif(currentUsername&&!/^[a-z0-9_]{1,64}$/.test(currentUsername))throw new Error('identity boundary: invalid currentUsername');\nconst expected={userId:storageUsername,memoryUserId:storageUsername,tenantId:`tenant_${storageUsername}`,memoryTenantId:`tenant_${storageUsername}`,qdrantCollection:`kb_tenant_${storageUsername}`,soulId:`chelsea_soul_${storageUsername}`};\nfor(const [key,value] of Object.entries(expected)){if(text(input[key])!==value)throw new Error(`identity boundary: ${key} mismatch`);}\nconst schema=text(input.identitySchemaVersion);if(schema!=='chelsea_actor_identity_v3')throw new Error('identity boundary: schema mismatch');\nif(input.identityAuthorityVerified!==true&&input.identityClaimsVerified!==true)throw new Error('identity boundary: PostgreSQL authority verification required');\nreturn [{json:{...input,...expected,principalKey,storageUsername,currentUsername,telegramUsername:currentUsername,telegramActorId,telegramUserId:telegramActorId,identitySchemaVersion:schema,identityStatus:text(input.identityStatus)||'active',identityBoundaryVerified:true}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2288,
+        1008
+      ],
+      "id": "1c4c2c9e-fc84-c255-a3d9-df84a62f0474",
+      "name": "Code | Validate Username Identity | TaskGate"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1748,
+        828
+      ],
+      "id": "23f6bd02-e500-4fdc-9f27-2364e6079cc5",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Parse Task Command JSON   TaskSemantic | TaskSemantic"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2188,
+        928
+      ],
+      "id": "2e12d06f-159c-4295-84f2-af6d8fddf532",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | TaskSemantic"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | TaskInput": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Username Identity | TaskGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Task Runtime Defaults | TaskInput": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Normalize Trusted Task Input | TaskGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Normalize Trusted Task Input | TaskGate": {
+      "main": [
+        [
+          {
+            "node": "If | Conservative Task Candidate | TaskGate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Conservative Task Candidate | TaskGate": {
+      "main": [
+        [
+          {
+            "node": "Search | Folder users | Exact Tenant | ProvisionTaskTable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Not a Task Command | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search | Folder users | Exact Tenant | ProvisionTaskTable": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Folder User Identity | ProvisionTaskTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Folder User Identity Exact | ProvisionTaskTable": {
+      "main": [
+        [
+          {
+            "node": "Create | Chelsea Tasks Table | ProvisionTaskTable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Task Command Failed Closed | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Folder User Identity | ProvisionTaskTable": {
+      "main": [
+        [
+          {
+            "node": "If | Folder User Identity Exact | ProvisionTaskTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create | Chelsea Tasks Table | ProvisionTaskTable": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Chelsea Tasks Schema | ProvisionTaskTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Chelsea Tasks Schema | ProvisionTaskTable": {
+      "main": [
+        [
+          {
+            "node": "If | Chelsea Tasks Schema Exact | ProvisionTaskTable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Chelsea Tasks Schema Exact | ProvisionTaskTable": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks Rows | TaskState",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Task Command Failed Closed | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks Rows | TaskState": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Route Task Operation | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Paid Task Semantic Call Required | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "Config | Key | OpenAI API | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoOp | Use Local Task Correlation | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Route Task Operation | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "If | Paid Task Semantic Call Required | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config | Key | OpenAI API | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Parse Task Command JSON   TaskSemantic | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI | Parse Task Command JSON | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NoOp | Use Local Task Correlation | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "If | Task Mutation Required | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Mutation Required | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "If | Task Mutation Uses Verified Saga | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Task Outcome Handled | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Outcome Handled | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Config | Key | Telegram Bot | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Not a Task Command | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Mutation Uses Verified Saga | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Loop | Task Command Saga Mutations | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Task Row Is New | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop | Task Command Saga Mutations | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Finalize Verified Task Command Saga | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Task Saga Row Is New | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Saga Row Is New | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Upsert | Chelsea Tasks | Task Saga Row | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update | Chelsea Tasks | Task Saga CAS Row | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert | Chelsea Tasks | Task Saga Row | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Saga Mutation | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | Task Saga CAS Row | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Saga Mutation | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Task Saga Mutation | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Task Command Saga Mutation | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Task Command Saga Mutation | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "If | Task Command Saga Mutation Verified | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Command Saga Mutation Verified | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Loop | Task Command Saga Mutations | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Finalize Verified Task Command Saga | ApplyTaskSaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Finalize Verified Task Command Saga | ApplyTaskSaga": {
+      "main": [
+        [
+          {
+            "node": "Config | Key | Telegram Bot | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Row Is New | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Upsert | Chelsea Tasks | Deterministic Task Rows | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update | Chelsea Tasks | CAS Task Row | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert | Chelsea Tasks | Deterministic Task Rows | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Mutation | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | CAS Task Row | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Mutation | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Task Mutation | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Task Mutation Read Back | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Task Mutation Read Back | ApplyTaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Config | Key | Telegram Bot | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config | Key | Telegram Bot | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Build Telegram Task Response | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Response Is Callback | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Acknowledge Task Callback | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Telegram | Send Task Response | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Build Telegram Task Response | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "If | Task Response Is Callback | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Acknowledge Task Callback | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Task Response | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Task Response | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Question Receipt Mutation Required | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Update | Chelsea Tasks | Store Task Question Receipt | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Task Command Handled | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Finalize Telegram Task Receipt | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "If | Task Question Receipt Mutation Required | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | Store Task Question Receipt | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Question Receipt | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Task Question Receipt | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Task Question Receipt | TaskResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Task Question Receipt | TaskResponse": {
+      "main": [
+        [
+          {
+            "node": "End | Task Command Handled | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Username Identity | TaskGate": {
+      "main": [
+        [
+          {
+            "node": "Set | Task Runtime Defaults | TaskInput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Parse Task Command JSON   TaskSemantic | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI | Parse Task Command JSON | TaskSemantic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | TaskSemantic": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Plan Trusted Task Mutation | ApplyTaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 300,
+    "timezone": "Asia/Novosibirsk",
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromAList",
+    "availableInMCP": false,
+    "callerIds": "5GAzkL7PzohlOycF",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "fc884c99-ecd3-5bcf-a459-5d0cab486d2e",
+  "activeVersionId": null,
+  "versionCounter": 75,
+  "tags": []
+}

@@ -1,0 +1,2890 @@
+{
+  "updatedAt": "2026-08-01T14:58:42.654Z",
+  "createdAt": "2026-07-19T10:58:35.168Z",
+  "id": "7VsagxmTKlmJ1YJ8",
+  "name": "Челси задачи планировщик v2.1 [HARDENED STAGED]",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Сканирование (SchedulerScan)\nПользователи берутся из PostgreSQL identity/folder receipts. Legacy `Folder users` не используется; отсутствующая task-таблица пропускается без создания.",
+        "height": 760,
+        "width": 2450,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        11536,
+        -1296
+      ],
+      "id": "5ea43f75-0c44-48f1-af38-f8cb017d6759",
+      "name": "## Пользователи и существующие task-таблицы (SchedulerScan)"
+    },
+    {
+      "parameters": {
+        "content": "## Claim (SchedulerAction)\nКаждый side effect разрешён только после CAS и exact read-back.",
+        "height": 1088,
+        "width": 2648,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        14176,
+        -848
+      ],
+      "id": "5836f171-019f-4d87-add4-a4f6162fbbeb",
+      "name": "## Lease и выбор действия (SchedulerAction)"
+    },
+    {
+      "parameters": {
+        "content": "## Telegram (SchedulerAction)\nDispatch фиксируется до send; receipt продвигает action один раз.",
+        "height": 496,
+        "width": 3362,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        17008,
+        -880
+      ],
+      "id": "3812730c-bb72-4704-9327-b8bc3b5da362",
+      "name": "## Telegram delivery и receipt (SchedulerAction)"
+    },
+    {
+      "parameters": {
+        "content": "## Recurrence (SchedulerAction)\nadvance_series: deterministic occurrence -> series counter/pointer -> очистка occurrence action.",
+        "height": 564,
+        "width": 2066,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        17008,
+        -320
+      ],
+      "id": "ada6eabe-bca1-4ba7-bddc-1e46ded50284",
+      "name": "## Внутренние actions и recurrence saga (SchedulerAction)"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        11728,
+        -928
+      ],
+      "id": "671061c1-9493-49e8-9b81-3edfd7df74f0",
+      "name": "Trigger | Schedule | TaskScheduler",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3cb632e7-878d-bdd7-6aca-145ac12a93fd",
+              "name": "taskSchedulerVersion",
+              "value": "chelsea_tasks_scheduler_v1_3",
+              "type": "string"
+            },
+            {
+              "id": "ebbaa6ab-4ae3-d430-5e2f-0c8d6df3b8c7",
+              "name": "taskLeaseSeconds",
+              "value": 120,
+              "type": "number"
+            },
+            {
+              "id": "359b2f84-8455-b60d-d57f-02c3c24735b6",
+              "name": "taskCallbackNamespace",
+              "value": "chelsea_task:",
+              "type": "string"
+            },
+            {
+              "id": "bf58d944-1c22-6eb9-302b-3a6c1c006da5",
+              "name": "taskDefaultTimezone",
+              "value": "Asia/Novosibirsk",
+              "type": "string"
+            },
+            {
+              "id": "c21536d8-e1b0-79fe-b494-5be6faf31726",
+              "name": "taskQuietHoursStart",
+              "value": "22:00",
+              "type": "string"
+            },
+            {
+              "id": "9aa83d42-21e6-8116-6943-d2fd7c7ae12a",
+              "name": "taskQuietHoursEnd",
+              "value": "08:00",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        11984,
+        -928
+      ],
+      "id": "14ec387d-f540-4e82-b7ba-d930bf0cc0f3",
+      "name": "Set | Scheduler Runtime Defaults | SchedulerScan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_folder_list_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        12240,
+        -928
+      ],
+      "id": "90a6eaf8-62f2-42f8-b1c9-cdbe184c06ca",
+      "name": "Read | Folder users | Registered Tenants | SchedulerScan",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "516b5239-a62d-4bf5-a002-5236af26f102",
+      "name": "Call | Chelsea Task Domain Runtime | Prepare Registered Task Users | PreUsernameCutover",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        12496,
+        -928
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_prepare_registered_task_users_schedulerscan_preusernamecutover_952511f0",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Set | Scheduler Runtime Defaults | SchedulerScan\": $items(\"Set | Scheduler Runtime Defaults | SchedulerScan\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        12768,
+        -928
+      ],
+      "id": "b618f8a0-a8ae-4a70-ba5d-71c1247c0cfc",
+      "name": "Loop | Registered Task Users | SchedulerScan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{},p_record:{},p_limit:10000} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        13008,
+        -848
+      ],
+      "id": "606f7bf5-46a1-4571-a016-7fb98860757d",
+      "name": "Read | Chelsea Tasks | Due Action Candidates | SchedulerScan",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "8dc81fae-68fd-48ef-919a-976f5b561d11",
+      "name": "Call | Chelsea Task Domain Runtime | Select Due Task Actions | SchedulerScan",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        13264,
+        -848
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_select_due_task_actions_schedulerscan_70509903",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Prepare Registered Task Users | SchedulerScan\": $items(\"Code | Prepare Registered Task Users | SchedulerScan\").map(item => item.json), \"Loop | Registered Task Users | SchedulerScan\": $items(\"Loop | Registered Task Users | SchedulerScan\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        13568,
+        -848
+      ],
+      "id": "b926f02e-2774-4f17-a053-28380804463a",
+      "name": "Loop | Due Task Actions | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7f0ea73f-5220-5e7e-479f-62d43bf5da16",
+              "leftValue": "={{ $json._hasDueAction === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        14336,
+        -672
+      ],
+      "id": "d964c15b-7e9f-4709-b4c6-529cfcf1c6bf",
+      "name": "If | Due Task Action Exists | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e4ccce3a-2a60-5616-52d6-62c152248524",
+              "leftValue": "={{ $json._schedulerReconciliationRequired === true && $json._schedulerReconciliationClassification === \"delivery_reconciliation_required\" && $json.automaticDispatchAllowed === false }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        14656,
+        -656
+      ],
+      "id": "c5bd5cef-7f77-46ee-ae6d-603ea963c4cf",
+      "name": "If | Task Action Needs Reconciliation | SchedulerAction"
+    },
+    {
+      "id": "ab46e60e-9850-4606-8dd1-1cd69e5d586f",
+      "name": "Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        14960,
+        -672
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_plan_expired_dispatch_reconciliation_scheduleraction_5776ef2f",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ec565764-412d-121f-9287-3b6d870d35c7",
+              "leftValue": "={{ $json._reconciliationMutationNeeded === true && $json.automaticDispatchAllowed === false }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        15216,
+        -672
+      ],
+      "id": "c85fd67e-a247-47b8-9f61-17221203b621",
+      "name": "If | Dispatch Reconciliation Planned | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        15504,
+        -688
+      ],
+      "id": "e896469f-62e0-4765-8f09-0e24608e4244",
+      "name": "Update | Chelsea Tasks | Reconcile Expired Dispatch | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction').item.json.recordId,\"tenantId\":$('Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction').item.json.tenantId,\"ownerUserId\":$('Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        15760,
+        -688
+      ],
+      "id": "8c2cf7fb-5f40-4c68-8136-1077c9b26387",
+      "name": "Read | Chelsea Tasks | Verify Dispatch Reconciliation | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "f30d8439-cf7e-4775-b9a3-01a282f9628d",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Expired Dispatch Reconciliation | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        16016,
+        -656
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_expired_dispatch_reconciliation_scheduleraction_b6ce4844",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Plan Expired Dispatch Reconciliation | SchedulerAction\": $items(\"Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "9e4bebc2-1978-4205-b514-6b8f2dd684af",
+      "name": "Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        14928,
+        -48
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_plan_task_action_claim_scheduleraction_1f8c45aa",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "67d3ec60-5caf-e1b7-c0ec-054fe9026bcd",
+              "leftValue": "={{ $json._claimFailed !== true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        15168,
+        -48
+      ],
+      "id": "022a3043-3670-4459-9d2e-f92a66409b9b",
+      "name": "If | Task Action Claim Planned | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_claim_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_worker:String($json.leaseOwner),p_lease_seconds:Number($json.taskLeaseSeconds || 120)} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        15440,
+        -64
+      ],
+      "id": "742a264a-9eb1-40a3-a61f-9c728ba6e6b8",
+      "name": "Update | Chelsea Tasks | Claim Due Action | SchedulerAction",
+      "alwaysOutputData": true,
+      "notes": "Chelsea Hardening v6: atomic PostgreSQL claim with FOR UPDATE SKIP LOCKED; stale candidates return zero rows."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction').item.json.recordId,\"tenantId\":$('Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction').item.json.tenantId,\"ownerUserId\":$('Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        15712,
+        -64
+      ],
+      "id": "a47f5ba5-fb31-4964-bbd4-ce747bf6e216",
+      "name": "Read | Chelsea Tasks | Verify Due Action Claim | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "e1252494-15fb-40f0-956d-4117900a4b3e",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        15968,
+        -64
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_claim_and_plan_action_scheduleraction_f6f68d04",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Plan Task Action Claim | SchedulerAction\": $items(\"Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "86dcf78a-deea-f3c8-2f48-659b49915b2a",
+              "leftValue": "={{ $json._schedulerActionPath === \"telegram\" }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16224,
+        -64
+      ],
+      "id": "20aae041-66ad-494a-a47e-e292b6926e2f",
+      "name": "If | Task Action Uses Telegram | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9d8ca922-b63f-2c61-f0cf-ed8cde1f5cb3",
+              "leftValue": "={{ $json._schedulerActionPath === \"internal\" }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16528,
+        -48
+      ],
+      "id": "0b26e95f-61d9-472e-b124-0875356fbb62",
+      "name": "If | Task Action Is Internal | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        17120,
+        -672
+      ],
+      "id": "a67b1de2-6c39-4ed8-8447-f024af8aad63",
+      "name": "Update | Chelsea Tasks | Mark Task Dispatch | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction').item.json.recordId,\"tenantId\":$('Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction').item.json.tenantId,\"ownerUserId\":$('Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        17376,
+        -672
+      ],
+      "id": "0891b6dc-5d9f-4fc5-a54a-fb3fd0ece7c9",
+      "name": "Read | Chelsea Tasks | Verify Task Dispatch | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "c5268fcc-f054-456f-a0b2-10c2002fd672",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Dispatch and Build Telegram Action | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        17632,
+        -672
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_dispatch_and_build_telegram_action_scheduleraction_fe05629f",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Verify Claim and Plan Action | SchedulerAction\": $items(\"Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3883e9ed-8fc9-801a-c4ba-51c265c7f4f9",
+              "leftValue": "={{ $json._telegramActionReady === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        17888,
+        -672
+      ],
+      "id": "d3ccf3e0-b5f0-4fca-bd41-698837fab6d1",
+      "name": "If | Telegram Task Action Ready | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().length ? $input.all().map(item => ({ json: { ...item.json, credentialSource: 'environment', credentialReady: true } })) : [{ json: { credentialSource: 'environment', credentialReady: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        18176,
+        -656
+      ],
+      "id": "a354ddfb-51f7-42f4-8340-9bf6eb341db0",
+      "name": "Config | Key | Telegram Bot | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "46620560-737e-4ae2-8bef-ab5b47746669",
+      "name": "Call | Chelsea Task Domain Runtime | Attach Telegram Key to Task Action | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        18432,
+        -656
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_attach_telegram_key_to_task_action_scheduleraction_2e57c213",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Verify Dispatch and Build Telegram Action | SchedulerAction\": $items(\"Call | Chelsea Task Domain Runtime | Verify Dispatch and Build Telegram Action | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "393145cf-9fd0-ff6e-5ff0-514602d6e3bd",
+              "leftValue": "={{ $json._telegramKeyReady === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        18640,
+        -672
+      ],
+      "id": "201e76d9-5bc6-4980-905c-806635a26c58",
+      "name": "If | Telegram Key Ready | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/sendMessage\" }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramTaskActionBody }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        18880,
+        -672
+      ],
+      "id": "c4afa2dc-3e30-4042-a315-826df1698d49",
+      "name": "Call | Telegram | Send Task Action | SchedulerAction",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "2093cc1c-4636-4115-89a2-39239641aaae",
+      "name": "Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        19136,
+        -672
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_finalize_telegram_task_delivery_scheduleraction_e3e4b35f",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Attach Telegram Key to Task Action | SchedulerAction\": $items(\"Call | Chelsea Task Domain Runtime | Attach Telegram Key to Task Action | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "404b1519-4a33-861a-e1e8-30f09ebd7b24",
+              "leftValue": "={{ $json._deliveryMutationNeeded === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        19408,
+        -672
+      ],
+      "id": "2be66ec9-3090-4d00-8f3d-2a6d03e1f45b",
+      "name": "If | Delivery State Mutation Required | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        19664,
+        -656
+      ],
+      "id": "a43df65b-3c4b-40ce-a8e4-1e35130045ca",
+      "name": "Update | Chelsea Tasks | Finalize Task Delivery | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction').item.json.recordId,\"tenantId\":$('Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction').item.json.tenantId,\"ownerUserId\":$('Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        19920,
+        -656
+      ],
+      "id": "86493598-14d2-41bd-83c0-90342e9cdd4a",
+      "name": "Read | Chelsea Tasks | Verify Task Delivery | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "fcade06a-46a3-4f34-84fb-c73047aaa1a7",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Task Delivery Mutation | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        20176,
+        -656
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_task_delivery_mutation_scheduleraction_400bc3ab",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Code | Finalize Telegram Task Delivery | SchedulerAction\": $items(\"Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "16a83d1b-8b4a-4499-b3b5-e7962934ca8b",
+      "name": "Call | Chelsea Task Domain Runtime | Plan Internal Task Action | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        17056,
+        -16
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_plan_internal_task_action_scheduleraction_5d810f38",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        17328,
+        -16
+      ],
+      "id": "0d5ac173-4d76-4df8-9b7e-62c4adf61cdb",
+      "name": "Loop | Internal Task Mutations | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3fec43e9-2055-851d-aeac-9efd4f0e205d",
+              "leftValue": "={{ $json._internalOperation === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        17584,
+        -80
+      ],
+      "id": "c7878d72-193c-4a3f-ad3e-5f8f4cf15d6b",
+      "name": "If | Internal Task Mutation Required | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "138d3ccf-5b56-d36a-9c0c-78e3c0cfe7d9",
+              "leftValue": "={{ $json._writeMode === \"upsert\" }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        17824,
+        -80
+      ],
+      "id": "a1757eaa-0ffd-48f7-b583-e7692ab47827",
+      "name": "If | Internal Task Row Is New | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"upsert\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"idempotencyKey\":$json.idempotencyKey},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        18080,
+        -224
+      ],
+      "id": "0b153619-3c0c-4ced-a84f-e79ffed909f9",
+      "name": "Upsert | Chelsea Tasks | Next Occurrence | SchedulerAction"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"update\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$json.recordId,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"rowVersion\":$json._expectedPreviousVersion,\"status\":$json._expectedPreviousStatus,\"lastMutationToken\":$json._expectedPreviousMutationToken,\"nextActionType\":$json._expectedPreviousNextActionType,\"nextActionAt\":$json._expectedPreviousNextActionAt,\"actionToken\":$json._expectedPreviousActionToken,\"leaseOwner\":$json._expectedPreviousLeaseOwner,\"leaseUntil\":$json._expectedPreviousLeaseUntil,\"dispatchToken\":$json._expectedPreviousDispatchToken},p_record:{\"recordId\":$json.recordId,\"recordType\":$json.recordType,\"rowRole\":$json.rowRole,\"taskId\":$json.taskId,\"seriesId\":$json.seriesId,\"occurrenceKey\":$json.occurrenceKey,\"tenantId\":$json.tenantId,\"ownerUserId\":$json.ownerUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"schemaVersion\":$json.schemaVersion,\"taskKind\":$json.taskKind,\"title\":$json.title,\"description\":$json.description,\"originalText\":$json.originalText,\"priority\":$json.priority,\"tagsJson\":$json.tagsJson,\"parentTaskId\":$json.parentTaskId,\"rootTaskId\":$json.rootTaskId,\"sortOrder\":$json.sortOrder,\"requiredForParent\":$json.requiredForParent,\"autoCompleteParent\":$json.autoCompleteParent,\"scheduleKind\":$json.scheduleKind,\"timeRole\":$json.timeRole,\"dueDate\":$json.dueDate,\"dueAt\":$json.dueAt,\"windowStartAt\":$json.windowStartAt,\"windowEndAt\":$json.windowEndAt,\"preferredTimeOfDay\":$json.preferredTimeOfDay,\"timezone\":$json.timezone,\"snoozedUntil\":$json.snoozedUntil,\"recurrenceRuleJson\":$json.recurrenceRuleJson,\"recurrenceStartLocalDate\":$json.recurrenceStartLocalDate,\"recurrenceEndLocalDate\":$json.recurrenceEndLocalDate,\"nextOccurrenceAt\":$json.nextOccurrenceAt,\"currentOccurrenceId\":$json.currentOccurrenceId,\"occurrenceScheduledFor\":$json.occurrenceScheduledFor,\"occurrenceOrdinal\":$json.occurrenceOrdinal,\"seriesCompletedCount\":$json.seriesCompletedCount,\"seriesSkippedCount\":$json.seriesSkippedCount,\"seriesMissedCount\":$json.seriesMissedCount,\"lastOccurrenceAt\":$json.lastOccurrenceAt,\"reminderEnabled\":$json.reminderEnabled,\"reminderPolicyJson\":$json.reminderPolicyJson,\"reminderCursor\":$json.reminderCursor,\"lastReminderAt\":$json.lastReminderAt,\"reminderCount\":$json.reminderCount,\"completionRequired\":$json.completionRequired,\"completionCheckAt\":$json.completionCheckAt,\"nextActionType\":$json.nextActionType,\"nextActionAt\":$json.nextActionAt,\"actionSequence\":$json.actionSequence,\"actionToken\":$json.actionToken,\"lastActionType\":$json.lastActionType,\"lastActionAt\":$json.lastActionAt,\"status\":$json.status,\"statusReason\":$json.statusReason,\"stateChangedAt\":$json.stateChangedAt,\"completedAt\":$json.completedAt,\"terminalAt\":$json.terminalAt,\"completionNote\":$json.completionNote,\"lastAnswerText\":$json.lastAnswerText,\"draftKind\":$json.draftKind,\"pendingCommandJson\":$json.pendingCommandJson,\"candidateTaskIdsJson\":$json.candidateTaskIdsJson,\"expectedAnswerType\":$json.expectedAnswerType,\"correlationToken\":$json.correlationToken,\"askedMessageId\":$json.askedMessageId,\"answerMessageId\":$json.answerMessageId,\"answerExpiresAt\":$json.answerExpiresAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"telegramActionMessageId\":$json.telegramActionMessageId,\"telegramActionChatId\":$json.telegramActionChatId,\"callbackScope\":$json.callbackScope,\"sourceUpdateId\":$json.sourceUpdateId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"sourceInputType\":$json.sourceInputType,\"idempotencyKey\":$json.idempotencyKey,\"rowVersion\":$json.rowVersion,\"lastMutationToken\":$json.lastMutationToken,\"leaseOwner\":$json.leaseOwner,\"leaseUntil\":$json.leaseUntil,\"dispatchToken\":$json.dispatchToken,\"lastDeliveredActionToken\":$json.lastDeliveredActionToken,\"lastDeliveryOutcome\":$json.lastDeliveryOutcome,\"attemptCount\":$json.attemptCount,\"nextRetryAt\":$json.nextRetryAt,\"lastError\":$json.lastError,\"lastErrorAt\":$json.lastErrorAt,\"historyJson\":$json.historyJson,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        18080,
+        -32
+      ],
+      "id": "b35785c6-5a71-497c-a060-06b6c701d706",
+      "name": "Update | Chelsea Tasks | CAS Internal Action | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"tasks\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"recordId\":$('Loop | Internal Task Mutations | SchedulerAction').item.json.recordId,\"tenantId\":$('Loop | Internal Task Mutations | SchedulerAction').item.json.tenantId,\"ownerUserId\":$('Loop | Internal Task Mutations | SchedulerAction').item.json.ownerUserId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        18352,
+        -32
+      ],
+      "id": "f222f9b4-e5e4-4adc-a660-f034bb160429",
+      "name": "Read | Chelsea Tasks | Verify Internal Action | SchedulerAction",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "c5b13e58-c0a8-4b29-bd88-fdc327a64fb5",
+      "name": "Call | Chelsea Task Domain Runtime | Verify Internal Task Mutation | SchedulerAction",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        18608,
+        -32
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "M4JqA5dzW7rC9sTx",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "code_verify_internal_task_mutation_scheduleraction_14710942",
+            "inputItems": "={{ $input.all().map(item => item.json) }}",
+            "contextsJson": "={{ JSON.stringify({\"Loop | Internal Task Mutations | SchedulerAction\": $items(\"Loop | Internal Task Mutations | SchedulerAction\").map(item => item.json)}) }}",
+            "executionId": "={{ $execution.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c0bcd50b-bc0b-acba-e02a-09bb7aa4382c",
+              "leftValue": "={{ $json._internalVerified === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        18848,
+        -48
+      ],
+      "id": "d901426b-bf40-4613-8b3b-2af1264872ad",
+      "name": "If | Internal Task Mutation Verified | SchedulerAction"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        13008,
+        -1104
+      ],
+      "id": "acef614e-8b2c-432f-997b-3b0e89480e6e",
+      "name": "End | Task Scheduler Scan Complete | Finish"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json || {}).flatMap((row) => Array.isArray(row) ? row : [row]).filter((row) => Object.keys(row).length);\nlet defaults = {};\ntry { defaults = $items('Set | Scheduler Runtime Defaults | SchedulerScan')[0]?.json || {}; } catch (_) {}\nconst defaultTimezone = String(defaults.taskDefaultTimezone || 'Asia/Novosibirsk');\nconst quietHoursStart = String(defaults.taskQuietHoursStart || '22:00');\nconst quietHoursEnd = String(defaults.taskQuietHoursEnd || '08:00');\nconst candidates = [];\nfor (const row of rows) {\n  const storageUsername = String(row.storageUsername || row.userId || row.memoryUserId || '').normalize('NFKC').trim().replace(/^@+/, '').toLowerCase();\n  const telegramActorId = String(row.telegramActorId || row.telegramUserId || '').trim();\n  const principalKey = String(row.principalKey || '').trim();\n  if (!/^actor_[a-f0-9]{32}$/.test(storageUsername)) continue;\n  if (!/^\\d+$/.test(telegramActorId) || Number(telegramActorId) <= 0) continue;\n  if (!/^tgactor_[a-f0-9]{64}$/.test(principalKey)) continue;\n  const tenantId = `tenant_${storageUsername}`;\n  if (String(row.User || row.tenantId || '').trim() !== tenantId) continue;\n  const userId = storageUsername;\n  const identity = core.deriveCanonicalIdentity({\n    ...row,\n    principalKey,\n    storageUsername,\n    userId,\n    memoryUserId: storageUsername,\n    tenantId,\n    memoryTenantId: tenantId,\n    qdrantCollection: `kb_tenant_${storageUsername}`,\n    soulId: `chelsea_soul_${storageUsername}`,\n    telegramActorId,\n    telegramUserId: telegramActorId,\n    identitySchemaVersion: 'chelsea_actor_identity_v3',\n    identityAuthorityVerified: true,\n  });\n  const table = core.deriveTenantTable(tenantId);\n  candidates.push({ row, ...identity, table });\n}\nconst counts = new Map();\nfor (const candidate of candidates) counts.set(candidate.tenantId, (counts.get(candidate.tenantId) || 0) + 1);\nif (Array.from(counts.values()).some((count) => count !== 1)) {\n  const error = new Error('PostgreSQL folder authority contains duplicate canonical task tenant rows');\n  error.code = 'duplicate_registry_tenant';\n  throw error;\n}\nreturn candidates.map(({ row, table, ...identity }) => ({ json: {\n  ...identity,\n  ownerUserId: identity.userId,\n  tenantSafe: table.tenantSafe,\n  taskTableName: table.tableName,\n  schedulerRegistryRowId: String(row.id || ''),\n  schedulerNowIso: new Date().toISOString(),\n  taskDefaultTimezone: defaultTimezone,\n  taskQuietHoursStart: quietHoursStart,\n  taskQuietHoursEnd: quietHoursEnd,\n} }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        12736,
+        -928
+      ],
+      "id": "9d6f999a-6804-5aee-f963-c10a26408c2f",
+      "name": "Code | Prepare Registered Task Users | SchedulerScan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_list_delivery_policies_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "c2100000-0000-4000-8000-000000000001",
+      "name": "Call | Supabase RPC | Read Proactivity Policies | SchedulerScan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        12992,
+        -1040
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst users=$items('Code | Prepare Registered Task Users | SchedulerScan').map(item=>item.json||{});\nconst incoming=$input.all().flatMap(item=>{const value=item?.json?.body??item?.json??{};return Array.isArray(value)?value:(Array.isArray(value?.data)?value.data:[value]);});\nconst clean=value=>String(value??'').normalize('NFKC').trim();\nconst policies=new Map(incoming.filter(row=>clean(row.principal_id??row.principalId)).map(row=>[clean(row.principal_id??row.principalId),row]));\nreturn users.map(user=>{const policy=policies.get(clean(user.principalKey))||{};return {json:{...user,proactivityMode:clean(policy.proactivity_mode??policy.proactivityMode)||'passive',proactivityPausedUntil:clean(policy.proactivity_paused_until??policy.proactivityPausedUntil),proactivityMorningStart:clean(policy.morning_start??policy.morningStart)||'08:30',proactivityMorningEnd:clean(policy.morning_end??policy.morningEnd)||'10:30',proactivityEveningStart:clean(policy.evening_start??policy.eveningStart)||'20:00',proactivityEveningEnd:clean(policy.evening_end??policy.eveningEnd)||'22:30'}};});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        13008,
+        -928
+      ],
+      "id": "c2100000-0000-4000-8000-000000000002",
+      "name": "Code | Attach Proactivity Policies | SchedulerScan"
+    },
+    {
+      "id": "741815c8-f6a6-5aee-b898-2da5797b9366",
+      "name": "Trigger | Parent Workflow | SchedulerWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        11728,
+        -788
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';const raw=$json.body??$json;const rows=Array.isArray(raw)?raw:(Array.isArray(raw?.rows)?raw.rows:(Object.keys(raw||{}).length?[raw]:[]));return rows.map(row=>({json:row}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        12460,
+        -928
+      ],
+      "id": "98233326-ee96-4395-a2b4-9e851115948b",
+      "name": "Code | Normalize PostgreSQL Folder Receipts | SchedulerScan",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Trigger | Schedule | TaskScheduler": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Runtime Defaults | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Runtime Defaults | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Read | Folder users | Registered Tenants | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Folder users | Registered Tenants | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize PostgreSQL Folder Receipts | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop | Registered Task Users | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "End | Task Scheduler Scan Complete | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read | Chelsea Tasks | Due Action Candidates | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Due Action Candidates | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Select Due Task Actions | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Select Due Task Actions | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Select Due Task Actions | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop | Due Task Actions | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Loop | Registered Task Users | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Due Task Action Exists | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Due Task Action Exists | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Task Action Needs Reconciliation | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Action Needs Reconciliation | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Plan Expired Dispatch Reconciliation | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Dispatch Reconciliation Planned | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Dispatch Reconciliation Planned | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Update | Chelsea Tasks | Reconcile Expired Dispatch | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | Reconcile Expired Dispatch | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Dispatch Reconciliation | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Dispatch Reconciliation | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Expired Dispatch Reconciliation | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Expired Dispatch Reconciliation | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Plan Task Action Claim | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Task Action Claim Planned | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Action Claim Planned | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Update | Chelsea Tasks | Claim Due Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | Claim Due Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Due Action Claim | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Due Action Claim | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Claim and Plan Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Task Action Uses Telegram | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Action Uses Telegram | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Update | Chelsea Tasks | Mark Task Dispatch | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Task Action Is Internal | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Task Action Is Internal | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Plan Internal Task Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | Mark Task Dispatch | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Dispatch | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Task Dispatch | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Dispatch and Build Telegram Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Dispatch and Build Telegram Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Telegram Task Action Ready | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Telegram Task Action Ready | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Config | Key | Telegram Bot | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config | Key | Telegram Bot | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Attach Telegram Key to Task Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Attach Telegram Key to Task Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Telegram Key Ready | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Telegram Key Ready | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Task Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Task Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Finalize Telegram Task Delivery | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Delivery State Mutation Required | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Delivery State Mutation Required | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Update | Chelsea Tasks | Finalize Task Delivery | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | Finalize Task Delivery | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Task Delivery | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Task Delivery | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Task Delivery Mutation | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Task Delivery Mutation | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Plan Internal Task Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Loop | Internal Task Mutations | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop | Internal Task Mutations | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Internal Task Mutation Required | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Internal Task Mutation Required | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Internal Task Row Is New | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Internal Task Mutations | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Internal Task Row Is New | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Upsert | Chelsea Tasks | Next Occurrence | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update | Chelsea Tasks | CAS Internal Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert | Chelsea Tasks | Next Occurrence | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Internal Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update | Chelsea Tasks | CAS Internal Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Read | Chelsea Tasks | Verify Internal Action | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Chelsea Tasks | Verify Internal Action | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Verify Internal Task Mutation | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Verify Internal Task Mutation | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "If | Internal Task Mutation Verified | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Internal Task Mutation Verified | SchedulerAction": {
+      "main": [
+        [
+          {
+            "node": "Loop | Internal Task Mutations | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop | Due Task Actions | SchedulerAction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Task Domain Runtime | Prepare Registered Task Users | PreUsernameCutover": {
+      "main": [
+        [
+          {
+            "node": "Code | Prepare Registered Task Users | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Prepare Registered Task Users | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Read Proactivity Policies | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Read Proactivity Policies | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Code | Attach Proactivity Policies | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Attach Proactivity Policies | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Loop | Registered Task Users | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Parent Workflow | SchedulerWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Runtime Defaults | SchedulerScan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize PostgreSQL Folder Receipts | SchedulerScan": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Domain Runtime | Prepare Registered Task Users | PreUsernameCutover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionTimeout": 1080,
+    "timezone": "Asia/Novosibirsk",
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": true,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": {
+    "node:Trigger | Schedule | TaskScheduler": {
+      "recurrenceRules": []
+    }
+  },
+  "pinData": {},
+  "versionId": "bb2bb12c-d487-5170-8cdb-dedd68367630",
+  "activeVersionId": null,
+  "versionCounter": 56,
+  "tags": []
+}

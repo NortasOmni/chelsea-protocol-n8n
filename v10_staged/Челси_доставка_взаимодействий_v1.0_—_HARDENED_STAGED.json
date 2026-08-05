@@ -1,0 +1,2148 @@
+{
+  "updatedAt": "2026-08-02T05:51:17.757Z",
+  "createdAt": "2026-08-01T19:50:05.419Z",
+  "id": "awa3pS7rw4fCNEVt",
+  "name": "Челси доставка взаимодействий v1.0 [HARDENED STAGED]",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "ecaa01ef-0000-4000-8000-e8b54e911d86",
+      "name": "Trigger | Parent Workflow | InteractionDelivery",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().length ? $input.all().map(item => ({ json: { ...item.json, credentialSource: 'environment', credentialReady: true } })) : [{ json: { credentialSource: 'environment', credentialReady: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        0
+      ],
+      "id": "d55bf63b-0000-4000-8000-c8f187cc8d2e",
+      "name": "Config | Telegram Bot Key | InteractionDelivery",
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "58bf1ce5-0000-4000-8000-da92eadb0915",
+      "name": "If | Cleanup | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ac94a3f9-0000-4000-8000-c35467e827c2",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"cleanup\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a7bf07f3-0000-4000-8000-3e2a3fc5fa31",
+      "name": "If | Reaction | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1200,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4b21e88b-0000-4000-8000-ffc88d058474",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"reaction\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f2a4dc3f-0000-4000-8000-da0685b04cd2",
+      "name": "If | Final | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -960,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "86f21d8e-0000-4000-8000-402352432ab4",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"final\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "83fa09be-0000-4000-8000-3b0d70df5d61",
+      "name": "If | Topic | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7e21caa0-0000-4000-8000-df4d2ca7f2fb",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"topic\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8b4778f1-0000-4000-8000-f3e755fe2ea6",
+      "name": "If | Depth Menu | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7fadf7cf-0000-4000-8000-52f1589d2aab",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"depth_menu\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "682f1aa8-0000-4000-8000-d037e89daefd",
+      "name": "If | Depth Apply | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb654c62-0000-4000-8000-96ee4fa6b60a",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"depth_apply\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e3fd8178-0000-4000-8000-5153d5678e9e",
+      "name": "If | Failure | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        600
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aea03995-0000-4000-8000-4c6fb50542c9",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"failure\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "212f6ba7-0000-4000-8000-9f5f5431a2ce",
+      "name": "If | Recovery | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "650aea2b-0000-4000-8000-4708c18abdec",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"recovery\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c19424ca-0000-4000-8000-fa9cd082e398",
+      "name": "End | InteractionDelivery",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        900
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ea3d5223-0000-4000-8000-1216156c384a",
+      "name": "Code | Build Cleanup | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        -580
+      ],
+      "parameters": {
+        "jsCode": "const input=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const chatId=String(input.chatId||input.telegramChatId||'');const messageId=Number(input.messageId||input.sourceMessageId||0);return [{json:{...input,cleanupEditBody:{chat_id:chatId,message_id:messageId,reply_markup:{inline_keyboard:[]}},cleanupAckBody:{callback_query_id:String(input.callbackQueryId||'')},cleanupReady:Boolean(chatId&&messageId&&input.callbackQueryId)}}];"
+      }
+    },
+    {
+      "id": "250264a7-0000-4000-8000-f4f5977a6f2c",
+      "name": "Call | Telegram | Remove Keyboard | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -940,
+        -580
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/editMessageReplyMarkup\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.cleanupEditBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "9e64af0e-0000-4000-8000-a3aadc4b3a64",
+      "name": "Call | Telegram | Ack Callback | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        -580
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/answerCallbackQuery\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Code | Build Cleanup | InteractionDelivery').first().json.cleanupAckBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "69c2a0fe-0000-4000-8000-115e1cda6558",
+      "name": "Code | Verify Cleanup | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        -580
+      ],
+      "parameters": {
+        "jsCode": "const input=$('Code | Build Cleanup | InteractionDelivery').first().json;const edit=$items('Call | Telegram | Remove Keyboard | InteractionDelivery')[0]?.json||{};const ack=$input.first()?.json||{};const eb=edit.body&&typeof edit.body==='object'?edit.body:edit;const ab=ack.body&&typeof ack.body==='object'?ack.body:ack;const editOk=eb.ok===true||String(eb.description||'').includes('message is not modified');const ackOk=ab.ok===true;return [{json:{...input,cleanupVerified:editOk&&ackOk,cleanupReceipt:{edit:eb,ack:ab},buttonsRemovedAtTelegram:editOk}}];"
+      }
+    },
+    {
+      "id": "aad7bd2a-0000-4000-8000-9d4f792c45a3",
+      "name": "Call | Supabase RPC | Mark Buttons Removed | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        -580
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_mark_buttons_removed_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_expected_version:Number($json.interactionVersion||0),p_receipt:$json.cleanupReceipt} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bd95a4c0-0000-4000-8000-bab3fda6c53f",
+      "name": "Code | Return Cleanup | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        -580
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Verify Cleanup | InteractionDelivery').first().json;const receipt=$input.first()?.json||{};return [{json:{...original,interactionVersion:Number(receipt.interactionVersion||original.interactionVersion||0),buttonCleanupReceipt:receipt,interactionCleanupComplete:true}}];"
+      }
+    },
+    {
+      "id": "97b402e3-0000-4000-8000-0bf1ea837ad6",
+      "name": "Code | Build Reaction Send | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -940,
+        -380
+      ],
+      "parameters": {
+        "jsCode": "const input=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const text=String(input.reactionText||'').trim().slice(0,500);return [{json:{...input,telegramReactionBody:{chat_id:String(input.chatId||input.telegramChatId||''),text,reply_to_message_id:Number(input.sourceMessageId||input.messageId||0),allow_sending_without_reply:true,disable_web_page_preview:true}}}];"
+      }
+    },
+    {
+      "id": "08cb38ba-0000-4000-8000-10d2febaea61",
+      "name": "Call | Telegram | Send Reaction | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        -380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/sendMessage\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramReactionBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "0fcf9ba8-0000-4000-8000-6deee7984842",
+      "name": "Code | Verify Reaction | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        -380
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Build Reaction Send | InteractionDelivery').first().json;const response=$input.first()?.json||{};const body=response.body&&typeof response.body==='object'?response.body:response;const messageId=body.result?.message_id??body.message_id;if(body.ok!==true||messageId==null)throw new Error('telegram_reaction_delivery_failed');return [{json:{...original,reactionMessageId:String(messageId),reactionReceipt:body}}];"
+      }
+    },
+    {
+      "id": "e1616bef-0000-4000-8000-ede1f15bb7c0",
+      "name": "Call | Supabase RPC | Mark Reaction | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        -380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_mark_reaction_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_expected_version:Number($json.interactionVersion||0),p_reaction_text:$json.reactionText,p_telegram_message_id:$json.reactionMessageId,p_receipt:$json.reactionReceipt} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bd8026d8-0000-4000-8000-ba954f98583e",
+      "name": "Code | Return Reaction | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        -380
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Verify Reaction | InteractionDelivery').first().json;const receipt=$input.first()?.json||{};return [{json:{...original,...receipt,reactionDeliveryComplete:true}}];"
+      }
+    },
+    {
+      "id": "c1c2e129-0000-4000-8000-27304abc284d",
+      "name": "Call | Supabase RPC | Prepare Final | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        -180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_prepare_final_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const x={...$node['Trigger | Parent Workflow | InteractionDelivery'].json,...$json}; return {p_interaction_id:x.interactionId,p_summary_text:x.summaryText,p_topics:x.topics||[],p_failure_text:x.failureText||null,p_inline_keyboard:x.inlineKeyboard||null,p_target_message_id:x.targetMessageId||null}; })() }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "b7928590-0000-4000-8000-14464bc792d0",
+      "name": "Code | Build Final Send | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        -180
+      ],
+      "parameters": {
+        "jsCode": "const trigger=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};let staged={};try{staged=$node['Code | Set Depth Menu Final | InteractionDelivery'].json||{}}catch{}try{staged={...staged,...($node['Code | Set Depth Result Final | InteractionDelivery'].json||{})}}catch{}const original={...trigger,...staged};const prep=$input.first()?.json||{};const method=prep.telegramMethod==='none'?'editMessageText':(prep.telegramMethod||'sendMessage');const body={chat_id:String(prep.telegramChatId||original.chatId||''),text:String(prep.summaryText||original.summaryText||'').slice(0,3900),disable_web_page_preview:true,reply_markup:{inline_keyboard:Array.isArray(prep.inlineKeyboard)?prep.inlineKeyboard:[]}};if(method==='editMessageText')body.message_id=Number(prep.targetMessageId);else if(prep.sourceMessageId){body.reply_to_message_id=Number(prep.sourceMessageId);body.allow_sending_without_reply=true;}return [{json:{...original,finalPrepareReceipt:prep,telegramFinalMethod:method,telegramFinalBody:body}}];"
+      }
+    },
+    {
+      "id": "3db55890-0000-4000-8000-b49cd7352041",
+      "name": "Call | Telegram | Deliver Final | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        -180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/\" + $json.telegramFinalMethod }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramFinalBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a71165fd-0000-4000-8000-68dac9fd3bd5",
+      "name": "Code | Verify Final | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        -180
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Build Final Send | InteractionDelivery').first().json;const response=$input.first()?.json||{};const body=response.body&&typeof response.body==='object'?response.body:response;const messageId=body.result?.message_id??body.message_id??original.finalPrepareReceipt?.targetMessageId;const unchanged=String(body.description||'').includes('message is not modified');if((body.ok!==true&&!unchanged)||messageId==null)throw new Error('telegram_final_delivery_failed');return [{json:{...original,finalMessageId:String(messageId),finalTelegramReceipt:body}}];"
+      }
+    },
+    {
+      "id": "61d6d6f7-0000-4000-8000-884fbebdeedb",
+      "name": "Call | Supabase RPC | Complete Final | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        -180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_complete_final_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_expected_version:Number($json.finalPrepareReceipt.interactionVersion),p_telegram_message_id:$json.finalMessageId,p_receipt:$json.finalTelegramReceipt,p_phase:'final'} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "e164bc2c-0000-4000-8000-d296542c54de",
+      "name": "Code | Return Final | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        -180
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Verify Final | InteractionDelivery').first().json;const receipt=$input.first()?.json||{};return [{json:{...original,interactionCompletionReceipt:receipt,interactionDeliveryComplete:true,telegramSent:true,telegramMessageId:original.finalMessageId,aiAnswer:original.summaryText}}];"
+      }
+    },
+    {
+      "id": "85ce9316-0000-4000-8000-8829bbf3374a",
+      "name": "Call | Supabase RPC | Open Topic | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_open_topic_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.interactionId,p_principal_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.principalId,p_topic_token:$node['Trigger | Parent Workflow | InteractionDelivery'].json.topicToken,p_callback_query_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.callbackQueryId,p_telegram_chat_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.chatId,p_telegram_message_id:String($node['Trigger | Parent Workflow | InteractionDelivery'].json.messageId)} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ded50714-0000-4000-8000-468549bbf525",
+      "name": "Code | Build Topic Edit | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        20
+      ],
+      "parameters": {
+        "jsCode": "const original=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const open=$input.first()?.json||{};return [{json:{...original,topicOpenReceipt:open,telegramTopicBody:{chat_id:String(open.telegramChatId),message_id:Number(open.telegramMessageId),text:String(open.messageText||'').slice(0,3900),disable_web_page_preview:true,reply_markup:{inline_keyboard:Array.isArray(open.inlineKeyboard)?open.inlineKeyboard:[]}}}}];"
+      }
+    },
+    {
+      "id": "d463b6fa-0000-4000-8000-01b7d5d8a6b0",
+      "name": "Call | Telegram | Edit Topic | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/editMessageText\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramTopicBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "52ecfef5-0000-4000-8000-2aa8b8806434",
+      "name": "Code | Verify Topic | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        20
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Build Topic Edit | InteractionDelivery').first().json;const response=$input.first()?.json||{};const body=response.body&&typeof response.body==='object'?response.body:response;const messageId=body.result?.message_id??original.topicOpenReceipt.telegramMessageId;if(body.ok!==true&&!(String(body.description||'').includes('message is not modified')))throw new Error('telegram_topic_delivery_failed');return [{json:{...original,topicMessageId:String(messageId),topicTelegramReceipt:body}}];"
+      }
+    },
+    {
+      "id": "a65ab674-0000-4000-8000-05e90481f90b",
+      "name": "Call | Supabase RPC | Complete Topic | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_complete_final_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_expected_version:Number($json.topicOpenReceipt.interactionVersion),p_telegram_message_id:$json.topicMessageId,p_receipt:$json.topicTelegramReceipt,p_phase:'topic'} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "36e5bf14-0000-4000-8000-028c860b1573",
+      "name": "Code | Return Topic | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        20
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Verify Topic | InteractionDelivery').first().json;return [{json:{...original,topicDeliveryComplete:true,interactionRouteComplete:true}}];"
+      }
+    },
+    {
+      "id": "0fbe5dc1-0000-4000-8000-24cd30d23c6e",
+      "name": "Call | Supabase RPC | Prepare Depth Menu | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -220,
+        220
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_prepare_depth_menu_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.interactionId} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "1b4f940d-0000-4000-8000-cc7773cf01cd",
+      "name": "Code | Set Depth Menu Final | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const original=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const menu=$input.first()?.json||{};return [{json:{...original,deliveryMode:'final',summaryText:String(original.inlineText||original.depthMenuText||'').trim(),topics:[],inlineKeyboard:menu.inlineKeyboard||[],failureText:'',targetMessageId:null}}];"
+      }
+    },
+    {
+      "id": "5e4feb57-0000-4000-8000-cbf1db23e034",
+      "name": "Call | Supabase RPC | Apply Depth | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_apply_depth_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.interactionId,p_principal_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.principalId,p_mode:$node['Trigger | Parent Workflow | InteractionDelivery'].json.depthMode,p_action_token:$node['Trigger | Parent Workflow | InteractionDelivery'].json.depthToken,p_callback_query_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.callbackQueryId,p_telegram_chat_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.chatId,p_telegram_message_id:String($node['Trigger | Parent Workflow | InteractionDelivery'].json.messageId)} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "8d2c05a8-0000-4000-8000-d3a71bffe72d",
+      "name": "Code | Set Depth Result Final | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const original=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const applied=$input.first()?.json||{};return [{json:{...original,depthApplyReceipt:applied,deliveryMode:'final',summaryText:String(original.inlineText||'').trim(),topics:[],inlineKeyboard:[],failureText:'',targetMessageId:String(original.messageId||'')}}];"
+      }
+    },
+    {
+      "id": "8bfe979d-0000-4000-8000-69393bb8454e",
+      "name": "Call | Supabase RPC | Fail Interaction | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        620
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_fail_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$node['Trigger | Parent Workflow | InteractionDelivery'].json.interactionId,p_failure_code:$node['Trigger | Parent Workflow | InteractionDelivery'].json.failureCode||'interaction_failed',p_failure_detail:$node['Trigger | Parent Workflow | InteractionDelivery'].json.failureDetail||'',p_failure_text:$node['Trigger | Parent Workflow | InteractionDelivery'].json.failureText} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "c5a85758-0000-4000-8000-d24d5c3185d7",
+      "name": "Code | Build Failure Send | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        620
+      ],
+      "parameters": {
+        "jsCode": "const original=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const failed=$input.first()?.json||{};const target=String(failed.targetMessageId||'');const method=target?'editMessageText':'sendMessage';const body={chat_id:String(failed.telegramChatId||original.chatId||''),text:String(failed.failureText||original.failureText||'').slice(0,500),reply_markup:{inline_keyboard:[[{text:'🔄 Повторить',callback_data:'csi:v1:r:'+failed.retryToken}]]}};if(target)body.message_id=Number(target);else if(failed.sourceMessageId){body.reply_to_message_id=Number(failed.sourceMessageId);body.allow_sending_without_reply=true;}return [{json:{...original,failureRpcReceipt:failed,telegramFailureMethod:method,telegramFailureBody:body}}];"
+      }
+    },
+    {
+      "id": "13e4b4f8-0000-4000-8000-0bfc84e17974",
+      "name": "Call | Telegram | Deliver Failure | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        620
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/\" + $json.telegramFailureMethod }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramFailureBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "5b31ac6e-0000-4000-8000-fc14cd2c0c7c",
+      "name": "Code | Verify Failure | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        620
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Build Failure Send | InteractionDelivery').first().json;const response=$input.first()?.json||{};const body=response.body&&typeof response.body==='object'?response.body:response;const messageId=body.result?.message_id??original.failureRpcReceipt.targetMessageId;if(body.ok!==true||messageId==null)throw new Error('telegram_failure_delivery_failed');return [{json:{...original,failureMessageId:String(messageId),failureTelegramReceipt:body}}];"
+      }
+    },
+    {
+      "id": "7558daa0-0000-4000-8000-63bc91de42a8",
+      "name": "Call | Supabase RPC | Complete Failure | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        620
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_complete_failure_delivery_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_telegram_message_id:$json.failureMessageId,p_receipt:$json.failureTelegramReceipt} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bc9afba2-0000-4000-8000-b3ff86106234",
+      "name": "Code | Return Failure | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        620
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Verify Failure | InteractionDelivery').first().json;return [{json:{...original,failureDeliveryComplete:true}}];"
+      }
+    },
+    {
+      "id": "ddbac55f-0000-4000-8000-0b1a9596aa00",
+      "name": "Code | Build Recovery Send | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        820
+      ],
+      "parameters": {
+        "jsCode": "const original=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const target=String(original.targetMessageId||'');const method=target?'editMessageText':'sendMessage';const body={chat_id:String(original.telegramChatId||original.chatId||''),text:String(original.failureText||'').slice(0,500),reply_markup:{inline_keyboard:[[{text:'🔄 Повторить',callback_data:'csi:v1:r:'+original.retryToken}]]}};if(target)body.message_id=Number(target);else if(original.sourceMessageId){body.reply_to_message_id=Number(original.sourceMessageId);body.allow_sending_without_reply=true;}return [{json:{...original,telegramRecoveryMethod:method,telegramRecoveryBody:body}}];"
+      }
+    },
+    {
+      "id": "0005eba5-0000-4000-8000-4813ac29acb0",
+      "name": "Call | Telegram | Deliver Recovery | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        820
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/\" + $json.telegramRecoveryMethod }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramRecoveryBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "1b449da8-0000-4000-8000-a2d9a3622415",
+      "name": "Code | Verify Recovery | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        820
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Build Recovery Send | InteractionDelivery').first().json;const response=$input.first()?.json||{};const body=response.body&&typeof response.body==='object'?response.body:response;const messageId=body.result?.message_id??original.targetMessageId;const unchanged=String(body.description||'').includes('message is not modified');return [{json:{...original,recoverySendOk:(body.ok===true||unchanged)&&messageId!=null,recoveryMessageId:messageId==null?'':String(messageId),recoveryTelegramReceipt:body}}];"
+      }
+    },
+    {
+      "id": "ec9de6e9-0000-4000-8000-12765eb1e636",
+      "name": "If | Recovery Send Succeeded | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1220,
+        820
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6b8ee307-0000-4000-8000-248d4ae556d0",
+              "leftValue": "={{ $json.recoverySendOk === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f0bf85b9-0000-4000-8000-c32aabdd67e3",
+      "name": "Call | Supabase RPC | Complete Recovery | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        760
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_complete_recovery_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_lease_token:$json.leaseToken,p_failure_code:$json.failureCode||'interaction_timeout',p_failure_text:$json.failureText,p_telegram_message_id:$json.recoveryMessageId,p_receipt:$json.recoveryTelegramReceipt} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "1c30cf36-0000-4000-8000-544c51bf32ee",
+      "name": "Call | Supabase RPC | Release Recovery | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        900
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_release_recovery_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_interaction_id:$json.interactionId,p_lease_token:$json.leaseToken,p_error_text:JSON.stringify($json.recoveryTelegramReceipt||{}).slice(0,1800),p_retry_minutes:2} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ba0cfec1-0000-4000-8000-e62556e4d7e8",
+      "name": "Code | Return Recovery | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        820
+      ],
+      "parameters": {
+        "jsCode": "const original=$('Code | Verify Recovery | InteractionDelivery').first().json;return [{json:{...original,recoveryDeliveryComplete:original.recoverySendOk===true,recoveryReleased:original.recoverySendOk!==true}}];"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "48ad1f80-f27e-4c58-88b4-380759c8d17b",
+              "leftValue": "={{ $node[\"Trigger | Parent Workflow | InteractionDelivery\"].json.deliveryMode === \"button_confirmation\" }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a73a5284-0116-42cc-ac41-da0c0b37f0ef",
+      "name": "If | Button Confirmation | InteractionDelivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1440,
+        -760
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input=$node['Trigger | Parent Workflow | InteractionDelivery'].json||{};const chatId=String(input.chatId||input.telegramChatId||'').trim();const text=String(input.buttonConfirmationText||'').normalize('NFKC').replace(/\\s+/g,' ').trim().slice(0,180);if(!chatId||!text)throw new Error('button_confirmation_input_invalid');return [{json:{...input,telegramButtonConfirmationBody:{chat_id:chatId,text,disable_web_page_preview:true}}}];"
+      },
+      "id": "33bb37f3-e1c9-4456-b187-8e56ddfa275f",
+      "name": "Code | Build Button Confirmation | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        -880
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ \"https://api.telegram.org/bot\" + $env.CHELSEA_TELEGRAM_BOT_TOKEN + \"/sendMessage\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.telegramButtonConfirmationBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "d009efb6-c53f-4fe6-b452-41053116fd8e",
+      "name": "Call | Telegram | Send Button Confirmation | InteractionDelivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -960,
+        -880
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "jsCode": "const original=$('Code | Build Button Confirmation | InteractionDelivery').first().json;const response=$input.first()?.json||{};const body=response.body&&typeof response.body==='object'?response.body:response;const messageId=body.result?.message_id??body.message_id;const ok=body.ok===true&&messageId!=null;return [{json:{...original,buttonConfirmationDeliveryComplete:ok,buttonConfirmationMessageId:ok?String(messageId):'',buttonConfirmationReceipt:body,buttonConfirmationError:ok?'':'telegram_button_confirmation_delivery_failed'}}];"
+      },
+      "id": "92a4e5a0-c8c7-442c-81b9-ef1da4a8886e",
+      "name": "Code | Verify Button Confirmation | InteractionDelivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        -880
+      ]
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Config | Telegram Bot Key | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config | Telegram Bot Key | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "If | Button Confirmation | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Cleanup | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Cleanup | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Reaction | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Reaction | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Reaction Send | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Prepare Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Topic | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Topic | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Open Topic | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Depth Menu | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Depth Menu | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Prepare Depth Menu | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Depth Apply | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Depth Apply | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Apply Depth | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Failure | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Failure | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail Interaction | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Recovery | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Recovery Send | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Cleanup | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Remove Keyboard | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Remove Keyboard | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Ack Callback | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Ack Callback | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Cleanup | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Cleanup | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark Buttons Removed | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark Buttons Removed | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Cleanup | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Cleanup | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Reaction Send | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Reaction | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Reaction | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Reaction | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Reaction | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark Reaction | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark Reaction | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Reaction | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Reaction | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Prepare Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Final Send | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Final Send | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Deliver Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Deliver Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Open Topic | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Topic Edit | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Topic Edit | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Edit Topic | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Edit Topic | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Topic | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Topic | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Topic | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Topic | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Topic | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Topic | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Prepare Depth Menu | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Set Depth Menu Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Set Depth Menu Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Prepare Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Apply Depth | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Set Depth Result Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Set Depth Result Final | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Prepare Final | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail Interaction | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Failure Send | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Failure Send | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Deliver Failure | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Deliver Failure | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Failure | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Failure | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Failure | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Failure | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Failure | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Failure | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Recovery Send | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Deliver Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Deliver Recovery | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Recovery | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "If | Recovery Send Succeeded | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Recovery Send Succeeded | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Supabase RPC | Release Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Recovery | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Release Recovery | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Return Recovery | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Return Recovery | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Button Confirmation | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Button Confirmation | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If | Cleanup | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Button Confirmation | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Button Confirmation | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Button Confirmation | InteractionDelivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Button Confirmation | InteractionDelivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "saveDataSuccessExecution": "none",
+    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": true,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "510891ab-7180-5ae9-8ec8-12e578aa669f",
+  "activeVersionId": null,
+  "versionCounter": 9,
+  "tags": []
+}
