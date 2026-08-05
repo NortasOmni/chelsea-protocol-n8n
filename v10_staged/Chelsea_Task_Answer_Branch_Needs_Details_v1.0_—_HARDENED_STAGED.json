@@ -1,0 +1,63 @@
+{
+  "id": "TM1062776ad6c450a",
+  "name": "Chelsea Task Answer Branch Needs Details v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "d60f7f84-1bc1-538b-a5db-dd0eac70883b",
+  "nodes": [
+    {
+      "id": "d6f3a15d-43c9-5180-96cc-c74c2a6e2ad3",
+      "name": "Trigger | Parent Workflow | ChelseaTaskAnswerBranchNeedsDetailsv",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "envelope",
+              "type": "object"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b48d507e-3e94-5ff8-b22d-b9216672c2ad",
+      "name": "Code | Execute Chelsea Task Answer Branch Needs Details | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\n__modules['./utils'] = function(module, exports, __require) {\n'use strict';\nfunction fail(code, message, details) {\n  const error = new Error(message || code);\n  error.code = code;\n  if (details !== undefined) error.details = details;\n  throw error;\n}\n\nfunction assert(condition, code, message, details) {\n  if (!condition) fail(code, message, details);\n}\n\nmodule.exports = { fail, assert };\n};\nconst __cache=Object.create(null);function __require(id){if(__cache[id])return __cache[id].exports;if(!__modules[id])throw new Error(`Unknown bundled module: ${id}`);const module={exports:{}};__cache[id]=module;__modules[id](module,module.exports,__require);return module.exports;}\nconst core=Object.assign({},__require('./utils'));\n\nconst rawEnvelope = $input.first()?.json || {};\nconst envelope = rawEnvelope.envelope && typeof rawEnvelope.envelope === 'object' ? rawEnvelope.envelope : rawEnvelope;\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst route = Array.isArray(contexts['Code | Route Task Operation | TaskSemantic']) ? (contexts['Code | Route Task Operation | TaskSemantic'][0] || {}) : {};\nconst trusted = JSON.parse(route._trustedJson || '{}');\nconst rows = JSON.parse(route._rowsJson || '[]');\nconst refs = JSON.parse(route._targetRefsJson || '{}');\nconst nowIso = new Date().toISOString();\n\nfunction outcome(fields) {\n  return [{ json: {\n    ...route,\n    _mutationNeeded: false,\n    _taskOutcomeJson: JSON.stringify(fields),\n    taskHandled: fields.taskHandled !== false,\n    taskOperation: fields.operation || 'failed_review',\n    taskRecordId: fields.recordId || '',\n    taskErrorCode: String(fields.errorCode || route.taskErrorCode || '').slice(0, 80),\n    memoryWriteAllowed: fields.taskHandled === false && route._incomingMemoryWriteAllowed === true,\n  } }];\n}\n\ntry {\n\nconst recordId=String(envelope.answerRecordId||'');\nconst answerAction=String(envelope.answerAction||'');\nconst exactRows=rows.filter((candidate)=>candidate.recordId===recordId&&candidate.recordType==='task'&&candidate.tenantId===trusted.tenantId&&candidate.ownerUserId===trusted.userId&&candidate.chatId===trusted.chatId);\ncore.assert(exactRows.length===1,'correlation_mismatch','Task answer row must resolve exactly once');\nconst row=exactRows[0];\nif(route._callbackToken)core.assert(String(route.messageId||'')===row.askedMessageId,'correlation_mismatch','Callback message does not match exact askedMessageId');\nelse core.assert(String(route.replyToMessageId||'')===row.askedMessageId,'correlation_mismatch','Reply does not match exact askedMessageId');\n\nreturn outcome({taskHandled:true,operation:'answer_needs_details',text:'Напишите новый срок отдельной командой: «перенеси задачу … на …».'});\n\n} catch (error) {\n  if (String(error.code || '') === 'concurrency_conflict' || String(error.code || '') === 'lease_conflict') {\n    return outcome({ taskHandled: true, operation: 'task_deferred_retry', text: 'Задача сейчас обрабатывается планировщиком. Повторите команду чуть позже.', errorCode: String(error.code).slice(0, 80) });\n  }\n  return outcome({ taskHandled: true, operation: 'failed_review', text: 'Команда задач остановлена безопасно; изменения не применены.', errorCode: String(error.code || 'contract_violation').slice(0, 80) });\n}\n"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskAnswerBranchNeedsDetailsv": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Chelsea Task Answer Branch Needs Details | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

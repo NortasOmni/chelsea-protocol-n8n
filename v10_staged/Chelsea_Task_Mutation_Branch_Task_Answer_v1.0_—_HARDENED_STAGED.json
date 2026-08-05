@@ -1,0 +1,520 @@
+{
+  "id": "TM102b6ad5e40f252",
+  "name": "Chelsea Task Mutation Branch Task Answer v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "f8e239ad-bbfa-548c-b0b8-08a6dbaa710d",
+  "nodes": [
+    {
+      "id": "dc406d52-ebd8-5938-ad16-c5758775321c",
+      "name": "Trigger | Parent Workflow | ChelseaTaskMutationBranchTaskAnswerv",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "e771931b-20b9-5386-b8df-f06e5c3f3e73",
+      "name": "Code | Classify Task Mutation | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst raw=$input.first()?.json||{};const envelope=raw.envelope&&typeof raw.envelope==='object'?raw.envelope:raw;let contexts={};try{contexts=typeof envelope.contextsJson==='string'?JSON.parse(envelope.contextsJson||'{}'):(envelope.contextsJson||{});}catch{contexts={};}\nconst route=Array.isArray(contexts['Code | Route Task Operation | TaskSemantic'])?(contexts['Code | Route Task Operation | TaskSemantic'][0]||{}):{};const trusted=JSON.parse(route._trustedJson||'{}');const rows=JSON.parse(route._rowsJson||'[]');\nfunction terminal(fields){return [{json:{...envelope,answerBranch:'terminal',terminalItems:[{...route,_mutationNeeded:false,_taskOutcomeJson:JSON.stringify(fields),taskHandled:fields.taskHandled!==false,taskOperation:fields.operation||'failed_review',taskRecordId:fields.recordId||'',taskErrorCode:String(fields.errorCode||route.taskErrorCode||'').slice(0,80),memoryWriteAllowed:false}]}}];}\ntry{const actionMap={done:'done',not_done:'not_done',snooze:'snooze',reschedule:'reschedule',cancel:'cancel',skip_occurrence:'skip_occurrence'};let answerAction=actionMap[route._callbackAction]||(/^(?:сделал|сделала|готово|выполнено)$/iu.test(String(route.messageText||'').trim())?'done':'');const matches=route._callbackToken?rows.filter((row)=>row.recordType==='task'&&row.correlationToken===route._callbackToken):rows.filter((row)=>row.recordType==='task'&&row.askedMessageId===String(route.replyToMessageId||''));if(matches.length!==1)throw Object.assign(new Error('Task answer must correlate to exactly one row'),{code:'correlation_mismatch'});const row=matches[0];if(route._callbackToken&&String(route.messageId||'')!==row.askedMessageId)throw Object.assign(new Error('Callback message does not match exact askedMessageId'),{code:'correlation_mismatch'});if(!route._callbackToken&&String(route.replyToMessageId||'')!==row.askedMessageId)throw Object.assign(new Error('Reply does not match exact askedMessageId'),{code:'correlation_mismatch'});let answerBranch='normal';if(row.status==='draft'&&answerAction==='cancel')answerBranch='cancel_draft';else if(row.status==='draft'&&row.draftKind==='mutation')answerBranch='mutation_draft';else if(row.status==='draft'&&row.draftKind==='create')answerBranch='create_draft_needs_details';else if(!answerAction||answerAction==='reschedule')answerBranch='answer_needs_details';return [{json:{...envelope,answerBranch,answerRecordId:row.recordId,answerAction}}];}catch(error){const retry=String(error.code||'')==='concurrency_conflict'||String(error.code||'')==='lease_conflict';return terminal(retry?{taskHandled:true,operation:'task_deferred_retry',text:'Задача сейчас обрабатывается планировщиком. Повторите команду чуть позже.',errorCode:String(error.code).slice(0,80)}:{taskHandled:true,operation:'failed_review',text:'Команда задач остановлена безопасно; изменения не применены.',errorCode:String(error.code||'contract_violation').slice(0,80)});}\n"
+      }
+    },
+    {
+      "id": "63d12158-fc47-5cc6-9824-90d435668f37",
+      "name": "Switch | Task Mutation Branch | TaskMutation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "42a7a03a-73ca-5a75-ada3-bd9d90099438",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "cancel_draft",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f8e7ded1-1259-55ee-b886-dfb663b4e8c2",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "mutation_draft",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ced2f61c-d35a-571a-8cd3-dd6cb5a07f66",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "create_draft_needs_details",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e57a1f29-d209-57a1-860c-b5b6efb46cb5",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "answer_needs_details",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7f886e10-8223-5de4-b051-2a8cd9411a36",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "normal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9391c91b-94cf-51c7-a9d3-b94d8f99292b",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "terminal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a63986a5-a778-57d3-b936-30f5a2c10a76",
+      "name": "Call | Chelsea Task Answer Branch Cancel Draft | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -600
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10812fc805a729a",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Answer Branch Cancel Draft v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "e6822762-be24-5328-b70c-31acaa94225c",
+      "name": "Call | Chelsea Task Answer Branch Mutation Draft | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM107206b8fcafd66",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Answer Branch Mutation Draft v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "6b19d076-e94c-5581-8e36-ef162509c2da",
+      "name": "Call | Chelsea Task Answer Branch Create Draft Needs Details | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM1051e0681770416",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Answer Branch Create Draft Needs Details v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "033799cc-3696-5afc-ab74-857fedcceee4",
+      "name": "Call | Chelsea Task Answer Branch Needs Details | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -60
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM1062776ad6c450a",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Answer Branch Needs Details v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "1fd424c2-dedd-5ece-9d2c-8ed95f193d57",
+      "name": "Call | Chelsea Task Answer Branch Normal | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        120
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10c432016f8c4a7",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Answer Branch Normal v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "52b144c5-400a-50cb-bc10-0f5fc8f3e7cf",
+      "name": "Call | Chelsea Task Answer Branch Terminal | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        300
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10c9f19bbed9e51",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Answer Branch Terminal v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskMutationBranchTaskAnswerv": {
+      "main": [
+        [
+          {
+            "node": "Code | Classify Task Mutation | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Classify Task Mutation | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Switch | Task Mutation Branch | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch | Task Mutation Branch | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Answer Branch Cancel Draft | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Answer Branch Mutation Draft | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Answer Branch Create Draft Needs Details | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Answer Branch Needs Details | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Answer Branch Normal | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Answer Branch Terminal | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

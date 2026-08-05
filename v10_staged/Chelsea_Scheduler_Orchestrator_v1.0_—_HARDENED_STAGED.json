@@ -1,0 +1,2746 @@
+{
+  "id": "SCH7nM4xV2cL9pQa",
+  "name": "Chelsea Scheduler Orchestrator v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 1500,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "ac4bd76f-9abc-4b90-8a69-9e86ff064b7a",
+  "nodes": [
+    {
+      "id": "fd1fa5cd-82f7-543e-917c-96fc3356aa16",
+      "name": "Trigger | Every Minute | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1400,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7651f943-5a65-5547-a53c-69d8caa9d911",
+      "name": "Trigger | Manual Start | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1400,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "369b4c4a-d2b4-5dbf-ab8e-3bb074b7c286",
+      "name": "Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        -420
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"state_scheduler\",leaseOwner:`n8n:${$execution.id}:state_scheduler`,ttlSeconds:1320,executionTimeoutSeconds:1080,targetWorkflowId:\"STF6pQ2mN9xR4vKa\",targetWorkflowName:\"Process Chelsea State Scheduler\"}}];"
+      }
+    },
+    {
+      "id": "49569343-3993-593c-afc5-5f8e2098db16",
+      "name": "Call | Supabase | Acquire Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        -420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "acea8c13-7864-5b4c-a31f-ea6494fbcf4b",
+      "name": "Code | Verify Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        -420
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;const acquired=row?.acquired===true&&Number.isSafeInteger(Number(row?.fencingToken));return [{json:{...x,leaseAcquired:acquired,fencingToken:Number(row?.fencingToken||0),leaseUntil:row?.leaseUntil||'',executionTimeoutSeconds:Number(row?.executionTimeoutSeconds||x.executionTimeoutSeconds)}}];"
+      }
+    },
+    {
+      "id": "1c26d866-8bc2-5dab-a262-7d6cc1e33290",
+      "name": "If | Process Chelsea State Scheduler Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        -420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0956248f-4587-5ceb-8522-66f68ea98438",
+              "leftValue": "={{ $json.leaseAcquired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5a95befe-2c20-59f6-b803-546bd0b61fce",
+      "name": "Call | Process Chelsea State Scheduler | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        -460
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "STF6pQ2mN9xR4vKa",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Scheduler v5.0 — MODULAR HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Chelsea Hardening v7: child execution timeout <=1080s; scheduler lease TTL 1320s with fencing token."
+    },
+    {
+      "id": "7f9dbfab-9f54-5b58-9ad0-c309bf84a902",
+      "name": "Code | Mark Process Chelsea State Scheduler Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        -500
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json;return [{json:{...x,workerOutcome:'success'}}];"
+      }
+    },
+    {
+      "id": "76cbc44a-c15e-521b-9f48-e16488e5b20d",
+      "name": "Code | Mark Process Chelsea State Scheduler Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        -420
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Process Chelsea State Scheduler Lease | SchedulerOrchestrator\").first().json;const e=$input.first()?.json||{};return [{json:{...x,workerOutcome:'failed',workerError:String(e.error?.message||e.message||'worker failed').slice(0,500)}}];"
+      }
+    },
+    {
+      "id": "3ceefd65-e8c1-5152-b471-ce3316d3262a",
+      "name": "Call | Supabase | Release Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        -460
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "8202a50b-7159-5541-a3d4-04eeaf016bab",
+      "name": "End | Process Chelsea State Scheduler Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        -340
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "bf14cd3f-7c70-58cb-88e3-7fef89fd4d9d",
+      "name": "End | Process Chelsea State Scheduler Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        620,
+        -460
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b5aa93c1-c09d-5335-be4e-f212d795a92c",
+      "name": "Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        -140
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"task_scheduler\",leaseOwner:`n8n:${$execution.id}:task_scheduler`,ttlSeconds:1320,executionTimeoutSeconds:1080,targetWorkflowId:\"7VsagxmTKlmJ1YJ8\",targetWorkflowName:\"\\u0427\\u0435\\u043b\\u0441\\u0438 \\u0437\\u0430\\u0434\\u0430\\u0447\\u0438 \\u043f\\u043b\\u0430\\u043d\\u0438\\u0440\\u043e\\u0432\\u0449\\u0438\\u043a\"}}];"
+      }
+    },
+    {
+      "id": "88ade84b-7e63-595f-99df-ad752b92485b",
+      "name": "Call | Supabase | Acquire Челси задачи планировщик Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        -140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "4fa3496b-ef28-5e9a-ac36-66809161999c",
+      "name": "Code | Verify Челси задачи планировщик Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        -140
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;const acquired=row?.acquired===true&&Number.isSafeInteger(Number(row?.fencingToken));return [{json:{...x,leaseAcquired:acquired,fencingToken:Number(row?.fencingToken||0),leaseUntil:row?.leaseUntil||'',executionTimeoutSeconds:Number(row?.executionTimeoutSeconds||x.executionTimeoutSeconds)}}];"
+      }
+    },
+    {
+      "id": "2e2fd75b-7aa8-5e9b-a620-d26a7cc07ac1",
+      "name": "If | Челси задачи планировщик Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        -140
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c768c347-d741-52b1-95e5-b8cb294e6b65",
+              "leftValue": "={{ $json.leaseAcquired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f2a59332-5345-5272-9fa1-5608a7c53eec",
+      "name": "Call | Челси задачи планировщик | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        -180
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "7VsagxmTKlmJ1YJ8",
+          "mode": "id",
+          "cachedResultName": "Челси задачи планировщик v2.1 [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Chelsea Hardening v7: child execution timeout <=1080s; scheduler lease TTL 1320s with fencing token."
+    },
+    {
+      "id": "509b90db-88ac-5736-8680-844089abb8ca",
+      "name": "Code | Mark Челси задачи планировщик Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        -220
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json;return [{json:{...x,workerOutcome:'success'}}];"
+      }
+    },
+    {
+      "id": "eabc0420-8cae-5c45-94a2-ae97127a6b21",
+      "name": "Code | Mark Челси задачи планировщик Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        -140
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Челси задачи планировщик Lease | SchedulerOrchestrator\").first().json;const e=$input.first()?.json||{};return [{json:{...x,workerOutcome:'failed',workerError:String(e.error?.message||e.message||'worker failed').slice(0,500)}}];"
+      }
+    },
+    {
+      "id": "5d55a9b6-6fc6-5295-9681-bc20f2be2fae",
+      "name": "Call | Supabase | Release Челси задачи планировщик Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        -180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "b5930b53-8a18-555c-bc75-6171def109a2",
+      "name": "End | Челси задачи планировщик Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        -60
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d92ba4f4-c218-5ea2-83db-e2bc680e9fd9",
+      "name": "End | Челси задачи планировщик Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        620,
+        -180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "280211f4-cf1b-5d9d-8439-afa9f8dc86d8",
+      "name": "Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        140
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"resolution_dispatcher\",leaseOwner:`n8n:${$execution.id}:resolution_dispatcher`,ttlSeconds:1320,executionTimeoutSeconds:1080,targetWorkflowId:\"COC56dbrXhYqRgFP\",targetWorkflowName:\"\\u0427\\u0435\\u043b\\u0441\\u0438 \\u0434\\u0438\\u0441\\u043f\\u0435\\u0442\\u0447\\u0435\\u0440 \\u0443\\u0442\\u043e\\u0447\\u043d\\u0435\\u043d\\u0438\\u0439\"}}];"
+      }
+    },
+    {
+      "id": "230cf579-a098-555f-9ae4-2b8a3a99c899",
+      "name": "Call | Supabase | Acquire Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "6f7f707f-0fc8-5390-9b77-b9e973f39425",
+      "name": "Code | Verify Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        140
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;const acquired=row?.acquired===true&&Number.isSafeInteger(Number(row?.fencingToken));return [{json:{...x,leaseAcquired:acquired,fencingToken:Number(row?.fencingToken||0),leaseUntil:row?.leaseUntil||'',executionTimeoutSeconds:Number(row?.executionTimeoutSeconds||x.executionTimeoutSeconds)}}];"
+      }
+    },
+    {
+      "id": "e445b393-646d-5543-baa0-b33fb29817da",
+      "name": "If | Челси диспетчер уточнений Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        140
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1585b8cb-9597-50be-8b34-96cfe29a2a39",
+              "leftValue": "={{ $json.leaseAcquired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f2367ff8-8b61-58ab-bd21-828ef52a8fe3",
+      "name": "Call | Челси диспетчер уточнений | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "COC56dbrXhYqRgFP",
+          "mode": "id",
+          "cachedResultName": "Челси диспетчер уточнений v3.1 [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Chelsea Hardening v7: child execution timeout <=1080s; scheduler lease TTL 1320s with fencing token."
+    },
+    {
+      "id": "ee9660b1-d5b2-5a5b-9733-a8789a93c1d7",
+      "name": "Code | Mark Челси диспетчер уточнений Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        60
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json;return [{json:{...x,workerOutcome:'success'}}];"
+      }
+    },
+    {
+      "id": "73640ea4-60f4-5e4a-805b-f8f9ebd0ad28",
+      "name": "Code | Mark Челси диспетчер уточнений Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        140
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Челси диспетчер уточнений Lease | SchedulerOrchestrator\").first().json;const e=$input.first()?.json||{};return [{json:{...x,workerOutcome:'failed',workerError:String(e.error?.message||e.message||'worker failed').slice(0,500)}}];"
+      }
+    },
+    {
+      "id": "ae7c544d-8f6e-5041-91f3-fe92a609299d",
+      "name": "Call | Supabase | Release Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "1bde27c0-160c-5da2-a5d0-d3c61f845034",
+      "name": "End | Челси диспетчер уточнений Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        220
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f532b15e-0696-5cf4-8544-c5994cb9e560",
+      "name": "End | Челси диспетчер уточнений Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        620,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "af21183c-bd4c-53e9-9466-96a40879f68f",
+      "name": "Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        420
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"memory_worker\",leaseOwner:`n8n:${$execution.id}:memory_worker`,ttlSeconds:1320,executionTimeoutSeconds:1080,targetWorkflowId:\"N3GFoezvVmoj0wyp\",targetWorkflowName:\"\\u0427\\u0435\\u043b\\u0441\\u0438 \\u043e\\u0431\\u0440\\u0430\\u0431\\u043e\\u0442\\u0447\\u0438\\u043a \\u043e\\u0447\\u0435\\u0440\\u0435\\u0434\\u0438 \\u043f\\u0430\\u043c\\u044f\\u0442\\u0438 replacement\"}}];"
+      }
+    },
+    {
+      "id": "dcce192b-36d7-56a6-bb90-34c7918d678e",
+      "name": "Call | Supabase | Acquire Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "be306c8e-b9fa-5daa-9224-278596407e60",
+      "name": "Code | Verify Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;const acquired=row?.acquired===true&&Number.isSafeInteger(Number(row?.fencingToken));return [{json:{...x,leaseAcquired:acquired,fencingToken:Number(row?.fencingToken||0),leaseUntil:row?.leaseUntil||'',executionTimeoutSeconds:Number(row?.executionTimeoutSeconds||x.executionTimeoutSeconds)}}];"
+      }
+    },
+    {
+      "id": "b9d55d41-8812-50ae-a545-2a6204b60817",
+      "name": "If | Челси обработчик очереди памяти replacement Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95a94e83-b42c-5d28-b77c-4de34e084302",
+              "leftValue": "={{ $json.leaseAcquired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b75cd880-133b-572a-8d44-8550e8e47cfb",
+      "name": "Call | Челси обработчик очереди памяти replacement | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        380
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "N3GFoezvVmoj0wyp",
+          "mode": "id",
+          "cachedResultName": "Челси обработчик очереди памяти v2.9 replacement [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Chelsea Hardening v7: child execution timeout <=1080s; scheduler lease TTL 1320s with fencing token."
+    },
+    {
+      "id": "79876d3e-070c-5dda-9e2a-358fbae4253c",
+      "name": "Code | Mark Челси обработчик очереди памяти replacement Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        340
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json;return [{json:{...x,workerOutcome:'success'}}];"
+      }
+    },
+    {
+      "id": "70930b6c-0102-512b-8ab6-1ad4990402c0",
+      "name": "Code | Mark Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        420
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator\").first().json;const e=$input.first()?.json||{};return [{json:{...x,workerOutcome:'failed',workerError:String(e.error?.message||e.message||'worker failed').slice(0,500)}}];"
+      }
+    },
+    {
+      "id": "4e0b2dbf-e507-5c98-8e93-c74f319e5265",
+      "name": "Call | Supabase | Release Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "cc535a94-065e-57e6-ba65-1837de7d59ac",
+      "name": "End | Челси обработчик очереди памяти replacement Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        500
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2a66b2ce-bef5-51f4-bbdd-b627d9e5388a",
+      "name": "End | Челси обработчик очереди памяти replacement Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        620,
+        380
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "90d27931-d217-56e8-b6be-2584dfdac70d",
+      "name": "Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1160,
+        660
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"privacy_outbox_worker\",leaseOwner:`n8n:${$execution.id}:privacy_outbox_worker`,ttlSeconds:1320,executionTimeoutSeconds:1080,targetWorkflowId:\"zYOv6rLZVEjAiTNf\",targetWorkflowName:\"Chelsea Privacy Outbox Worker v1.0 — HARDENED STAGED\"}}];"
+      }
+    },
+    {
+      "id": "810ceb06-6b47-57b1-aacc-068349483943",
+      "name": "Call | Supabase | Acquire Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        660
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "102e03de-f497-58dc-8b9b-be80ac71eeed",
+      "name": "Code | Verify Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;const acquired=row?.acquired===true&&Number.isSafeInteger(Number(row?.fencingToken));return [{json:{...x,leaseAcquired:acquired,fencingToken:Number(row?.fencingToken||0),leaseUntil:row?.leaseUntil||'',executionTimeoutSeconds:Number(row?.executionTimeoutSeconds||x.executionTimeoutSeconds)}}];"
+      }
+    },
+    {
+      "id": "cd34f993-70d2-5045-bf63-ddcf15f519a7",
+      "name": "If | Chelsea Privacy Outbox Worker Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95a94e83-b42c-5d28-b77c-4de34e084302",
+              "leftValue": "={{ $json.leaseAcquired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "05c7d696-f06c-5b88-8349-c41e03d65eed",
+      "name": "Call | Chelsea Privacy Outbox Worker | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        620
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "zYOv6rLZVEjAiTNf",
+          "mode": "id",
+          "cachedResultName": "Chelsea Privacy Outbox Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Chelsea Hardening v7: child execution timeout <=1080s; scheduler lease TTL 1320s with fencing token."
+    },
+    {
+      "id": "49153558-d924-5bbc-80db-faddc3cacf42",
+      "name": "Code | Mark Chelsea Privacy Outbox Worker Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        580
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json;return [{json:{...x,workerOutcome:'success'}}];"
+      }
+    },
+    {
+      "id": "4a7e330b-b51f-56ea-bc24-771245799dfd",
+      "name": "Code | Mark Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        660
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator\").first().json;const e=$input.first()?.json||{};return [{json:{...x,workerOutcome:'failed',workerError:String(e.error?.message||e.message||'worker failed').slice(0,500)}}];"
+      }
+    },
+    {
+      "id": "27a5293b-8356-5ea9-b5c5-56cd4de41fca",
+      "name": "Call | Supabase | Release Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        360,
+        620
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "17d67017-70d6-5b9c-a6bf-69c0b9c3a748",
+      "name": "End | Chelsea Privacy Outbox Worker Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        740
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ea223f6c-327c-524f-b01e-c73c7a6edd03",
+      "name": "End | Chelsea Privacy Outbox Worker Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        620,
+        620
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "Code | Configure Chelsea",
+      "name": "Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"privacy_artifact_cleanup\",leaseOwner:`n8n:${$execution.id}:privacy_artifact_cleanup`,ttlSeconds:720,executionTimeoutSeconds:600,targetWorkflowId:\"PRIVCLN7d4e5f6a7b8c\",targetWorkflowName:\"Chelsea Privacy Artifact Cleanup Worker v1.0 — HARDENED STAGED\"}}];"
+      }
+    },
+    {
+      "id": "Call | Supabase | Acquir",
+      "name": "Call | Supabase | Acquire Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "Code | Verify Chelsea Pr",
+      "name": "Code | Verify Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;return [{json:{...x,leaseAcquired:row?.acquired===true,fencingToken:Number(row?.fencingToken||0)}}];"
+      }
+    },
+    {
+      "id": "If | Chelsea Privacy Art",
+      "name": "If | Chelsea Privacy Artifact Cleanup Worker Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "736cdf75-4703-46fd-aaa1-2bf5151c8af1",
+              "leftValue": "={{ $json.leaseAcquired }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "Call | Chelsea Privacy A",
+      "name": "Call | Chelsea Privacy Artifact Cleanup Worker | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        -80
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "PRIVCLN7d4e5f6a7b8c",
+          "mode": "id",
+          "cachedResultName": "Chelsea Privacy Artifact Cleanup Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "Code | Mark Chelsea Priv",
+      "name": "Code | Mark Chelsea Privacy Artifact Cleanup Worker Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -120
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,schedulerSuccess:true}}];"
+      }
+    },
+    {
+      "id": "Code | Mark Chelsea Priv",
+      "name": "Code | Mark Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,schedulerSuccess:false}}];"
+      }
+    },
+    {
+      "id": "Call | Supabase | Releas",
+      "name": "Call | Supabase | Release Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        -60
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "End | Chelsea Privacy Ar",
+      "name": "End | Chelsea Privacy Artifact Cleanup Worker Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "End | Chelsea Privacy Ar",
+      "name": "End | Chelsea Privacy Artifact Cleanup Worker Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        -60
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8de9be16-4e33-5343-b939-ac75e38e6380",
+      "name": "Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        900
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{leaseName:\"reliability_monitor\",leaseOwner:`n8n:${$execution.id}:reliability_monitor`,ttlSeconds:300,executionTimeoutSeconds:90,targetWorkflowId:\"RELMON7c3d4e5f6a7b\",targetWorkflowName:\"Chelsea Reliability Monitor v1.0 — HARDENED STAGED\"}}];"
+      }
+    },
+    {
+      "id": "99828e94-f4c0-586e-a1b8-a3119a4fa2f5",
+      "name": "Call | Supabase | Acquire Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        900
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_acquire_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$(\"Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json.leaseName,p_owner:$(\"Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json.leaseOwner,p_ttl_seconds:$(\"Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json.ttlSeconds,p_execution_timeout_seconds:$(\"Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json.executionTimeoutSeconds} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "8b92d168-050c-5f8e-ae23-17fb557250cb",
+      "name": "Code | Verify Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        900
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json;const raw=$input.first()?.json||{};const r=raw.body??raw.data??raw;const row=Array.isArray(r)?r[0]:r;return [{json:{...x,leaseAcquired:row?.acquired===true,fencingToken:Number(row?.fencingToken||0)}}];"
+      }
+    },
+    {
+      "id": "7b232aaf-be6c-5fc6-8dec-d835ce14fc9f",
+      "name": "If | Chelsea Reliability Monitor Lease Acquired | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        900
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eea49d2f-41a1-58b4-91c6-c7e15d86e6f1",
+              "leftValue": "={{ $json.leaseAcquired === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5f06fc3f-9235-56de-88a3-c143d096142b",
+      "name": "Call | Chelsea Reliability Monitor | Execute Leased Scheduler | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        820
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "RELMON7c3d4e5f6a7b",
+          "mode": "id",
+          "cachedResultName": "Chelsea Reliability Monitor v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "0f2014a3-1033-5e18-b069-ea166ef9e092",
+      "name": "Code | Mark Chelsea Reliability Monitor Success | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        780
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json;return [{json:{...x,workerOutcome:'success'}}];"
+      }
+    },
+    {
+      "id": "e4db6bd5-8361-543d-9c64-aff8a615c9e5",
+      "name": "Code | Mark Chelsea Reliability Monitor Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        900
+      ],
+      "parameters": {
+        "jsCode": "const x=$(\"Code | Verify Chelsea Reliability Monitor Lease | SchedulerOrchestrator\").first().json;const e=$input.first()?.json||{};return [{json:{...x,workerOutcome:'failed',workerError:String(e.error?.message||e.message||'worker failed').slice(0,500)}}];"
+      }
+    },
+    {
+      "id": "71d16e90-ebcd-5321-a894-0bda4fc70aee",
+      "name": "Call | Supabase | Release Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        840
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_release_scheduler_lease_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_lease_name:$json.leaseName,p_owner:$json.leaseOwner,p_fencing_token:$json.fencingToken} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "c9ab5e85-2274-593f-b813-7f93816f5541",
+      "name": "End | Chelsea Reliability Monitor Lease Busy | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        960,
+        980
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "1e1c5cf9-8269-52c9-8971-ffbaf6eed48c",
+      "name": "End | Chelsea Reliability Monitor Scheduler Receipt | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        840
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c40c6ebe-0bed-5fa1-9fe2-3c651a54a253",
+      "name": "Call | Supabase | Record Process Chelsea State Scheduler Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        -400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Process Chelsea State Scheduler Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ed2e5ebf-25d9-58e6-836d-3cea955f16f4",
+      "name": "Call | Supabase | Record Челси задачи планировщик Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        -120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Челси задачи планировщик Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "73cadc7d-9aed-5d22-9d08-d970f745ac3f",
+      "name": "Call | Supabase | Record Челси диспетчер уточнений Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Челси диспетчер уточнений Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "f390a4f8-e11e-59f3-a8c2-cde58979fe8a",
+      "name": "Call | Supabase | Record Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        440
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "32b868c6-637c-556b-8daa-64a0043d1cb0",
+      "name": "Call | Supabase | Record Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        680
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "4495ddc7-544d-52d6-888b-da5c21815dcb",
+      "name": "Call | Supabase | Record Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "8291d023-f35f-5d52-95fa-4822d0a85e54",
+      "name": "Call | Supabase | Record Chelsea Reliability Monitor Failure | SchedulerOrchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        920
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + '/rest/v1/rpc/chelsea_record_error_event_v2' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_event:{eventId:(\"scheduler_\"+$json.leaseName+\"_\"+$execution.id),workflowId:$json.targetWorkflowId,workflowName:$json.targetWorkflowName,executionId:$execution.id,lastNode:\"Code | Mark Chelsea Reliability Monitor Failure | SchedulerOrchestrator\",errorName:\"SchedulerChildFailure\",errorMessage:$json.workerError||\"worker failed\",errorStack:\"\",retryable:true,occurredAt:$now.toISO()}} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Process Chelsea State Scheduler Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Process Chelsea State Scheduler Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Process Chelsea State Scheduler Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Process Chelsea State Scheduler Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Scheduler | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Process Chelsea State Scheduler Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Scheduler | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Process Chelsea State Scheduler Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Process Chelsea State Scheduler Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Process Chelsea State Scheduler Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Process Chelsea State Scheduler Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Process Chelsea State Scheduler Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Process Chelsea State Scheduler Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Process Chelsea State Scheduler Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Челси задачи планировщик Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Челси задачи планировщик Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Челси задачи планировщик Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Челси задачи планировщик Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Челси задачи планировщик Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Челси задачи планировщик Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси задачи планировщик | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Челси задачи планировщик Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Челси задачи планировщик | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Челси задачи планировщик Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Челси задачи планировщик Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Челси задачи планировщик Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Челси задачи планировщик Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Челси задачи планировщик Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Челси задачи планировщик Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Челси задачи планировщик Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Челси задачи планировщик Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Челси диспетчер уточнений Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Челси диспетчер уточнений Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Челси диспетчер уточнений Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Челси диспетчер уточнений Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси диспетчер уточнений | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Челси диспетчер уточнений Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Челси диспетчер уточнений | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Челси диспетчер уточнений Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Челси диспетчер уточнений Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Челси диспетчер уточнений Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Челси диспетчер уточнений Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Челси диспетчер уточнений Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Челси диспетчер уточнений Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Челси диспетчер уточнений Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Челси обработчик очереди памяти replacement Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Челси обработчик очереди памяти replacement Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси обработчик очереди памяти replacement | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Челси обработчик очереди памяти replacement Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Челси обработчик очереди памяти replacement | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Челси обработчик очереди памяти replacement Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Челси обработчик очереди памяти replacement Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Челси обработчик очереди памяти replacement Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Every Minute | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Configure Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Челси задачи планировщик Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Configure Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Chelsea Privacy Outbox Worker Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Chelsea Privacy Outbox Worker Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Privacy Outbox Worker | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Chelsea Privacy Outbox Worker Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Privacy Outbox Worker | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Chelsea Privacy Outbox Worker Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Chelsea Privacy Outbox Worker Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Chelsea Privacy Outbox Worker Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Chelsea Privacy Outbox Worker Lease Busy | SchedulerOrchestrator": {},
+    "End | Chelsea Privacy Outbox Worker Scheduler Receipt | SchedulerOrchestrator": {},
+    "Code | Configure Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Chelsea Privacy Artifact Cleanup Worker Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Chelsea Privacy Artifact Cleanup Worker Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Privacy Artifact Cleanup Worker | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Chelsea Privacy Artifact Cleanup Worker Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Privacy Artifact Cleanup Worker | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Chelsea Privacy Artifact Cleanup Worker Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Chelsea Privacy Artifact Cleanup Worker Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Chelsea Privacy Artifact Cleanup Worker Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Configure Chelsea Reliability Monitor Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Acquire Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Acquire Chelsea Reliability Monitor Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Chelsea Reliability Monitor Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "If | Chelsea Reliability Monitor Lease Acquired | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Chelsea Reliability Monitor Lease Acquired | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Reliability Monitor | Execute Leased Scheduler | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Chelsea Reliability Monitor Lease Busy | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Reliability Monitor | Execute Leased Scheduler | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Code | Mark Chelsea Reliability Monitor Success | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Chelsea Reliability Monitor Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Chelsea Reliability Monitor Success | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Chelsea Reliability Monitor Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Record Chelsea Reliability Monitor Failure | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Release Chelsea Reliability Monitor Lease | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "End | Chelsea Reliability Monitor Scheduler Receipt | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Process Chelsea State Scheduler Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Process Chelsea State Scheduler Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Челси задачи планировщик Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Челси задачи планировщик Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Челси диспетчер уточнений Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Челси диспетчер уточнений Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Челси обработчик очереди памяти replacement Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Челси обработчик очереди памяти replacement Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Chelsea Privacy Outbox Worker Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Chelsea Privacy Outbox Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Chelsea Privacy Artifact Cleanup Worker Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Chelsea Privacy Artifact Cleanup Worker Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Record Chelsea Reliability Monitor Failure | SchedulerOrchestrator": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Release Chelsea Reliability Monitor Lease | SchedulerOrchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

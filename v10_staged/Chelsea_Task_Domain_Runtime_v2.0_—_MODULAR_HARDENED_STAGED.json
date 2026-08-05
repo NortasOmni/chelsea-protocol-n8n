@@ -1,0 +1,2398 @@
+{
+  "id": "M4JqA5dzW7rC9sTx",
+  "name": "Chelsea Task Domain Runtime v2.0 — MODULAR HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "a7873811-cf4c-5ec6-b09c-339d62eafd60",
+  "nodes": [
+    {
+      "id": "5906592f-2cae-5236-98c3-6417fea61880",
+      "name": "Trigger | Parent Workflow | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "8d9feeac-7dc8-5517-8750-c104c86a2f78",
+      "name": "Code | Validate Task Operation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst input = $input.first()?.json || {};\nconst allowed = new Set([\"code_normalize_trusted_task_input_taskgate_92baa798\", \"code_verify_folder_user_identity_provisiontasktable_e4198056\", \"code_route_task_operation_tasksemantic_ab8c875a\", \"code_plan_trusted_task_mutation_applytaskmutation_73a6f57f\", \"code_verify_task_command_saga_mutation_applytasksaga_223432ba\", \"code_finalize_verified_task_command_saga_applytasksaga_49d0b183\", \"code_verify_task_mutation_read_back_applytaskmutation_b67d03ac\", \"code_build_telegram_task_response_taskresponse_4b4b6306\", \"code_finalize_telegram_task_receipt_taskresponse_875dcc0c\", \"code_verify_task_question_receipt_taskresponse_6eba41dd\", \"code_prepare_registered_task_users_schedulerscan_preusernamecutover_952511f0\", \"code_select_due_task_actions_schedulerscan_70509903\", \"code_plan_expired_dispatch_reconciliation_scheduleraction_5776ef2f\", \"code_verify_expired_dispatch_reconciliation_scheduleraction_b6ce4844\", \"code_plan_task_action_claim_scheduleraction_1f8c45aa\", \"code_verify_claim_and_plan_action_scheduleraction_f6f68d04\", \"code_verify_dispatch_and_build_telegram_action_scheduleraction_fe05629f\", \"code_attach_telegram_key_to_task_action_scheduleraction_2e57c213\", \"code_finalize_telegram_task_delivery_scheduleraction_e3e4b35f\", \"code_verify_task_delivery_mutation_scheduleraction_400bc3ab\", \"code_plan_internal_task_action_scheduleraction_5d810f38\", \"code_verify_internal_task_mutation_scheduleraction_14710942\"]);\nconst operationId = String(input.operationId || '');\nif (!allowed.has(operationId)) { const error = new Error('Unsupported task domain operation'); error.code = 'unsupported_task_domain_operation'; throw error; }\nreturn [{ json: input }];\n"
+      }
+    },
+    {
+      "id": "22e6e1cd-d61e-501d-83d9-6d1b91003415",
+      "name": "Switch | Task Operation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "39032c16-ce85-5795-abfe-54dc93c593df",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_normalize_trusted_task_input_taskgate_92baa798",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "caa3b39f-73d0-575b-bce2-434567c143cc",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_folder_user_identity_provisiontasktable_e4198056",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "12852f01-21ab-5444-8eb1-82e10e6a8038",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_route_task_operation_tasksemantic_ab8c875a",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "36263a06-5167-55bb-bff1-a23c74a206f7",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_plan_trusted_task_mutation_applytaskmutation_73a6f57f",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d1477ce9-f37d-5498-9193-b38e4a5d6e62",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_task_command_saga_mutation_applytasksaga_223432ba",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1a4af192-1df7-5d30-b8bf-82feef8386d0",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_finalize_verified_task_command_saga_applytasksaga_49d0b183",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "da9aaf90-d45b-54a4-b824-98e62238f82e",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_task_mutation_read_back_applytaskmutation_b67d03ac",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5c822a78-0fa2-5534-8824-bea407f0d7b2",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_build_telegram_task_response_taskresponse_4b4b6306",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ecf51847-84b4-519e-bb00-914ea3d56571",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_finalize_telegram_task_receipt_taskresponse_875dcc0c",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "24d3a05e-897f-5104-ad29-8e26a4f55146",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_task_question_receipt_taskresponse_6eba41dd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "19c45e43-d666-5e42-b879-26e7266ca3fd",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_prepare_registered_task_users_schedulerscan_preusernamecutover_952511f0",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c7c55375-d12d-5343-aca8-a3a412b38e31",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_select_due_task_actions_schedulerscan_70509903",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "964a0874-651d-59bb-8bbd-8b2cfd21393c",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_plan_expired_dispatch_reconciliation_scheduleraction_5776ef2f",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e949d7ed-69bb-5ff3-813b-4e570d63948e",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_expired_dispatch_reconciliation_scheduleraction_b6ce4844",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6fd4d41f-eb1e-5b99-adb7-6c7bd8e05459",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_plan_task_action_claim_scheduleraction_1f8c45aa",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b27937fd-00c6-5d2e-9cd8-ec2b9ec6a5d5",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_claim_and_plan_action_scheduleraction_f6f68d04",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "461c788f-1341-5583-9d79-0e917f010e0c",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_dispatch_and_build_telegram_action_scheduleraction_fe05629f",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4ad5c345-45c5-59ee-8cbe-d2ff0ade9eb7",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_attach_telegram_key_to_task_action_scheduleraction_2e57c213",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9edf0492-e53a-5c2c-9860-9ce283474266",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_finalize_telegram_task_delivery_scheduleraction_e3e4b35f",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b1c30dbe-62ee-5c7c-bf66-758cd2eb0f11",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_task_delivery_mutation_scheduleraction_400bc3ab",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ddee51a4-cbcd-53ae-baa0-0e3f96adca89",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_plan_internal_task_action_scheduleraction_5d810f38",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c372c2f7-2540-5594-8986-e71b29fa35b2",
+                    "leftValue": "={{ $json.operationId }}",
+                    "rightValue": "code_verify_internal_task_mutation_scheduleraction_14710942",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "77c6633d-c3fb-5a92-b73b-9515ac954879",
+      "name": "Call | Chelsea Task Operation Normalize Trusted Task Input | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -1680
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T1025d0ce7ad99f4",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Normalize Trusted Task Input v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "5b0501ac-30fa-5988-a812-d944cd1d01a0",
+      "name": "Call | Chelsea Task Operation Verify Folder User Identity | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -1520
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T100abdfea74ba71",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Folder User Identity v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "68ae9c7f-83cb-5fb4-b558-4352f3c298f6",
+      "name": "Call | Chelsea Task Operation Route Task Operation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -1360
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T102df83f961ee96",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Route Task Operation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "e13aa095-d8eb-595a-b3e0-5e57545bf1b4",
+      "name": "Call | Chelsea Task Operation Plan Trusted Task Mutation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -1200
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T1014db58b06e187",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Plan Trusted Task Mutation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "3078f0ad-8b99-5508-9eab-069d9a3776ad",
+      "name": "Call | Chelsea Task Operation Verify Task Command Saga Mutation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -1040
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T1049d966a366c6a",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Task Command Saga Mutation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "ff649329-d21c-5d52-8b10-2e0bc566084a",
+      "name": "Call | Chelsea Task Operation Finalize Verified Task Command Saga | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -880
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10cccd671a11087",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Finalize Verified Task Command Saga v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "713b1eea-c607-5d6a-ab77-b9951e1d652e",
+      "name": "Call | Chelsea Task Operation Verify Task Mutation Read Back | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -720
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T103471a71f8c2ca",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Task Mutation Read Back v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "972136ba-4eca-5020-b518-212a286633a9",
+      "name": "Call | Chelsea Task Operation Build Telegram Task Response | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -560
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10bc4d97a3476f3",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Build Telegram Task Response v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "d4a3cbf5-52cd-53a9-be06-d203a81aa174",
+      "name": "Call | Chelsea Task Operation Finalize Telegram Task Receipt | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -400
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T101bde66b6cf26c",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Finalize Telegram Task Receipt v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "d78501f1-940a-51bc-8003-a00842da663d",
+      "name": "Call | Chelsea Task Operation Verify Task Question Receipt | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10111afa8d29e81",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Task Question Receipt v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "f89da6b1-cedf-599a-916c-1b29a9563a2f",
+      "name": "Call | Chelsea Task Operation Prepare Registered Task Users | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -80
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T104273c7aa49eee",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Prepare Registered Task Users v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "234be345-b596-5d5e-b0c2-b1ff7b8469b4",
+      "name": "Call | Chelsea Task Operation Select Due Task Actions | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        80
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10d70c24a8dcf74",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Select Due Task Actions v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "75c29414-7911-5585-9e50-42490c0e9069",
+      "name": "Call | Chelsea Task Operation Plan Expired Dispatch Reconciliation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T1055ec59562a258",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Plan Expired Dispatch Reconciliation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "2fed20b5-2b6c-5d06-934e-30f2a5962828",
+      "name": "Call | Chelsea Task Operation Verify Expired Dispatch Reconciliation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        400
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10836409ec04587",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Expired Dispatch Reconciliation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "80829770-d747-5408-ab66-7d851c6e946a",
+      "name": "Call | Chelsea Task Operation Plan Task Action Claim | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        560
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T106c655bd8e065e",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Plan Task Action Claim v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "088aa511-32ec-564f-a55f-12979ffc2096",
+      "name": "Call | Chelsea Task Operation Verify Claim and Plan Action | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        720
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10eff9a6c763ba3",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Claim and Plan Action v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "0a6b60ad-509e-5930-a5ed-181f9e5fa93d",
+      "name": "Call | Chelsea Task Operation Verify Dispatch and Build Telegram Action | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        880
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T108a9b93fc0d15d",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Dispatch and Build Telegram Action v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "fe3e4572-23ec-5582-a470-f545a26c1b1f",
+      "name": "Call | Chelsea Task Operation Attach Telegram Key to Task Action | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        1040
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10d0678e94dee69",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Attach Telegram Key to Task Action v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "525b7809-ddb6-533b-b7c8-df68d3a8642e",
+      "name": "Call | Chelsea Task Operation Finalize Telegram Task Delivery | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        1200
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10af49d550a9600",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Finalize Telegram Task Delivery v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "f19bd88f-5e0f-50ac-92a8-bea6bee69448",
+      "name": "Call | Chelsea Task Operation Verify Task Delivery Mutation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        1360
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T1011cf85aa441ba",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Task Delivery Mutation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "56ff3380-0668-546e-8a45-60ed00c42c7c",
+      "name": "Call | Chelsea Task Operation Plan Internal Task Action | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        1520
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T105888095b63685",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Plan Internal Task Action v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "97a930a7-6118-54de-a728-959429b417d1",
+      "name": "Call | Chelsea Task Operation Verify Internal Task Mutation | TaskDomainRuntime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        1680
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "T10c3515f29855db",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Operation Verify Internal Task Mutation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "operationId": "={{ $json.operationId }}",
+            "inputItems": "={{ $json.inputItems }}",
+            "contextsJson": "={{ $json.contextsJson }}",
+            "executionId": "={{ $json.executionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operationId",
+              "displayName": "operationId",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "inputItems",
+              "displayName": "inputItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "contextsJson",
+              "displayName": "contextsJson",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | TaskDomainRuntime": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Task Operation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Task Operation | TaskDomainRuntime": {
+      "main": [
+        [
+          {
+            "node": "Switch | Task Operation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch | Task Operation | TaskDomainRuntime": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Operation Normalize Trusted Task Input | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Folder User Identity | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Route Task Operation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Plan Trusted Task Mutation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Task Command Saga Mutation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Finalize Verified Task Command Saga | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Task Mutation Read Back | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Build Telegram Task Response | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Finalize Telegram Task Receipt | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Task Question Receipt | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Prepare Registered Task Users | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Select Due Task Actions | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Plan Expired Dispatch Reconciliation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Expired Dispatch Reconciliation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Plan Task Action Claim | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Claim and Plan Action | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Dispatch and Build Telegram Action | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Attach Telegram Key to Task Action | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Finalize Telegram Task Delivery | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Task Delivery Mutation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Plan Internal Task Action | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Operation Verify Internal Task Mutation | TaskDomainRuntime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

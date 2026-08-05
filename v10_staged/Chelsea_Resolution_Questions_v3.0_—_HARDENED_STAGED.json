@@ -1,0 +1,556 @@
+{
+  "updatedAt": "2026-07-22T15:31:05.246Z",
+  "createdAt": "2026-07-11T06:44:36.430Z",
+  "id": "JdJJcYvZdJgJiElS",
+  "name": "Chelsea Resolution Questions v3.0 [HARDENED STAGED]",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Вход\\nФиксированная глобальная таблица; tenant проверяется в каждой строке.",
+        "height": 420,
+        "width": 760,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -300
+      ],
+      "id": "b9946e40-a38c-4eb9-8b25-dd064023e721",
+      "name": "## Вход единой очереди уточнений (InputModule)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -680,
+        -120
+      ],
+      "id": "e0ee6f80-aee6-4b16-ae87-4c757ac32c3c",
+      "name": "Trigger | Manual Start | InputModule"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "userId"
+            },
+            {
+              "name": "memoryUserId"
+            },
+            {
+              "name": "tenantId"
+            },
+            {
+              "name": "memoryTenantId"
+            },
+            {
+              "name": "telegramUserId"
+            },
+            {
+              "name": "chatId"
+            },
+            {
+              "name": "messageId"
+            },
+            {
+              "name": "messageDateIso"
+            },
+            {
+              "name": "qdrantCollection"
+            },
+            {
+              "name": "uploadId"
+            },
+            {
+              "name": "sourceTitle"
+            },
+            {
+              "name": "questions",
+              "type": "array"
+            },
+            {
+              "name": "principalKey"
+            },
+            {
+              "name": "storageUsername"
+            },
+            {
+              "name": "currentUsername"
+            },
+            {
+              "name": "soulId"
+            },
+            {
+              "name": "identitySchemaVersion"
+            },
+            {
+              "name": "identityStatus"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -680,
+        120
+      ],
+      "id": "66bc7ba9-ec59-458c-9b36-6b4a191706d5",
+      "name": "Trigger | Parent Workflow | InputModule"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first()?.json || {};\n\nfunction text(value, fallback = '') {\n  const result = String(value ?? '').replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n').trim();\n  return result || fallback;\n}\nfunction list(value) {\n  if (Array.isArray(value)) return value;\n  if (!value) return [];\n  if (typeof value === 'object') return [value];\n  try {\n    const parsed = JSON.parse(String(value));\n    return Array.isArray(parsed) ? parsed : [];\n  } catch (error) {\n    return [];\n  }\n}\n\nconst userId = text(input.userId || input.memoryUserId);\nconst memoryTenantId = text(input.memoryTenantId || input.tenantId);\nconst tenantId = text(input.tenantId || memoryTenantId);\nif (!tenantId || !memoryTenantId) {\n  throw new Error('Resolution queue requires tenantId and memoryTenantId.');\n}\nif (tenantId !== memoryTenantId) {\n  throw new Error('Resolution queue requires tenantId to equal memoryTenantId.');\n}\nconst memoryUserId = text(input.memoryUserId || userId);\nconst telegramUserId = text(input.telegramUserId);\nconst chatId = text(input.chatId || input.telegramChatId || input.telegramUserId);\nconst qdrantCollection = text(input.qdrantCollection);\nif (!userId || !memoryUserId || !/^\\d+$/.test(telegramUserId) || Number(telegramUserId)<=0 || !chatId || !qdrantCollection) {\n  throw new Error('Resolution queue identity requires user, Telegram chat, and Qdrant collection.');\n}\n\nconst questions = list(input.questions || input.resolutionQuestions)\n  .filter(value => value && typeof value === 'object');\n\nreturn [{ json: {\n  ...input,\n  userId,\n  memoryUserId,\n  tenantId,\n  memoryTenantId,\n  telegramActorId,\n  telegramUserId,\n  chatId,\n  messageId: text(input.messageId || input.sourceMessageId),\n  messageDateIso: text(input.messageDateIso),\n  qdrantCollection,\n  uploadId: text(input.uploadId),\n  sourceTitle: text(input.sourceTitle),\n  questionTableName: 'Chelsea Resolution Questions',\n  questions,\n  questionCount: questions.length,\n  queueSchemaVersion: 'chelsea_resolution_questions_v2_0'\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -420,
+        0
+      ],
+      "id": "d0e57023-71b2-4c08-b8d1-643a9ee14e0b",
+      "name": "Code | Normalize Resolution Queue Request | InputModule"
+    },
+    {
+      "parameters": {
+        "content": "## Таблица\\nТипы: person_resolution и memory_conflict. Upsert не сбрасывает asked/terminal state.",
+        "height": 620,
+        "width": 1180,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -300
+      ],
+      "id": "f1b64648-6210-4502-80f1-60762c97459f",
+      "name": "## Хранилище Chelsea Resolution Questions (TableSetup)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "893839e4-9ab9-412e-b407-629d61f3e28e",
+      "name": "Create | Data Table | Chelsea Resolution Questions | TableSetup"
+    },
+    {
+      "parameters": {
+        "jsCode": "const runtime = $('Code | Normalize Resolution Queue Request | InputModule').first().json || {};\nconst questions = Array.isArray(runtime.questions) ? runtime.questions : [];\n\nfunction text(value, fallback = '') {\n  const result = String(value ?? '').replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n').trim();\n  return result || fallback;\n}\nfunction arr(value) {\n  if (Array.isArray(value)) return value;\n  if (!value) return [];\n  try { const parsed = JSON.parse(String(value)); return Array.isArray(parsed) ? parsed : []; }\n  catch (error) { return []; }\n}\nfunction json(value, fallback) {\n  try { return JSON.stringify(value ?? fallback); }\n  catch (error) { return JSON.stringify(fallback); }\n}\nfunction unique(values, limit = 50) {\n  const out = [];\n  const seen = new Set();\n  for (const value of values || []) {\n    const key = text(value);\n    if (!key || seen.has(key)) continue;\n    seen.add(key);\n    out.push(key);\n    if (out.length >= limit) break;\n  }\n  return out;\n}\nfunction hash(value) {\n  const source = String(value ?? '').normalize('NFKC');\n  let a = 0x811c9dc5;\n  let b = 0x9e3779b9;\n  for (let index = 0; index < source.length; index += 1) {\n    const code = source.charCodeAt(index);\n    a ^= code;\n    a = Math.imul(a, 0x01000193) >>> 0;\n    b ^= code + index;\n    b = Math.imul(b, 0x85ebca6b) >>> 0;\n  }\n  return a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0');\n}\nfunction candidateRows(question) {\n  return arr(question.candidates || question.personResolutionCandidates)\n    .map(candidate => {\n      if (!candidate || typeof candidate !== 'object') return null;\n      const ref = text(candidate.personId || candidate.ref || candidate.id);\n      if (!ref) return null;\n      return {\n        ref,\n        label: text(candidate.displayName || candidate.canonicalName || candidate.title || ref, ref).slice(0, 60),\n        personId: ref,\n        qdrantPointId: text(candidate.qdrantPointId),\n        disambiguationLabel: text(candidate.disambiguationLabel),\n        confidence: Number(candidate.resolutionScore || candidate.confidence || 0)\n      };\n    })\n    .filter(Boolean)\n    .slice(0, 6);\n}\n\nif (!questions.length) {\n  return [{ json: { ...runtime, hasQuestion: false, status: 'no_questions' } }];\n}\n\nreturn questions.map((question, index) => {\n  const identityChecks = [\n    ['tenantId', question.tenantId, runtime.tenantId],\n    ['memoryTenantId', question.memoryTenantId, runtime.memoryTenantId],\n    ['userId', question.userId, runtime.userId],\n    ['memoryUserId', question.memoryUserId, runtime.memoryUserId],\n    ['telegramUserId', question.telegramUserId, runtime.telegramUserId],\n    ['chatId', question.chatId || question.telegramChatId, runtime.chatId],\n    ['qdrantCollection', question.qdrantCollection, runtime.qdrantCollection],\n    ['sourceMessageId', question.sourceMessageId || question.messageId, runtime.messageId]\n  ];\n  for (const [field, supplied, expected] of identityChecks) {\n    if (text(supplied) && text(supplied) !== text(expected)) {\n      throw new Error(`Resolution question ${index} ${field} does not match the queue runtime identity.`);\n    }\n  }\n  const pointType = text(question.pointType || question.knowledgeType || question.questionType).toLowerCase();\n  const questionType = pointType === 'memory_conflict'\n    ? 'memory_conflict'\n    : ['person_resolution', 'person_resolution_question'].includes(pointType)\n      ? 'person_resolution'\n      : '';\n  if (!questionType) {\n    throw new Error(`Unsupported resolution question type at index ${index}.`);\n  }\n\n  const questionId = text(\n    question.questionId || question.resolutionQuestionId || question.knowledgeId,\n    `resolution_${hash(`${runtime.memoryTenantId}|${runtime.messageId}|${index}`)}`\n  );\n  const callbackQuestionKey = hash(`${runtime.memoryTenantId}|${questionId}`);\n  const questionRowKey = `resolution_row_${callbackQuestionKey}`;\n  const rowInstanceId = `resolution_instance_${callbackQuestionKey}`;\n  // Reuse the full 64-bit callback key. Ten hex digits become collision-prone\n  // in a long-lived global multi-tenant table; sixteen remain short enough for\n  // a human-visible Telegram correlation token.\n  const questionToken = `CQ-${callbackQuestionKey.toUpperCase()}`;\n  const candidates = candidateRows(question);\n  const existingValue = text(question.existingValue);\n  const incomingValue = text(question.incomingValue);\n  const allowCreateNewPerson = question.allowCreateNewPerson !== false;\n  const options = [];\n\n  if (questionType === 'memory_conflict') {\n    options.push({ ref: 'keep_existing', label: 'Оставить прежнее', value: existingValue });\n    options.push({ ref: 'accept_incoming', label: 'Принять новое', value: incomingValue });\n  } else {\n    for (const candidate of candidates) options.push({ ref: candidate.ref, label: candidate.label, personId: candidate.personId });\n    if (allowCreateNewPerson) options.push({ ref: 'create_new', label: 'Это новый человек' });\n    options.push({ ref: 'reject', label: 'Ни один вариант' });\n  }\n\n  const callbackOptions = options.slice(0, 8).map((option, optionIndex) => ({\n    ...option,\n    index: optionIndex,\n    optionToken: hash(`${runtime.memoryTenantId}|${questionId}|${option.ref}`),\n    callbackData: `chelsea_res:${callbackQuestionKey}:${hash(`${runtime.memoryTenantId}|${questionId}|${option.ref}`)}`\n  }));\n  const questionText = text(\n    question.questionText || question.question || question.content || question.title,\n    questionType === 'memory_conflict'\n      ? 'Уточните, какое значение сейчас верно.'\n      : 'Уточните, о каком человеке идёт речь.'\n  ).slice(0, 3500);\n  const provisionalPersonId = text(question.provisionalPersonId || question.context?.provisionalPersonId);\n  const qdrantQuestionPointId = text(question.qdrantQuestionPointId || question.qdrantPointId);\n  if (!qdrantQuestionPointId) {\n    throw new Error(`Resolution question ${questionId} has no qdrantQuestionPointId.`);\n  }\n\n  return { json: {\n    hasQuestion: true,\n    questionRowKey,\n    rowInstanceId,\n    questionTableName: runtime.questionTableName,\n    questionId,\n    tenantId: runtime.tenantId,\n    memoryTenantId: runtime.memoryTenantId,\n    userId: runtime.userId,\n    memoryUserId: runtime.memoryUserId,\n    telegramUserId: runtime.telegramUserId,\n    chatId: runtime.chatId,\n    sourceMessageId: runtime.messageId,\n    sourceMessageDateIso: text(question.messageDateIso, runtime.messageDateIso),\n    uploadId: text(question.uploadId, runtime.uploadId),\n    sourceTitle: text(question.sourceTitle, runtime.sourceTitle),\n    qdrantCollection: runtime.qdrantCollection,\n    questionType,\n    status: 'pending',\n    priority: Math.max(1, Math.min(Number(question.priority || (questionType === 'memory_conflict' ? 9 : 6)), 10)),\n    questionText,\n    mention: text(question.mention),\n    subjectName: text(question.subjectName),\n    relatedKnowledgeId: text(question.relatedKnowledgeId || question.stableKnowledgeId),\n    relatedKnowledgeTitle: text(question.relatedKnowledgeTitle || question.predicateLabel),\n    qdrantQuestionPointId,\n    stableKnowledgeId: text(question.stableKnowledgeId),\n    stableQdrantPointId: text(question.stableQdrantPointId),\n    existingValue,\n    incomingValue,\n    plausibleHeadRefsJson: json(unique(arr(question.plausibleHeadRefs), 20), []),\n    candidatesJson: json(candidates, []),\n    candidateRefsJson: json(candidates.map(candidate => candidate.ref), []),\n    allowCreateNewPerson,\n    provisionalPersonId,\n    resolutionReason: text(question.resolutionReason || question.reason),\n    confidence: Number(question.confidence || question.personResolutionConfidence || 0),\n    resolutionPolicy: text(question.resolutionPolicy),\n    callbackQuestionKey,\n    questionToken,\n    callbackOptionsJson: json(callbackOptions, []),\n    correlationKey: '',\n    dispatchLeaseOwner: '',\n    dispatchLeaseUntil: '',\n    dispatchAttemptCount: 0,\n    telegramQuestionMessageId: '',\n    askedAt: '',\n    askedExpiresAt: '',\n    stateChangedAt: new Date().toISOString(),\n    answerMessageId: '',\n    answerText: '',\n    selectedRef: '',\n    answeredAt: '',\n    answerIdempotencyKey: '',\n    answerClaimLeaseOwner: '',\n    answerClaimLeaseUntil: '',\n    answerAttemptCount: 0,\n    lastAnswerAttemptMessageId: '',\n    jobId: '',\n    lastAcceptedJobId: '',\n    lastAcceptedAnswerMessageId: '',\n    lastAcceptedAnswerText: '',\n    lastAcceptedSelectedRef: '',\n    lastAcceptedAnswerIdempotencyKey: '',\n    lastAcceptedAt: '',\n    appliedAt: '',\n    selectedPersonId: '',\n    resolutionResultJson: '',\n    lastError: '',\n    contextJson: json({\n      relationToUser: question.relationToUser || '',\n      sourceEvidence: question.sourceEvidence || question.evidence || '',\n      tags: arr(question.tags),\n      provisionalPersonId,\n      stableKnowledgeId: text(question.stableKnowledgeId),\n      stableQdrantPointId: text(question.stableQdrantPointId),\n      existingValue,\n      incomingValue,\n      plausibleHeadRefs: unique(arr(question.plausibleHeadRefs), 20),\n      payloadShape: text(question.payloadShape)\n    }, {}),\n    queueSchemaVersion: 'chelsea_resolution_questions_v2_0'\n  } };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "83c32d79-45ed-451f-90f5-15cf9241a0da",
+      "name": "Code | Build Resolution Question Rows | QueueWrite"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ebb7f9f-fe7d-411a-a3c5-7ed0e9ffa005",
+              "leftValue": "={{ $json.hasQuestion }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "d47c7aed-a8b4-4ea5-8623-73472684ec0f",
+      "name": "If | Has Resolution Questions | QueueWrite"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"questionId\":$json.questionId,\"memoryTenantId\":$json.memoryTenantId},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        -100
+      ],
+      "id": "90260a52-fdf6-4821-bd0a-dd1b75a3b899",
+      "name": "Search | Data Table | Existing Resolution Question | QueueWrite",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const incomingRows = $items('Code | Build Resolution Question Rows | QueueWrite').map(item => item.json || {});\nconst existingRows = $input.all().map(item => item.json || {}).filter(row => String(row.questionId || '').trim());\n\nconst terminal = new Set([\n  'dispatching', 'asked', 'answer_claimed', 'answer_queued', 'applying',\n  'resolved', 'needs_clarification', 'rejected', 'closed', 'deferred', 'failed_review'\n]);\nfunction text(value) { return String(value ?? '').trim(); }\nfunction exactIdentity(incoming, existing) {\n  for (const field of [\n    'questionId', 'memoryTenantId', 'tenantId', 'questionType', 'qdrantQuestionPointId',\n    'qdrantCollection', 'relatedKnowledgeId', 'stableKnowledgeId', 'stableQdrantPointId'\n  ]) {\n    if (text(incoming[field]) !== text(existing[field])) {\n      throw new Error(`Existing resolution question changed immutable ${field}.`);\n    }\n  }\n  if (text(existing.questionRowKey) && text(existing.questionRowKey) !== text(incoming.questionRowKey)) {\n    throw new Error('Existing resolution question has another logical row key.');\n  }\n}\nfunction merge(incoming, existing) {\n  exactIdentity(incoming, existing);\n  const currentStatus = text(existing.status).toLowerCase();\n  if (terminal.has(currentStatus)) {\n    return { ...incoming, ...existing, questionRowKey: incoming.questionRowKey,\n      rowInstanceId: text(existing.rowInstanceId) || incoming.rowInstanceId,\n      hasQuestion: true, duplicatePreserved: true };\n  }\n  return {\n    ...incoming,\n    rowInstanceId: text(existing.rowInstanceId) || incoming.rowInstanceId,\n    correlationKey: existing.correlationKey || incoming.correlationKey,\n    telegramQuestionMessageId: existing.telegramQuestionMessageId || '',\n    askedAt: existing.askedAt || '',\n    askedExpiresAt: existing.askedExpiresAt || '',\n    stateChangedAt: existing.stateChangedAt || incoming.stateChangedAt,\n    answerMessageId: existing.answerMessageId || '',\n    answerText: existing.answerText || '',\n    selectedRef: existing.selectedRef || '',\n    answeredAt: existing.answeredAt || '',\n    answerIdempotencyKey: existing.answerIdempotencyKey || '',\n    answerClaimLeaseOwner: existing.answerClaimLeaseOwner || '',\n    answerClaimLeaseUntil: existing.answerClaimLeaseUntil || '',\n    answerAttemptCount: Number(existing.answerAttemptCount || 0),\n    lastAnswerAttemptMessageId: existing.lastAnswerAttemptMessageId || '',\n    jobId: existing.jobId || '',\n    lastAcceptedJobId: existing.lastAcceptedJobId || '',\n    lastAcceptedAnswerMessageId: existing.lastAcceptedAnswerMessageId || '',\n    lastAcceptedAnswerText: existing.lastAcceptedAnswerText || '',\n    lastAcceptedSelectedRef: existing.lastAcceptedSelectedRef || '',\n    lastAcceptedAnswerIdempotencyKey: existing.lastAcceptedAnswerIdempotencyKey || '',\n    lastAcceptedAt: existing.lastAcceptedAt || '',\n    appliedAt: existing.appliedAt || '',\n    selectedPersonId: existing.selectedPersonId || '',\n    resolutionResultJson: existing.resolutionResultJson || '',\n    lastError: existing.lastError || '',\n    status: currentStatus || 'pending',\n    duplicatePreserved: true\n  };\n}\n\nreturn incomingRows.map(incoming => {\n  const matches = existingRows.filter(existing =>\n    text(existing.questionId) === text(incoming.questionId)\n      && text(existing.memoryTenantId || existing.tenantId) === text(incoming.memoryTenantId));\n  if (matches.length > 1) throw new Error(`Duplicate resolution question rows found for ${text(incoming.questionId)}.`);\n  return { json: matches.length ? merge(incoming, matches[0]) : incoming };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -100
+      ],
+      "id": "3263df1a-5b77-450f-855e-21c231493a0e",
+      "name": "Code | Preserve Existing Resolution State | QueueWrite"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"upsert\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"questionId\":$json.questionId,\"memoryTenantId\":$json.memoryTenantId},p_record:{\"questionRowKey\":$json.questionRowKey,\"rowInstanceId\":$json.rowInstanceId,\"questionId\":$json.questionId,\"questionToken\":$json.questionToken,\"tenantId\":$json.tenantId,\"memoryTenantId\":$json.memoryTenantId,\"userId\":$json.userId,\"memoryUserId\":$json.memoryUserId,\"telegramUserId\":$json.telegramUserId,\"chatId\":$json.chatId,\"sourceMessageId\":$json.sourceMessageId,\"sourceMessageDateIso\":$json.sourceMessageDateIso,\"uploadId\":$json.uploadId,\"sourceTitle\":$json.sourceTitle,\"qdrantCollection\":$json.qdrantCollection,\"questionType\":$json.questionType,\"status\":$json.status,\"priority\":$json.priority,\"questionText\":$json.questionText,\"mention\":$json.mention,\"subjectName\":$json.subjectName,\"relatedKnowledgeId\":$json.relatedKnowledgeId,\"relatedKnowledgeTitle\":$json.relatedKnowledgeTitle,\"qdrantQuestionPointId\":$json.qdrantQuestionPointId,\"stableKnowledgeId\":$json.stableKnowledgeId,\"stableQdrantPointId\":$json.stableQdrantPointId,\"existingValue\":$json.existingValue,\"incomingValue\":$json.incomingValue,\"plausibleHeadRefsJson\":$json.plausibleHeadRefsJson,\"candidatesJson\":$json.candidatesJson,\"candidateRefsJson\":$json.candidateRefsJson,\"allowCreateNewPerson\":$json.allowCreateNewPerson,\"provisionalPersonId\":$json.provisionalPersonId,\"resolutionReason\":$json.resolutionReason,\"confidence\":$json.confidence,\"resolutionPolicy\":$json.resolutionPolicy,\"callbackQuestionKey\":$json.callbackQuestionKey,\"callbackOptionsJson\":$json.callbackOptionsJson,\"correlationKey\":$json.correlationKey,\"telegramQuestionMessageId\":$json.telegramQuestionMessageId,\"askedAt\":$json.askedAt,\"askedExpiresAt\":$json.askedExpiresAt,\"stateChangedAt\":$json.stateChangedAt,\"dispatchLeaseOwner\":$json.dispatchLeaseOwner,\"dispatchLeaseUntil\":$json.dispatchLeaseUntil,\"dispatchAttemptCount\":$json.dispatchAttemptCount,\"answerMessageId\":$json.answerMessageId,\"answerText\":$json.answerText,\"selectedRef\":$json.selectedRef,\"answeredAt\":$json.answeredAt,\"answerIdempotencyKey\":$json.answerIdempotencyKey,\"answerClaimLeaseOwner\":$json.answerClaimLeaseOwner,\"answerClaimLeaseUntil\":$json.answerClaimLeaseUntil,\"answerAttemptCount\":$json.answerAttemptCount,\"lastAnswerAttemptMessageId\":$json.lastAnswerAttemptMessageId,\"jobId\":$json.jobId,\"lastAcceptedJobId\":$json.lastAcceptedJobId,\"lastAcceptedAnswerMessageId\":$json.lastAcceptedAnswerMessageId,\"lastAcceptedAnswerText\":$json.lastAcceptedAnswerText,\"lastAcceptedSelectedRef\":$json.lastAcceptedSelectedRef,\"lastAcceptedAnswerIdempotencyKey\":$json.lastAcceptedAnswerIdempotencyKey,\"lastAcceptedAt\":$json.lastAcceptedAt,\"appliedAt\":$json.appliedAt,\"selectedPersonId\":$json.selectedPersonId,\"resolutionResultJson\":$json.resolutionResultJson,\"lastError\":$json.lastError,\"contextJson\":$json.contextJson,\"queueSchemaVersion\":$json.queueSchemaVersion,\"principalKey\":$json.principalKey,\"storageUsername\":$json.storageUsername,\"currentUsername\":$json.currentUsername,\"identitySchemaVersion\":$json.identitySchemaVersion,\"identityStatus\":$json.identityStatus},p_limit:1} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        -100
+      ],
+      "id": "a24f91e5-fa51-4c95-a81d-af07d544ec08",
+      "name": "Upsert | Data Table | Chelsea Resolution Questions | QueueWrite"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_record_store_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_namespace:\"resolution_questions\",p_operation:\"get\",p_principal_key:String($json.principalKey || $json.ownerPrincipalKey || ''),p_tenant_id:String($json.tenantId || $json.memoryTenantId || ''),p_owner_user_id:String($json.ownerUserId || $json.userId || $json.memoryUserId || ''),p_match_type:\"all\",p_filters:{\"questionRowKey\":$json.questionRowKey},p_record:{},p_limit:2} }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        -100
+      ],
+      "id": "35f731a5-76dc-4498-bc1c-79847daef196",
+      "name": "Read | Data Table | Verify Resolution Question Upsert | QueueWrite",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const expectedRows = $items('Code | Preserve Existing Resolution State | QueueWrite').map(item => item.json || {});\nconst actualRows = $input.all().map(item => item.json || {}).filter(row => String(row.questionId || '').trim());\nfunction text(value) { return String(value ?? '').trim(); }\nfunction canonical(value) {\n  if (value === null || typeof value !== 'object') return JSON.stringify(value);\n  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;\n  return `{${Object.keys(value).sort().filter(key => value[key] !== undefined).map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`;\n}\n\nreturn expectedRows.map(expected => {\n  const matches = actualRows.filter(actual => text(actual.questionRowKey) === text(expected.questionRowKey));\n  if (matches.length !== 1) {\n    throw new Error(`Resolution question upsert read-back cardinality is ${matches.length} for ${text(expected.questionId)}.`);\n  }\n  const actual = matches[0];\n  for (const field of [\n    'questionRowKey', 'rowInstanceId', 'questionId', 'tenantId', 'memoryTenantId',\n    'questionType', 'qdrantQuestionPointId', 'qdrantCollection', 'status', 'callbackOptionsJson',\n    'answerMessageId', 'answerText', 'selectedRef', 'jobId'\n  ]) {\n    if (canonical(actual[field]) !== canonical(expected[field])) {\n      throw new Error(`Resolution question upsert read-back mismatch for ${field}.`);\n    }\n  }\n  return { json: { ...expected, resolutionQuestionUpsertVerified: true } };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        -100
+      ],
+      "id": "665e9914-d9ff-4515-934e-5e2a16a0ae43",
+      "name": "Code | Verify Resolution Question Upsert | QueueWrite"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json || {});\nconst queued = rows.filter(row => row.hasQuestion === true);\nreturn [{ json: {\n  status: queued.length ? 'queued' : 'no_questions',\n  questionCount: queued.length,\n  questionIds: queued.map(row => row.questionId).filter(Boolean),\n  questionTypes: queued.reduce((out, row) => {\n    const key = String(row.questionType || 'unknown');\n    out[key] = (out[key] || 0) + 1;\n    return out;\n  }, {}),\n  duplicatePreservedCount: queued.filter(row => row.duplicatePreserved === true).length,\n  questionTableName: 'Chelsea Resolution Questions',\n  queueSchemaVersion: 'chelsea_resolution_questions_v2_0',\n  queuedAt: new Date().toISOString()\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "5221d050-a2cf-45c3-b1ae-631816533baa",
+      "name": "Code | Build Resolution Queue Summary | Finish"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        0
+      ],
+      "id": "4f028bbf-c7e2-4488-9c66-27198313cde9",
+      "name": "End | Chelsea Resolution Queue | Finish"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nconst text=v=>String(v??'').normalize('NFKC').trim();\nconst username=v=>text(v).replace(/^@+/,'').toLowerCase();\nconst principalKey=text(input.principalKey);\nconst storageUsername=username(input.storageUsername||input.userId||input.memoryUserId);\nconst currentUsername=username(input.currentUsername||input.telegramUsername);\nconst telegramActorId=text(input.telegramActorId||input.telegramUserId);\nif(!/^tgactor_[a-f0-9]{64}$/.test(principalKey))throw new Error('identity boundary: invalid principalKey');\nif(!/^actor_[a-f0-9]{32}$/.test(storageUsername))throw new Error('identity boundary: invalid storageUsername');\nif(!/^\\d+$/.test(telegramActorId)||Number(telegramActorId)<=0)throw new Error('identity boundary: numeric Telegram actor required');\nif(text(input.telegramActorId)&&text(input.telegramUserId)&&text(input.telegramActorId)!==text(input.telegramUserId))throw new Error('identity boundary: Telegram actor fields mismatch');\nif(currentUsername&&!/^[a-z0-9_]{1,64}$/.test(currentUsername))throw new Error('identity boundary: invalid currentUsername');\nconst expected={userId:storageUsername,memoryUserId:storageUsername,tenantId:`tenant_${storageUsername}`,memoryTenantId:`tenant_${storageUsername}`,qdrantCollection:`kb_tenant_${storageUsername}`,soulId:`chelsea_soul_${storageUsername}`};\nfor(const [key,value] of Object.entries(expected)){if(text(input[key])!==value)throw new Error(`identity boundary: ${key} mismatch`);}\nconst schema=text(input.identitySchemaVersion);if(schema!=='chelsea_actor_identity_v3')throw new Error('identity boundary: schema mismatch');\nif(input.identityAuthorityVerified!==true&&input.identityClaimsVerified!==true)throw new Error('identity boundary: PostgreSQL authority verification required');\nreturn [{json:{...input,...expected,principalKey,storageUsername,currentUsername,telegramUsername:currentUsername,telegramActorId,telegramUserId:telegramActorId,identitySchemaVersion:schema,identityStatus:text(input.identityStatus)||'active',identityBoundaryVerified:true}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        120
+      ],
+      "id": "839feb52-4c0d-628c-c23b-fb127948b385",
+      "name": "Code | Validate Username Identity | InputModule"
+    }
+  ],
+  "connections": {
+    "Trigger | Manual Start | InputModule": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Resolution Queue Request | InputModule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Parent Workflow | InputModule": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Username Identity | InputModule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Resolution Queue Request | InputModule": {
+      "main": [
+        [
+          {
+            "node": "Create | Data Table | Chelsea Resolution Questions | TableSetup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create | Data Table | Chelsea Resolution Questions | TableSetup": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Resolution Question Rows | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Resolution Question Rows | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "If | Has Resolution Questions | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Has Resolution Questions | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "Search | Data Table | Existing Resolution Question | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Resolution Queue Summary | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search | Data Table | Existing Resolution Question | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "Code | Preserve Existing Resolution State | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Preserve Existing Resolution State | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "Upsert | Data Table | Chelsea Resolution Questions | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert | Data Table | Chelsea Resolution Questions | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "Read | Data Table | Verify Resolution Question Upsert | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read | Data Table | Verify Resolution Question Upsert | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Resolution Question Upsert | QueueWrite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Resolution Question Upsert | QueueWrite": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Resolution Queue Summary | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Resolution Queue Summary | Finish": {
+      "main": [
+        [
+          {
+            "node": "End | Chelsea Resolution Queue | Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Username Identity | InputModule": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Resolution Queue Request | InputModule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": false,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "executionTimeout": 180,
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "72dce1d5-6f11-5141-8f9b-9b5a3f720bf2",
+  "activeVersionId": null,
+  "versionCounter": 21,
+  "tags": []
+}

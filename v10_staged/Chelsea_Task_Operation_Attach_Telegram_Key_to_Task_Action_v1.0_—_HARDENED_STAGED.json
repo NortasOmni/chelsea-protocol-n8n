@@ -1,0 +1,56 @@
+{
+  "id": "T10d0678e94dee69",
+  "name": "Chelsea Task Operation Attach Telegram Key to Task Action v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "a7a5bbd3-8f25-5977-885a-eeea4e0cc7d8",
+  "nodes": [
+    {
+      "id": "26415847-d0a3-5d18-84f5-035febeb2b8c",
+      "name": "Trigger | Parent Workflow | AttachTelegramKeytoTaskAction",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "d2994087-fb6e-5799-ab95-789c49cf101c",
+      "name": "Code | Execute Attach Telegram Key to Task Action | TaskOperation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\nconst __cache = Object.create(null);\nfunction __require(id) { if (__cache[id]) return __cache[id].exports; if (!__modules[id]) throw new Error(`Unknown bundled module: ${id}`); const module = { exports: {} }; __cache[id] = module; __modules[id](module, module.exports, __require); return module.exports; }\nconst core = {};\n\nconst envelope = $input.first()?.json || {};\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst wrap = (value) => ({ json: value && typeof value === 'object' ? value : {} });\nconst localInput = inputItems.map(wrap);\nconst localInputApi = { all: () => localInput, first: () => localInput[0] || wrap({}), last: () => localInput[localInput.length - 1] || wrap({}), item: localInput[0] || wrap({}) };\nconst localItems = (name) => (Array.isArray(contexts[String(name)]) ? contexts[String(name)] : []).map(wrap);\nconst localDollar = (name) => { const all = localItems(name); return { all: () => all, first: () => all[0] || wrap({}), last: () => all[all.length - 1] || wrap({}), item: all[0] || wrap({}) }; };\nconst __execute = async ($input, $items, $, $execution, $json, $itemIndex, $runIndex) => {\nlet action = {};\ntry { action = $('Code | Verify Dispatch and Build Telegram Action | SchedulerAction').item.json || {}; }\ncatch (_) { action = $items('Code | Verify Dispatch and Build Telegram Action | SchedulerAction')[0]?.json || {}; }\nreturn [{ json: {\n  ...action,\n  _telegramKeyReady: true,\n    credentialSource: 'server_environment',\n} }];\n\n};\nreturn __execute(localInputApi, localItems, localDollar, $execution, localInputApi.first().json, 0, 0);\n"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | AttachTelegramKeytoTaskAction": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Attach Telegram Key to Task Action | TaskOperation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

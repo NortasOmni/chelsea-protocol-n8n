@@ -1,0 +1,158 @@
+{
+  "id": "zW9Ny2Is64j3nO8e",
+  "name": "Chelsea State Intake Shadow v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "621173ed-f5f1-5ac3-84f2-154c6ad5b146",
+      "name": "Trigger | Parent Workflow | StateIntakeShadow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -760,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "da468ec1-bc07-5230-a2ea-ea734609a2c8",
+      "name": "Trigger | Manual Start | StateIntakeShadow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "092040c5-674a-5e07-a39d-5482f19cb826",
+      "name": "Code | Normalize State Core Input | StateIntakeShadow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst clean = (value, limit = 0) => {\n  const normalized = String(value ?? '').normalize('NFKC').replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n').trim();\n  return limit > 0 ? normalized.slice(0, limit).trim() : normalized;\n};\nconst bool = value => value === true || ['true','1','yes','да'].includes(clean(value).toLowerCase());\nconst operation = clean(input.operation).toLowerCase();\nconst principalId = clean(input.principalId || input.principalKey, 200);\nconst localDate = clean(input.localDate || input.local_date, 10);\nconst replyToMessageId = clean(input.replyToMessageId, 200);\nconst replyToText = clean(input.replyToText, 2000);\n\nconst identityContext = {\n  principalKey: clean(input.principalKey || principalId, 200),\n  identitySchemaVersion: clean(input.identitySchemaVersion, 120),\n  identityStatus: clean(input.identityStatus, 80),\n  tenantId: clean(input.tenantId, 200),\n  memoryTenantId: clean(input.memoryTenantId || input.tenantId, 200),\n  qdrantCollection: clean(input.qdrantCollection, 240),\n  chatId: clean(input.chatId, 120),\n  deliveryAddress: clean(input.deliveryAddress || input.chatId, 120),\n  userId: clean(input.userId, 160),\n  memoryUserId: clean(input.memoryUserId || input.userId, 160),\n  telegramUserId: clean(input.telegramActorId || input.telegramUserId, 160),\n  currentUsername: clean(input.currentUsername || input.username, 160).replace(/^@+/, ''),\n  displayName: clean(input.displayName, 240),\n  timezone: clean(input.timeZone || input.timezone || 'Asia/Novosibirsk', 120)\n};\nconst messageContext = {\n  messageAuthorship: clean(input.messageAuthorship || 'user_authored', 80),\n  isForwarded: bool(input.isForwarded),\n  replyToMessageId: replyToMessageId || null,\n  replyToText: replyToText || null,\n  sourceUpdateId: clean(input.sourceUpdateId, 200) || null,\n  clarificationKey: clean(input.clarificationKey, 240) || null,\n  precedingQuestionKey: clean(input.precedingQuestionKey, 240) || null\n};\n\nlet stateRpcBody = {};\nlet stateCoreReady = false;\nif (operation === 'intake') {\n  const content = clean(input.text || input.messageText || input.question, 12000);\n  const sourceMessageId = clean(input.messageId || input.sourceMessageId, 200);\n  stateCoreReady = Boolean(\n    principalId && clean(input.identitySchemaVersion) && clean(input.memoryTenantId || input.tenantId) &&\n    clean(input.qdrantCollection) && sourceMessageId && content && localDate && clean(input.receivedAt)\n  );\n  stateRpcBody = {\n    p_principal_id: principalId,\n    p_identity_schema_version: clean(input.identitySchemaVersion, 120),\n    p_memory_tenant_id: clean(input.memoryTenantId || input.tenantId, 200),\n    p_qdrant_collection: clean(input.qdrantCollection, 240),\n    p_source: clean(input.source || 'telegram', 80),\n    p_source_message_id: sourceMessageId,\n    p_message_kind: clean(input.kind || input.inputType || 'text', 80),\n    p_content: content,\n    p_received_at: clean(input.receivedAt, 80),\n    p_local_date: localDate,\n    p_identity_context: identityContext,\n    p_message_context: messageContext,\n    p_idempotency_key: clean(input.idempotencyKey, 300) || null\n  };\n} else if (operation === 'summary') {\n  stateCoreReady = Boolean(principalId && localDate);\n  stateRpcBody = { p_principal_id: principalId, p_as_of_date: localDate };\n}\n\nreturn [{ json: {\n  ...input,\n  operation,\n  principalId,\n  localDate,\n  stateCoreReady,\n  stateRpcBody,\n  stateIdentityContext: identityContext,\n  stateMessageContext: messageContext,\n  stateCoreContractVersion: 'chelsea_state_core_v1'\n} }];\n"
+      }
+    },
+    {
+      "id": "95567052-66e8-52ed-b385-9209936f037c",
+      "name": "Code | Build State Date Route RPC | StateIntakeShadow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        160
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst clean = (value, limit = 0) => {\n  const text = String(value ?? '').normalize('NFKC').replace(/\\r\\n/g, '\\n').replace(/\\r/g, '\\n').trim();\n  return limit > 0 ? text.slice(0, limit).trim() : text;\n};\nconst bool = value => value === true || ['true', '1', 'yes', 'да'].includes(clean(value).toLowerCase());\nconst principalId = clean(input.principalId || input.principalKey, 200);\nconst sourceMessageId = clean(input.messageId || input.sourceMessageId, 200);\nconst sourceUpdateId = clean(input.sourceUpdateId, 200);\nconst content = clean(input.text || input.messageText || input.question, 12000);\nconst timezone = clean(input.timeZone || input.timezone, 120);\nconst localDate = clean(input.localDate || input.local_date, 10);\nconst receivedAt = clean(input.receivedAt, 80);\nconst identityContext = {\n  principalKey: clean(input.principalKey || principalId, 200),\n  identitySchemaVersion: clean(input.identitySchemaVersion, 120),\n  identityStatus: clean(input.identityStatus, 80),\n  tenantId: clean(input.tenantId, 200),\n  memoryTenantId: clean(input.memoryTenantId || input.tenantId, 200),\n  qdrantCollection: clean(input.qdrantCollection, 240),\n  chatId: clean(input.chatId, 120),\n  deliveryAddress: clean(input.deliveryAddress || input.chatId, 120),\n  userId: clean(input.userId, 160),\n  memoryUserId: clean(input.memoryUserId || input.userId, 160),\n  telegramUserId: clean(input.telegramActorId || input.telegramUserId, 160),\n  currentUsername: clean(input.currentUsername || input.username, 160).replace(/^@+/, ''),\n  displayName: clean(input.displayName, 240),\n  timezone\n};\nconst messageContext = {\n  messageAuthorship: clean(input.messageAuthorship || 'user_authored', 80),\n  isForwarded: bool(input.isForwarded),\n  replyToMessageId: clean(input.replyToMessageId, 200) || null,\n  replyToText: clean(input.replyToText, 2000) || null,\n  sourceUpdateId: sourceUpdateId || null,\n  clarificationKey: clean(input.clarificationKey, 240) || null,\n  precedingQuestionKey: clean(input.precedingQuestionKey, 240) || null\n};\nconst ready = Boolean(\n  principalId &&\n  clean(input.identitySchemaVersion) &&\n  clean(input.memoryTenantId || input.tenantId) &&\n  clean(input.qdrantCollection) &&\n  sourceMessageId &&\n  content &&\n  timezone &&\n  localDate &&\n  receivedAt\n);\nconst stateRpcBody = ready ? {\n  p_principal_id: principalId,\n  p_identity_schema_version: clean(input.identitySchemaVersion, 120),\n  p_memory_tenant_id: clean(input.memoryTenantId || input.tenantId, 200),\n  p_qdrant_collection: clean(input.qdrantCollection, 240),\n  p_source: clean(input.source || 'telegram', 80),\n  p_source_message_id: sourceMessageId,\n  p_source_update_id: sourceUpdateId || null,\n  p_message_kind: clean(input.kind || input.inputType || 'text', 80),\n  p_content: content,\n  p_received_at: receivedAt,\n  p_local_date: localDate,\n  p_timezone: timezone,\n  p_identity_context: identityContext,\n  p_message_context: messageContext,\n  p_idempotency_key: clean(input.idempotencyKey, 300) || null\n} : {};\n\nreturn [{\n  json: {\n    ...input,\n    principalId,\n    stateDateRouteReady: ready,\n    stateRpcBody,\n    stateDateRouteIdentityContext: identityContext,\n    stateDateRouteMessageContext: messageContext,\n    stateDateRouteContractVersion: 'chelsea_state_date_route_v1'\n  }\n}];\n\n"
+      }
+    },
+    {
+      "id": "74840347-556f-5101-926c-7a8220956a09",
+      "name": "Code | Build State Shadow Comparison | StateIntakeShadow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        80
+      ],
+      "parameters": {
+        "jsCode": "'use strict';let a={},b={};try{a=$('Code | Normalize State Core Input | StateIntakeShadow').first().json||{}}catch{}try{b=$('Code | Build State Date Route RPC | StateIntakeShadow').first().json||{}}catch{};return [{json:{stateCore:a,stateDateRoute:b,comparison:{samePrincipal:String(a.principalId||'')===String(b.principalId||''),coreReady:a.stateCoreReady===true,dateRouteReady:b.stateDateRouteReady===true,coreContract:a.stateCoreContractVersion||'',dateContract:b.stateDateRouteContractVersion||''},shadowContractVersion:'chelsea_state_intake_shadow_v1'}}];"
+      }
+    },
+    {
+      "id": "e4c3a715-ac73-5337-b680-1b4233fed00a",
+      "name": "End | State Intake Shadow Result | StateIntakeShadow",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        40,
+        80
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | StateIntakeShadow": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Core Input | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Build State Date Route RPC | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | StateIntakeShadow": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Core Input | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code | Build State Date Route RPC | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Core Input | StateIntakeShadow": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Shadow Comparison | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Route RPC | StateIntakeShadow": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Shadow Comparison | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Shadow Comparison | StateIntakeShadow": {
+      "main": [
+        [
+          {
+            "node": "End | State Intake Shadow Result | StateIntakeShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 60,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "f96198ef-481b-5d91-8a43-b95972d92d7b"
+}

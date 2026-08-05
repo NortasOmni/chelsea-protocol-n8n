@@ -1,0 +1,181 @@
+{
+  "id": "FiTw7NHWsbSqg6RP",
+  "name": "Chelsea Scheduler Lease Guard v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "3e29eeec-2996-5553-a0e6-e73bb42e3d3d",
+      "name": "Trigger | Parent Workflow | SchedulerLease",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "89d20817-2099-564e-b5b6-b495bbdedb86",
+      "name": "Trigger | Manual Start | SchedulerLease",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "00120ac5-926b-5b50-aec3-00841d1b4f3a",
+      "name": "Code | Validate Scheduler Lease Request | SchedulerLease",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        80
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const x=$input.first()?.json||{};const operation=String(x.operation||'acquire').toLowerCase();if(!['acquire','release','heartbeat'].includes(operation))throw new Error('invalid_lease_operation');const leaseName=String(x.leaseName||'').normalize('NFKC').trim();if(!/^[A-Za-z0-9_.:-]{3,180}$/.test(leaseName))throw new Error('invalid_lease_name');const owner=String(x.owner||`n8n:${$workflow.id}:${$execution.id}`).slice(0,240);const ttl=Math.max(30,Math.min(Number(x.ttlSeconds||180),3600));return [{json:{...x,operation,leaseName,owner,ttlSeconds:ttl}}];"
+      }
+    },
+    {
+      "id": "86810388-3844-5c1b-8401-065dcd572e56",
+      "name": "Call | Supabase RPC | Scheduler Lease | SchedulerLease",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_scheduler_lease_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_operation:$json.operation,p_lease_name:$json.leaseName,p_owner:$json.owner,p_ttl_seconds:$json.ttlSeconds} }}"
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "58f9f426-ebbd-5bfe-bdc9-1c76fbf4d734",
+      "name": "Code | Verify Scheduler Lease Receipt | SchedulerLease",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        80
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const src=$('Code | Validate Scheduler Lease Request | SchedulerLease').first().json;const r=$input.first()?.json||{};let b=r.body??r.data??r;try{if(typeof b==='string')b=JSON.parse(b)}catch{};const row=Array.isArray(b)?b[0]:b;if(!row||String(row.lease_name||row.leaseName||'')!==src.leaseName)throw new Error('scheduler_lease_receipt_missing');return [{json:{...src,leaseReceipt:row,acquired:row.acquired===true||row.status==='acquired'}}];"
+      }
+    },
+    {
+      "id": "d3abe593-2d18-52ad-be12-5716a068b9d9",
+      "name": "End | Scheduler Lease Result | SchedulerLease",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        220,
+        80
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | SchedulerLease": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Scheduler Lease Request | SchedulerLease",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | SchedulerLease": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Scheduler Lease Request | SchedulerLease",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Scheduler Lease Request | SchedulerLease": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Scheduler Lease | SchedulerLease",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Scheduler Lease | SchedulerLease": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Scheduler Lease Receipt | SchedulerLease",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Scheduler Lease Receipt | SchedulerLease": {
+      "main": [
+        [
+          {
+            "node": "End | Scheduler Lease Result | SchedulerLease",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 90,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "3bb0299a-1416-5211-a85b-e294401b6a21"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "T10cccd671a11087",
+  "name": "Chelsea Task Operation Finalize Verified Task Command Saga v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "d8d120c5-cd31-5774-92df-437b24c8c121",
+  "nodes": [
+    {
+      "id": "4afb09e4-ec6b-5a6c-b28f-cb2bc84aa98c",
+      "name": "Trigger | Parent Workflow | FinalizeVerifiedTaskCommandSaga",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "6e93ef82-3783-515d-9e5d-11cc46a63cd4",
+      "name": "Code | Execute Finalize Verified Task Command Saga | TaskOperation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\n__modules['./utils'] = function(module, exports, __require) {\n'use strict';\nfunction fail(code, message, details) {\n  const error = new Error(message || code);\n  error.code = code;\n  if (details !== undefined) error.details = details;\n  throw error;\n}\n\nfunction assert(condition, code, message, details) {\n  if (!condition) fail(code, message, details);\n}\n\nmodule.exports = { fail, assert };\n};\nconst __cache = Object.create(null);\nfunction __require(id) { if (__cache[id]) return __cache[id].exports; if (!__modules[id]) throw new Error(`Unknown bundled module: ${id}`); const module = { exports: {} }; __cache[id] = module; __modules[id](module, module.exports, __require); return module.exports; }\nconst core = Object.assign({}, __require('./utils'));\n\nconst envelope = $input.first()?.json || {};\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst wrap = (value) => ({ json: value && typeof value === 'object' ? value : {} });\nconst localInput = inputItems.map(wrap);\nconst localInputApi = { all: () => localInput, first: () => localInput[0] || wrap({}), last: () => localInput[localInput.length - 1] || wrap({}), item: localInput[0] || wrap({}) };\nconst localItems = (name) => (Array.isArray(contexts[String(name)]) ? contexts[String(name)] : []).map(wrap);\nconst localDollar = (name) => { const all = localItems(name); return { all: () => all, first: () => all[0] || wrap({}), last: () => all[all.length - 1] || wrap({}), item: all[0] || wrap({}) }; };\nconst __execute = async ($input, $items, $, $execution, $json, $itemIndex, $runIndex) => {\nconst direct = $input.first()?.json || {};\nif (direct._commandSagaVerified === false) return [{ json: direct }];\ntry {\n  const verified = $items('Code | Verify Task Command Saga Mutation | ApplyTaskSaga')\n    .map((item) => item.json || {})\n    .filter((item) => item._commandSagaVerified === true)\n    .sort((a, b) => Number(a._commandSagaOrder) - Number(b._commandSagaOrder));\n  core.assert(verified.length > 0, 'readback_failed', 'Command saga produced no verified operations');\n  const total = Number(verified[0]._commandSagaTotal || 0);\n  core.assert(total === verified.length, 'readback_failed', 'Command saga verified-operation count mismatch');\n  for (let index = 0; index < verified.length; index += 1) {\n    core.assert(Number(verified[index]._commandSagaOrder) === index + 1 && Number(verified[index]._commandSagaTotal) === total, 'readback_failed', 'Command saga operation order mismatch');\n  }\n  const final = verified[verified.length - 1];\n  const writtenRows = verified.map((item) => JSON.parse(item._verifiedSagaRowJson || '{}'));\n  return [{ json: {\n    ...final,\n    _commandSaga: false,\n    _mutationNeeded: false,\n    _writtenRowsJson: JSON.stringify(writtenRows),\n    taskHandled: true,\n    memoryWriteAllowed: false,\n  } }];\n} catch (error) {\n  return [{ json: {\n    taskHandled: true,\n    taskOperation: 'task_saga_failed_review',\n    taskRecordId: '',\n    memoryWriteAllowed: false,\n    _taskOutcomeJson: JSON.stringify({ taskHandled: true, operation: 'task_saga_failed_review', recordId: '', text: 'Изменение серии остановлено и требует проверки.' }),\n    taskErrorCode: String(error.code || 'readback_failed').slice(0, 80),\n  } }];\n}\n\n};\nreturn __execute(localInputApi, localItems, localDollar, $execution, localInputApi.first().json, 0, 0);\n"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | FinalizeVerifiedTaskCommandSaga": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Finalize Verified Task Command Saga | TaskOperation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

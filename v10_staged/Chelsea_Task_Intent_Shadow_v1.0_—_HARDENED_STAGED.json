@@ -1,0 +1,100 @@
+{
+  "id": "JPpslgT3mncJzEEy",
+  "name": "Chelsea Task Intent Shadow v1.0 — HARDENED STAGED",
+  "active": false,
+  "nodes": [
+    {
+      "id": "7904c270-bef3-56fd-ad09-321d4be628a5",
+      "name": "Trigger | Parent Workflow | TaskIntentShadow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -600,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "a339d4b5-bd06-5377-863a-5c388963b9a3",
+      "name": "Trigger | Manual Start | TaskIntentShadow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "67545440-8c9d-585f-9231-e86eb6ad94db",
+      "name": "Code | Evaluate Canonical Task Intent | TaskIntentShadow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        80
+      ],
+      "parameters": {
+        "jsCode": "const input=$input.first()?.json||{};\nconst text=String(input.text||input.messageText||input.question||'').normalize('NFKC').trim();\nconst clean=v=>String(v??'').normalize('NFKC').trim();\nif(input.principalKey||input.storageUsername||input.telegramActorId||input.telegramUserId){\n const actor=clean(input.telegramActorId||input.telegramUserId);const storage=clean(input.storageUsername||input.userId||input.memoryUserId).toLowerCase();\n if(!/^\\d+$/.test(actor)||Number(actor)<=0)throw new Error('task shadow numeric Telegram actor required');\n if(!/^tgactor_[a-f0-9]{64}$/.test(clean(input.principalKey)))throw new Error('task shadow principal invalid');\n if(!/^actor_[a-f0-9]{32}$/.test(storage))throw new Error('task shadow storage invalid');\n if(clean(input.telegramActorId)&&clean(input.telegramUserId)&&clean(input.telegramActorId)!==clean(input.telegramUserId))throw new Error('task shadow actor mismatch');\n if(clean(input.userId)&&clean(input.userId)!==storage)throw new Error('task shadow userId mismatch');\n}\nconst explicit=/(?:напомни|напомнить|поставь\\s+(?:задачу|напоминание)|создай\\s+(?:задачу|напоминание)|запланируй|добавь\\s+(?:задачу|напоминание)|\\bremind me\\b|\\bcreate (?:a )?task\\b)/iu;\nconst list=/^(?:покажи|покажи мне|какие|список)\\s+(?:мои\\s+)?(?:задачи|напоминания)(?:\\s|$)/iu;\nconst imperative=/^(?:купить|позвонить|сделать|отправить|проверить|забрать|записаться|оплатить|выключить|подготовить)(?:\\s|$)[\\s\\S]{0,160}(?:сегодня|завтра|послезавтра|через\\s+\\d+|в\\s+\\d{1,2}(?::\\d{2})?)/iu;\nconst cadence=/^(?:(?:добавь|запланируй|создай)\\s+)?(?:ежедневно|еженедельно|ежемесячно|кажд(?:ый|ую|ое)\\s+(?:день|утро|вечер|неделю|месяц|понедельник|вторник|среду|четверг|пятницу|субботу|воскресенье))\\s+(?:зарядк[ауи]?|тренировк[ауи]?|пробежк[ауи]?|медитаци[яюи]|чтени[ея]|прогулк[ауи]?|уборк[ауи]?|[\\p{L}-]{3,}(?:ть|ти|чь))/iu;\nconst conversational=/^(?:как|почему|что\\s+ты\\s+думаешь|расскажи|объясни|помоги\\s+понять|можешь\\s+ли\\s+обсудить)(?:\\s|,|$)/iu;\nconst ambiguous=/(?:надо|нужно|хочу|не забыть|когда-нибудь|в ближайшее время)|^(?:готово|выполнено|сделал(?:а)?)$/iu;\nlet route='not_a_task_command',reason='no_task_signal';\nif(input.isEdited||input.isForwarded){route='not_a_task_command';reason='untrusted_update';}\nelse if(input.inputType==='callback'&&input.callbackScope==='chelsea_task_v1'){route='task_answer';reason='trusted_task_callback';}\nelse if(!text){route='not_a_task_command';reason='empty';}\nelse if(list.test(text)||explicit.test(text)||imperative.test(text)||cadence.test(text)){route='task_command';reason='explicit_task_intent';}\nelse if(conversational.test(text)){route='not_a_task_command';reason='conversation';}\nelse if(ambiguous.test(text)){route='ambiguous';reason='needs_confirmation';}\nreturn [{json:{...input,shadowDecision:{route,reason},shadowOnly:true,identityFieldContract:'telegramActorId_numeric__storageUsername_actor_namespace'}}];"
+      }
+    },
+    {
+      "id": "96cbaf35-337a-58b1-9942-2987b3c52a42",
+      "name": "End | Task Intent Shadow Result | TaskIntentShadow",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        80
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | TaskIntentShadow": {
+      "main": [
+        [
+          {
+            "node": "Code | Evaluate Canonical Task Intent | TaskIntentShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | TaskIntentShadow": {
+      "main": [
+        [
+          {
+            "node": "Code | Evaluate Canonical Task Intent | TaskIntentShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Evaluate Canonical Task Intent | TaskIntentShadow": {
+      "main": [
+        [
+          {
+            "node": "End | Task Intent Shadow Result | TaskIntentShadow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 60,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "9ad22a95-61b0-5c4b-a7f1-5f180066ef4d"
+}

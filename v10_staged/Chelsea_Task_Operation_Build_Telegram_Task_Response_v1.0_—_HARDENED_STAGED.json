@@ -1,0 +1,56 @@
+{
+  "id": "T10bc4d97a3476f3",
+  "name": "Chelsea Task Operation Build Telegram Task Response v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "297710f7-2878-51f8-902d-ab785335841e",
+  "nodes": [
+    {
+      "id": "eed5c2c4-ba02-5b65-baec-4df4968c80f8",
+      "name": "Trigger | Parent Workflow | BuildTelegramTaskResponse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "0b8efa22-83a7-55d7-83f9-a84b7adc8ecc",
+      "name": "Code | Execute Build Telegram Task Response | TaskOperation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\n__modules['./utils'] = function(module, exports, __require) {\n'use strict';\nfunction fail(code, message, details) {\n  const error = new Error(message || code);\n  error.code = code;\n  if (details !== undefined) error.details = details;\n  throw error;\n}\n\nfunction assert(condition, code, message, details) {\n  if (!condition) fail(code, message, details);\n}\n\nmodule.exports = { fail, assert };\n};\n__modules['./scheduler'] = function(module, exports, __require) {\n'use strict';\nconst { assert } = __require('./utils');\nfunction validateServerCorrelationToken(value) {\n  assert(typeof value === 'string' && /^[a-f0-9]{32}$/.test(value), 'missing_correlation_token', 'ask_completion requires a server-generated 32-hex random/signed token');\n  return value;\n}\n\nconst CALLBACK_ACTION_CODES = Object.freeze({ done: 'd', not_done: 'n', snooze: 's', reschedule: 'r', cancel: 'c', skip_occurrence: 'k' });\n\nfunction buildTaskCallbackData(action, correlationToken) {\n  const code = CALLBACK_ACTION_CODES[action];\n  assert(code, 'invalid_answer_action', 'Unsupported callback action');\n  validateServerCorrelationToken(correlationToken);\n  const data = `chelsea_task:${code}:${correlationToken}`;\n  assert(data.length <= 64, 'callback_too_long', 'Telegram callback payload exceeds 64 bytes');\n  return data;\n}\n\nmodule.exports = { validateServerCorrelationToken, buildTaskCallbackData };\n};\nconst __cache = Object.create(null);\nfunction __require(id) { if (__cache[id]) return __cache[id].exports; if (!__modules[id]) throw new Error(`Unknown bundled module: ${id}`); const module = { exports: {} }; __cache[id] = module; __modules[id](module, module.exports, __require); return module.exports; }\nconst core = Object.assign({}, __require('./scheduler'));\n\nconst envelope = $input.first()?.json || {};\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst wrap = (value) => ({ json: value && typeof value === 'object' ? value : {} });\nconst localInput = inputItems.map(wrap);\nconst localInputApi = { all: () => localInput, first: () => localInput[0] || wrap({}), last: () => localInput[localInput.length - 1] || wrap({}), item: localInput[0] || wrap({}) };\nconst localItems = (name) => (Array.isArray(contexts[String(name)]) ? contexts[String(name)] : []).map(wrap);\nconst localDollar = (name) => { const all = localItems(name); return { all: () => all, first: () => all[0] || wrap({}), last: () => all[all.length - 1] || wrap({}), item: all[0] || wrap({}) }; };\nconst __execute = async ($input, $items, $, $execution, $json, $itemIndex, $runIndex) => {\nfunction firstExecuted(name) {\n  try { return $items(name)[0]?.json || {}; } catch (_) { return {}; }\n}\nconst verified = firstExecuted('Code | Verify Task Mutation Read Back | ApplyTaskMutation');\nconst sagaFinal = firstExecuted('Code | Finalize Verified Task Command Saga | ApplyTaskSaga');\nconst planned = firstExecuted('Code | Plan Trusted Task Mutation | ApplyTaskMutation');\nconst source = Object.keys(sagaFinal).length ? sagaFinal : (Object.keys(verified).length ? verified : planned);\nconst outcome = JSON.parse(source._taskOutcomeJson || '{}');\nconst writtenRows = JSON.parse(source._writtenRowsJson || '[]');\nconst draft = writtenRows.find((row) => row.recordType === 'task' && row.rowRole === 'command_draft' && row.status === 'draft');\nconst text = String(outcome.text || (source.taskOperation === 'failed_review' ? 'Команда задач остановлена безопасно.' : 'Готово.')).slice(0, 3500);\nlet replyMarkup;\nif (draft && draft.correlationToken) {\n  let candidates = [];\n  try { candidates = JSON.parse(draft.candidateTaskIdsJson || '[]'); } catch (_) {}\n  const buttons = [];\n  if (draft.draftKind === 'mutation' && candidates.length === 1) {\n    buttons.push({\n      text: '✅ Применить изменение',\n      callback_data: core.buildTaskCallbackData('done', draft.correlationToken),\n    });\n  }\n  buttons.push({ text: '❌ Отменить', callback_data: core.buildTaskCallbackData('cancel', draft.correlationToken) });\n  replyMarkup = { inline_keyboard: [buttons] };\n}\nconst body = { chat_id: source.chatId, text };\nif (replyMarkup) body.reply_markup = replyMarkup;\nreturn [{ json: {\n  ...source,\n  telegramTaskResponseBody: JSON.stringify(body),\n  telegramTaskCallbackAckBody: JSON.stringify({ callback_query_id: String(source.callbackQueryId || '') }),\n  _isTaskCallback: String(source.callbackData || '').startsWith('chelsea_task:'),\n  _draftRecordId: draft?.recordId || '',\n  _draftExpectedRowJson: draft ? JSON.stringify(draft) : '',\n} }];\n\n};\nreturn __execute(localInputApi, localItems, localDollar, $execution, localInputApi.first().json, 0, 0);\n"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | BuildTelegramTaskResponse": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Build Telegram Task Response | TaskOperation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
