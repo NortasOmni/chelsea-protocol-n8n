@@ -1,0 +1,912 @@
+{
+  "id": "qgWN2jDgXChDsbbe",
+  "name": "Process Chelsea State FuturePlanFollowUp Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "e2ca5fe5-05d4-5b1d-be5f-68f5553c76f6",
+  "nodes": [
+    {
+      "id": "a3f6de0c-2434-5783-9a7b-87f3f090d5e1",
+      "name": "Trigger | Parent Workflow | FuturePlanFollowUpWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "eabe816d-570d-51a9-a527-cead278e64fd",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_future_plan_followups_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":future-plan-follow-up-v1\", p_limit: $json.futurePlanFollowUpBatchLimit, p_lease_minutes: $json.fastLeaseMinutes, p_plan_id: null } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "45450ef2-3b1a-5005-acfd-9d08bb487f30",
+      "name": "Call | Supabase RPC | Claim Future Plan Follow-Ups | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet base = {};\ntry { base = $('Set | Scheduler Constants | StateScheduler').first().json || {}; } catch {}\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst rows = $input.all().flatMap(item => {\n  const value = item?.json?.body ?? item?.json ?? {};\n  return Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : [value]);\n});\n\nreturn rows.filter(row => row &&\n  /^[0-9a-f-]{36}$/.test(clean(row.plan_id ?? row.planId)) &&\n  /^[0-9a-f-]{36}$/.test(clean(row.lease_token ?? row.leaseToken)) &&\n  Number.isSafeInteger(Number(row.plan_version ?? row.planVersion)) &&\n  clean(row.delivery_address ?? row.deliveryAddress) &&\n  /^\\d{4}-\\d{2}-\\d{2}$/.test(clean(row.planned_for ?? row.plannedFor)) &&\n  clean(row.summary) && /^[0-9a-f]{32}$/.test(clean(row.callback_token ?? row.callbackToken))\n).map(row => {\n  const planId = clean(row.plan_id ?? row.planId);\n  const planVersion = Number(row.plan_version ?? row.planVersion);\n  const beginRpcBody = {\n    p_plan_id: planId,\n    p_lease_token: clean(row.lease_token ?? row.leaseToken),\n    p_expected_version: planVersion,\n    p_send_key: `future_plan_prompt:${planId}:v${planVersion}`\n  };\n  return { json: {\n    ...base,\n    ...row,\n    stateFuturePlanClaim: row,\n    stateFuturePlanReady: true,\n    stateFuturePlanContractVersion: 'chelsea_state_future_plan_claim_v1',\n    stateFuturePlanBeginRpcBody: beginRpcBody,\n    stateRpcBody: beginRpcBody\n  } };\n});\n"
+      },
+      "id": "ed59045e-07db-5f43-aedf-8f486f0498be",
+      "name": "Code | Normalize Future Plan Claims | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000012",
+              "leftValue": "={{ $json.stateFuturePlanReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c6bca73a-3552-534c-95ca-af29fa0e74b6",
+      "name": "If | Future Plan Claim Ready | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        40,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_begin_future_plan_followup_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "439bb711-b4d5-5512-afbe-f5e68eebdb8d",
+      "name": "Call | Supabase RPC | Begin Future Plan Follow-Up | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        290,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Normalize Future Plan Claims | FuturePlanFollowUp').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst expectedPlanId = String(source.stateRpcBody?.p_plan_id || '');\nconst expectedSendKey = String(source.stateRpcBody?.p_send_key || '');\nconst chatId = String(body?.deliveryAddress ?? '').normalize('NFKC').trim();\nconst plannedFor = String(body?.plannedFor ?? '').trim();\nconst summary = String(body?.summary ?? '').normalize('NFKC').trim();\nconst completedData = String(body?.completedCallbackData ?? '').trim();\nconst notCompletedData = String(body?.notCompletedCallbackData ?? '').trim();\nconst callbackPattern = /^csp:v1:[dn]:[0-9a-f]{32}$/;\nconst valid = Boolean(body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_future_plan_send_begin_v1' &&\n  body.telegramSendAllowed === true && String(body.planId || '') === expectedPlanId &&\n  String(body.sendKey || '') === expectedSendKey && Number.isSafeInteger(Number(body.planVersion)) &&\n  chatId && /^\\d{4}-\\d{2}-\\d{2}$/.test(plannedFor) && summary &&\n  callbackPattern.test(completedData) && callbackPattern.test(notCompletedData) &&\n  completedData !== notCompletedData && completedData.length <= 64 && notCompletedData.length <= 64);\nconst formatDate = value => {\n  const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(value);\n  if (!match) return value;\n  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];\n  return `${Number(match[3])} ${months[Number(match[2]) - 1]} ${match[1]}`;\n};\nconst promptText = valid\n  ? `План на ${formatDate(plannedFor)}: «${summary}».\\n\\nПолучилось выполнить?`\n  : '';\nconst inlineKeyboard = {\n  rows: [{\n    row: {\n      buttons: [\n        { text: '✅ Выполнено', additionalFields: { callback_data: completedData } },\n        { text: '❌ Не выполнено', additionalFields: { callback_data: notCompletedData } }\n      ]\n    }\n  }]\n};\n\nreturn [{ json: {\n  ...source,\n  stateFuturePlanBeginResult: body,\n  stateFuturePlanBeginValid: valid,\n  stateFuturePlanTelegramSendAllowed: valid,\n  stateFuturePlanSendingVersion: valid ? Number(body.planVersion) : Number(source.stateRpcBody?.p_expected_version),\n  stateFuturePlanChatId: chatId,\n  stateFuturePlanPromptText: promptText,\n  stateFuturePlanInlineKeyboard: inlineKeyboard,\n  stateFuturePlanSendError: valid\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'future_plan_send_begin_invalid').slice(0, 2000)\n} }];\n"
+      },
+      "id": "82c0c191-f8c6-5778-862d-5e42b8b59c15",
+      "name": "Code | Validate Future Plan Send Begin | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000015",
+              "leftValue": "={{ $json.stateFuturePlanTelegramSendAllowed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e6b44d1c-333f-5477-8f07-d232610abe7f",
+      "name": "If | Future Plan Telegram Send Allowed | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        790,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.stateFuturePlanChatId }}",
+        "text": "={{ $json.stateFuturePlanPromptText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": "={{ $json.stateFuturePlanInlineKeyboard }}"
+      },
+      "id": "2f6aba35-1bc7-5514-b49c-229e4d90dda4",
+      "name": "Call | Telegram | Send Future Plan Prompt | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        220
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "UcyKnC2iZoXPPYxc",
+          "name": "Протокол Челси"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Validate Future Plan Send Begin | FuturePlanFollowUp').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst response = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst message = response?.result && typeof response.result === 'object' ? response.result : response;\nconst messageId = String(message?.message_id ?? '').trim();\nconst responseChatId = String(message?.chat?.id ?? '').trim();\nconst expectedChatId = String(source.stateFuturePlanChatId || '').trim();\nconst explicitFailure = Boolean(response?.ok === false || incoming?.ok === false || response?.error || incoming?.error);\nconst exactReceipt = Boolean(source.stateFuturePlanBeginValid === true && !explicitFailure &&\n  /^\\d+$/.test(messageId) && /^-?\\d+$/.test(responseChatId) && responseChatId === expectedChatId);\nconst telegramDate = Number(message?.date);\nconst sentAt = Number.isSafeInteger(telegramDate) && telegramDate > 0\n  ? new Date(telegramDate * 1000).toISOString()\n  : new Date().toISOString();\n\nreturn [{ json: {\n  ...source,\n  stateFuturePlanTelegramReceiptExact: exactReceipt,\n  stateFuturePlanSendErrorCode: exactReceipt ? '' : (explicitFailure\n    ? 'future_plan_telegram_rejected'\n    : 'future_plan_telegram_receipt_invalid'),\n  stateRpcBody: exactReceipt ? {\n    p_plan_id: String(source.stateFuturePlanBeginRpcBody?.p_plan_id || ''),\n    p_lease_token: String(source.stateFuturePlanBeginRpcBody?.p_lease_token || ''),\n    p_expected_version: Number(source.stateFuturePlanSendingVersion),\n    p_send_key: String(source.stateFuturePlanBeginRpcBody?.p_send_key || ''),\n    p_chat_id: responseChatId,\n    p_external_message_id: messageId,\n    p_sent_at: sentAt\n  } : null\n} }];\n"
+      },
+      "id": "0f3dc928-6398-5f87-8c84-680c3d91d625",
+      "name": "Code | Build Future Plan Send Complete | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1290,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000018",
+              "leftValue": "={{ $json.stateFuturePlanTelegramReceiptExact === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ac60a0bd-ba5f-5038-879a-717bd187baaa",
+      "name": "If | Future Plan Telegram Receipt Exact | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_future_plan_followup_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "bcba7897-bd3c-5afe-be6a-ca3e908e7e32",
+      "name": "Call | Supabase RPC | Complete Future Plan Follow-Up | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1790,
+        140
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Build Future Plan Send Complete | FuturePlanFollowUp').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst valid = Boolean(body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_future_plan_send_complete_v1' &&\n  String(body.planId || '') === String(source.stateRpcBody?.p_plan_id || '') &&\n  body.status === 'awaiting_confirmation' && Number.isSafeInteger(Number(body.planVersion)) &&\n  /^\\d+$/.test(String(body.externalMessageId || '')));\n\nreturn [{ json: {\n  ...source,\n  stateFuturePlanSendCompleted: valid,\n  stateFuturePlanSendCompleteResult: body,\n  stateFuturePlanSendCompleteError: valid\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'future_plan_send_complete_invalid').slice(0, 2000)\n} }];\n"
+      },
+      "id": "87ac468f-6b65-5c13-9926-7eb66cccbdcf",
+      "name": "Code | Validate Future Plan Send Complete | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2040,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000021",
+              "leftValue": "={{ $json.stateFuturePlanSendCompleted === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "27fd5883-8e38-5c75-96a8-8268b28989d0",
+      "name": "If | Future Plan Send Completed | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2290,
+        140
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2540,
+        60
+      ],
+      "id": "afab05be-5f8c-531b-a404-eb5596eadc08",
+      "name": "End | Future Plan Prompt Sent | FuturePlanFollowUp"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nlet source = input;\nif (!source.stateFuturePlanBeginResult) {\n  try { source = $('Code | Build Future Plan Send Complete | FuturePlanFollowUp').item.json || input; } catch {}\n}\nconst ready = source.stateFuturePlanBeginValid === true && (\n  source.stateFuturePlanTelegramReceiptExact !== true || source.stateFuturePlanSendCompleted === false\n);\nconst errorCode = String(\n  source.stateFuturePlanSendCompleteError || source.stateFuturePlanSendErrorCode || 'future_plan_telegram_send_uncertain'\n).slice(0, 120);\n\nreturn [{ json: {\n  ...source,\n  stateFuturePlanUncertainReady: ready,\n  stateRpcBody: ready ? {\n    p_plan_id: String(source.stateFuturePlanBeginRpcBody?.p_plan_id || source.stateFuturePlanBeginResult?.planId || ''),\n    p_lease_token: String(source.stateFuturePlanBeginRpcBody?.p_lease_token || ''),\n    p_expected_version: Number(source.stateFuturePlanSendingVersion),\n    p_error_code: errorCode,\n    p_error_text: errorCode\n  } : null\n} }];\n"
+      },
+      "id": "0674c651-f50f-5804-9b35-ff46bc05ebac",
+      "name": "Code | Build Future Plan Send Uncertain | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000024",
+              "leftValue": "={{ $json.stateFuturePlanUncertainReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c406d420-0687-532a-82d3-02ab1885ac96",
+      "name": "If | Future Plan Send Uncertain Ready | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2040,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_mark_future_plan_followup_uncertain_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "f21959b5-d882-5c78-90bb-5e405fe9aaa1",
+      "name": "Call | Supabase RPC | Mark Future Plan Follow-Up Uncertain | FuturePlanFollowUp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2290,
+        380
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Plan to completed fact (FuturePlanFollowUp)\nPlans never mutate state. The next local day prompts for an outcome; only completed creates an analysis input on the planned date. Delivery uses lease/CAS and post-send uncertain.",
+        "height": 620,
+        "width": 3300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ],
+      "id": "29f495fa-e54f-5acd-8d05-c4dd7f6e0385",
+      "name": "Sticky Note | Future Plan Follow-Up | FuturePlanFollowUp"
+    },
+    {
+      "id": "86aab6a3-6ae4-53b5-80ed-efffb6fc44b2",
+      "name": "End | FuturePlanFollowUp Worker Receipt | FuturePlanFollowUpWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2820,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | FuturePlanFollowUpWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Future Plan Follow-Ups | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Future Plan Follow-Ups | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Future Plan Claims | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Future Plan Claims | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "If | Future Plan Claim Ready | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Future Plan Claim Ready | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Begin Future Plan Follow-Up | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Call | Supabase RPC | Begin Future Plan Follow-Up | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Future Plan Send Begin | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Future Plan Send Begin | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "If | Future Plan Telegram Send Allowed | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Future Plan Telegram Send Allowed | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Future Plan Prompt | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Call | Telegram | Send Future Plan Prompt | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Future Plan Send Complete | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Future Plan Send Complete | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Future Plan Send Complete | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "If | Future Plan Telegram Receipt Exact | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Future Plan Telegram Receipt Exact | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Future Plan Follow-Up | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Future Plan Send Uncertain | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Future Plan Follow-Up | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Future Plan Send Complete | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Future Plan Send Complete | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "If | Future Plan Send Completed | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Future Plan Send Completed | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "End | Future Plan Prompt Sent | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Future Plan Send Uncertain | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Future Plan Send Uncertain | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "If | Future Plan Send Uncertain Ready | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Future Plan Send Uncertain Ready | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark Future Plan Follow-Up Uncertain | FuturePlanFollowUp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "End | Future Plan Prompt Sent | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "End | FuturePlanFollowUp Worker Receipt | FuturePlanFollowUpWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark Future Plan Follow-Up Uncertain | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "End | FuturePlanFollowUp Worker Receipt | FuturePlanFollowUpWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | Future Plan Follow-Up | FuturePlanFollowUp": {
+      "main": [
+        [
+          {
+            "node": "End | FuturePlanFollowUp Worker Receipt | FuturePlanFollowUpWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

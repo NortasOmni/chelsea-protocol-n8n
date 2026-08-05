@@ -1,0 +1,1389 @@
+{
+  "id": "cX6ay5aMXH3wdL0v",
+  "name": "Process Chelsea State Proactivity Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "cc0aaffc-d305-4756-bd31-81475857b7f3",
+  "nodes": [
+    {
+      "id": "c561e566-4dd2-5178-90fa-f160ce93ca3c",
+      "name": "Trigger | Parent Workflow | ProactivityWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6bb542e6-1cb9-57da-9c14-aecdf3308c54",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_refresh_candidates_v3\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_now: new Date().toISOString() } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "02745302-fbbb-5098-8fa6-2f78e417656c",
+      "name": "Call | Supabase RPC | Refresh Proactivity Candidates | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -500,
+        340
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_claim_due_v2\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $(\"Set | Scheduler Constants | StateScheduler\").first().json.schedulerWorkerBase + \":proactivity-v1\", p_limit: $(\"Set | Scheduler Constants | StateScheduler\").first().json.proactivityBatchLimit, p_lease_seconds: $(\"Set | Scheduler Constants | StateScheduler\").first().json.proactivityLeaseSeconds } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "384a263d-0f6f-517a-b25c-be87c6811db7",
+      "name": "Call | Supabase RPC | Claim Proactivity Candidates | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -250,
+        340
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet base = {};\ntry { base = $('Set | Scheduler Constants | StateScheduler').first().json || {}; } catch {}\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst rows = $input.all().flatMap(item => {\n  const value = item?.json?.body ?? item?.json ?? {};\n  return Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : [value]);\n});\n\nreturn rows.filter(row => row &&\n  /^[0-9a-f-]{36}$/i.test(clean(row.candidate_id ?? row.candidateId)) &&\n  /^[0-9a-f-]{36}$/i.test(clean(row.lease_token ?? row.leaseToken)) &&\n  Number.isSafeInteger(Number(row.candidate_version ?? row.candidateVersion)) &&\n  clean(row.delivery_address ?? row.deliveryAddress) &&\n  /^[0-9a-f]{32}$/i.test(clean(row.callback_token ?? row.callbackToken))\n).map(row => {\n  const candidateId = clean(row.candidate_id ?? row.candidateId).toLowerCase();\n  const candidateVersion = Number(row.candidate_version ?? row.candidateVersion);\n  const leaseToken = clean(row.lease_token ?? row.leaseToken).toLowerCase();\n  const attemptNo = Number(row.attempt_no ?? row.attemptNo ?? 1);\n  const beginRpcBody = {\n    p_candidate_id: candidateId,\n    p_lease_token: leaseToken,\n    p_expected_version: candidateVersion,\n    p_send_key: `proactivity:${candidateId}:a${attemptNo}:v${candidateVersion}`\n  };\n  return { json: {\n    ...base,\n    ...row,\n    stateProactivityReady: true,\n    stateProactivityClaim: row,\n    stateProactivityBeginRpcBody: beginRpcBody,\n    stateRpcBody: beginRpcBody\n  } };\n});\n"
+      },
+      "id": "895f6e04-ed83-56db-929b-e83acaef2c33",
+      "name": "Code | Normalize Proactivity Claims | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000012",
+              "leftValue": "={{ $json.stateProactivityReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4c0354b8-0021-51ae-91c7-87f534882623",
+      "name": "If | Proactivity Candidate Ready | Proactivity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        250,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_begin_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "917bd87f-89fc-5e0a-9836-2e3d9eb10f76",
+      "name": "Call | Supabase RPC | Begin Proactivity Send | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        260
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Normalize Proactivity Claims | Proactivity').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst claim = source.stateProactivityClaim || {};\nconst candidateId = clean(claim.candidate_id ?? claim.candidateId).toLowerCase();\nconst callbackToken = clean(claim.callback_token ?? claim.callbackToken).toLowerCase();\nconst category = clean(claim.category);\nconst payload = claim.payload_json && typeof claim.payload_json === 'object' ? claim.payload_json : {};\nconst valid = Boolean(body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_proactivity_send_begin_v1' && body.telegramSendAllowed === true &&\n  clean(body.candidateId).toLowerCase() === candidateId &&\n  clean(body.sendKey) === clean(source.stateProactivityBeginRpcBody?.p_send_key) &&\n  Number.isSafeInteger(Number(body.candidateVersion)) && /^[0-9a-f]{32}$/.test(callbackToken));\n\nconst callback = action => `cpa:v1:${action}:${callbackToken}`;\nlet text = '';\nlet buttons = [];\nif (category === 'morning') {\n  text = 'Утреннее взаимодействие: узнай главный желаемый результат пользователя на сегодня.';\n  buttons = [\n    [{ text: '✍️ Ответить', additionalFields: { callback_data: callback('r') } }],\n    [{ text: '⏰ Позже', additionalFields: { callback_data: callback('l') } }, { text: '⏭️ Пропустить сегодня', additionalFields: { callback_data: callback('s') } }]\n  ];\n} else if (category === 'evening') {\n  text = 'Вечернее взаимодействие: попроси рассказать о прошедшем дне, событиях, результатах и состоянии.';\n  buttons = [\n    [{ text: '✍️ Ответить', additionalFields: { callback_data: callback('r') } }],\n    [{ text: '⏰ Позже', additionalFields: { callback_data: callback('l') } }, { text: '⏭️ Пропустить сегодня', additionalFields: { callback_data: callback('s') } }]\n  ];\n} else if (category === 'unfinished_clarification') {\n  text = clean(payload.questionText);\n  buttons = [\n    [{ text: '✍️ Ответить', additionalFields: { callback_data: callback('r') } }],\n    [{ text: '⏭️ Пропустить уточнения', additionalFields: { callback_data: callback('s') } }],\n    [{ text: '⏰ Позже', additionalFields: { callback_data: callback('l') } }, { text: '✖️ Закрыть вопрос', additionalFields: { callback_data: callback('c') } }]\n  ];\n} else if (category === 'profile_question') {\n  text = clean(payload.questionText);\n  buttons = [\n    [{ text: '✍️ Ответить', additionalFields: { callback_data: callback('r') } }],\n    [{ text: '⏰ Позже', additionalFields: { callback_data: callback('l') } }, { text: '✖️ Закрыть вопрос', additionalFields: { callback_data: callback('c') } }]\n  ];\n} else if (category === 'check_in') {\n  text = clean(payload.questionText) || 'Узнай, чем пользователь сейчас занят и как себя чувствует.';\n  buttons = [\n    [{ text: '✍️ Ответить', additionalFields: { callback_data: callback('r') } }],\n    [{ text: '⏰ Позже', additionalFields: { callback_data: callback('l') } }, { text: '✖️ Закрыть вопрос', additionalFields: { callback_data: callback('c') } }]\n  ];\n}\nconst keyboard = { rows: buttons.map(row => ({ row: { buttons: row } })) };\n\nreturn [{ json: {\n  ...source,\n  stateProactivityBeginResult: body,\n  stateProactivityBeginValid: valid && Boolean(text && buttons.length),\n  stateProactivityTelegramSendAllowed: valid && Boolean(text && buttons.length),\n  stateProactivitySendingVersion: valid ? Number(body.candidateVersion) : Number(source.stateProactivityBeginRpcBody?.p_expected_version),\n  stateProactivityChatId: clean(claim.delivery_address ?? claim.deliveryAddress),\n  stateProactivityPromptText: text,\n  stateProactivityMessageIntent: {\n    category,\n    semanticInstruction: text,\n    targetLocalDate: clean(claim.target_local_date ?? claim.targetLocalDate),\n    mode: clean(claim.mode_code ?? claim.modeCode),\n    payload\n  },\n  stateProactivityInlineKeyboard: keyboard,\n  stateProactivitySendError: valid ? '' : clean(body?.message || body?.error?.message || body?.hint || 'proactivity_send_begin_invalid').slice(0, 2000)\n} }];\n"
+      },
+      "id": "529cf383-0065-53fa-aa80-035bafef374d",
+      "name": "Code | Validate Proactivity Send Begin | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000012",
+              "leftValue": "={{ $json.stateProactivityTelegramSendAllowed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ce2fe40a-ae52-57a4-9bfe-72cda491dbf6",
+      "name": "If | Proactivity Telegram Send Allowed | Proactivity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1000,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.stateProactivityChatId }}",
+        "text": "={{ $json.stateProactivityPromptText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": "={{ $json.stateProactivityInlineKeyboard }}"
+      },
+      "id": "f77ed3ef-5975-5c3a-a8b0-992e52aff821",
+      "name": "Call | Telegram | Send Proactivity Prompt | Proactivity",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1250,
+        180
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "UcyKnC2iZoXPPYxc",
+          "name": "Протокол Челси"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Validate Proactivity Send Begin | Proactivity').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst response = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst message = response?.result && typeof response.result === 'object' ? response.result : response;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst messageId = clean(message?.message_id);\nconst responseChatId = clean(message?.chat?.id);\nconst expectedChatId = clean(source.stateProactivityChatId);\nconst explicitFailure = Boolean(response?.ok === false || incoming?.ok === false || response?.error || incoming?.error);\nconst exactReceipt = Boolean(source.stateProactivityBeginValid === true && !explicitFailure &&\n  /^\\d+$/.test(messageId) && /^-?\\d+$/.test(responseChatId) && responseChatId === expectedChatId);\n\nconst base = source.stateProactivityBeginRpcBody || {};\nreturn [{ json: {\n  ...source,\n  stateProactivityTelegramReceipt: response,\n  stateProactivityTelegramReceiptExact: exactReceipt,\n  stateProactivityCompleteRpcBody: exactReceipt ? {\n    p_candidate_id: clean(base.p_candidate_id),\n    p_lease_token: clean(base.p_lease_token),\n    p_expected_version: Number(source.stateProactivitySendingVersion),\n    p_send_key: clean(base.p_send_key),\n    p_chat_id: responseChatId,\n    p_message_id: messageId,\n    p_receipt: response\n  } : null,\n  stateProactivityUncertainRpcBody: exactReceipt ? null : {\n    p_candidate_id: clean(base.p_candidate_id),\n    p_lease_token: clean(base.p_lease_token),\n    p_expected_version: Number(source.stateProactivitySendingVersion),\n    p_error_code: explicitFailure ? 'proactivity_telegram_rejected' : 'proactivity_telegram_receipt_invalid'\n  },\n  stateRpcBody: exactReceipt ? {\n    p_candidate_id: clean(base.p_candidate_id), p_lease_token: clean(base.p_lease_token),\n    p_expected_version: Number(source.stateProactivitySendingVersion), p_send_key: clean(base.p_send_key),\n    p_chat_id: responseChatId, p_message_id: messageId, p_receipt: response\n  } : null\n} }];\n"
+      },
+      "id": "e7b0edba-e9b6-5070-ad40-a72f31e146c0",
+      "name": "Code | Build Proactivity Send Result | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000012",
+              "leftValue": "={{ $json.stateProactivityTelegramReceiptExact === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "041365dc-34e5-514f-918e-d545f1011660",
+      "name": "If | Proactivity Telegram Receipt Exact | Proactivity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1750,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_complete_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateProactivityCompleteRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "dfb8f28b-6c67-5621-9f28-8c97e70911eb",
+      "name": "Call | Supabase RPC | Complete Proactivity Send | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        100
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $input.first()?.json || {};\nconst ready = source.stateProactivityBeginValid === true && source.stateProactivityTelegramReceiptExact !== true &&\n  source.stateProactivityUncertainRpcBody && typeof source.stateProactivityUncertainRpcBody === 'object';\nreturn [{ json: {\n  ...source,\n  stateProactivityUncertainReady: ready,\n  stateRpcBody: ready ? source.stateProactivityUncertainRpcBody : null\n} }];\n"
+      },
+      "id": "97a41bc6-ad1d-5141-af5b-8bb43d2dea60",
+      "name": "Code | Build Proactivity Send Uncertain | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1700000-0000-4000-8000-000000000012",
+              "leftValue": "={{ $json.stateProactivityUncertainReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c34f6e26-04cd-5b7b-b966-8a94d038f9b7",
+      "name": "If | Proactivity Send Uncertain Ready | Proactivity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2250,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_mark_send_uncertain_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "2f27cec7-3ac2-5359-8849-5eb881f2cc2c",
+      "name": "Call | Supabase RPC | Mark Proactivity Send Uncertain | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2500,
+        260
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2750,
+        180
+      ],
+      "id": "dc0ccf1a-a6c0-5a04-946a-2561df53d82f",
+      "name": "End | Proactivity Cycle | Proactivity"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst ContextualClarification = (() => {\n  const clean = value => String(value ?? '').normalize('NFKC').replace(/\\s+/g, ' ').trim();\n  const normalized = value => clean(value).toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');\n  const ymdPattern = /^\\d{4}-\\d{2}-\\d{2}$/;\n  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];\n  const formalPattern = /(?:^|[^\\p{L}])(?:вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашего|вашей|вашим|вашими|ваших)(?=$|[^\\p{L}])/iu;\n  const vagueReferences = new Set([\n    'это','эта нагрузка','нагрузка','все','всё','ситуация','эта ситуация','это событие','произошедшее'\n  ].map(normalized));\n  const tokenStop = new Set([\n    'это','эта','этот','эти','была','было','были','сегодня','вчера','июля','августа','сентября',\n    'октября','ноября','декабря','января','февраля','марта','апреля','мая','июня','событие'\n  ]);\n\n  function localDate(timezone, localTimestamp = '') {\n    const supplied = clean(localTimestamp).slice(0, 10);\n    if (ymdPattern.test(supplied)) return supplied;\n    const parts = new Intl.DateTimeFormat('en-US', {\n      timeZone: clean(timezone) || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit'\n    }).formatToParts(new Date());\n    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));\n    return `${values.year}-${values.month}-${values.day}`;\n  }\n\n  function utcDay(value) {\n    if (!ymdPattern.test(value)) return Number.NaN;\n    const [year,month,day] = value.split('-').map(Number);\n    const time = Date.UTC(year,month - 1,day);\n    const check = new Date(time);\n    return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day\n      ? Math.floor(time / 86400000)\n      : Number.NaN;\n  }\n\n  function dateReference(sourceLocalDate, currentLocalDate) {\n    const sourceDay = utcDay(sourceLocalDate);\n    const currentDay = utcDay(currentLocalDate);\n    if (!Number.isFinite(sourceDay) || !Number.isFinite(currentDay)) return { ready: false, error: 'local_date_invalid' };\n    const delta = currentDay - sourceDay;\n    if (delta < 0) return { ready: false, error: 'future_event_for_state_clarification', deltaDays: delta };\n    if (delta === 0) return { ready: true, value: 'сегодня', deltaDays: 0 };\n    if (delta === 1) return { ready: true, value: 'вчера', deltaDays: 1 };\n    const [sourceYear,sourceMonth,sourceDate] = sourceLocalDate.split('-').map(Number);\n    const currentYear = Number(currentLocalDate.slice(0,4));\n    return {\n      ready: true,\n      value: `${sourceDate} ${months[sourceMonth - 1]}${sourceYear === currentYear ? '' : ` ${sourceYear} года`}`,\n      deltaDays: delta\n    };\n  }\n\n  function derive(contextValue, timezone, localTimestamp = '') {\n    const context = contextValue && typeof contextValue === 'object' && !Array.isArray(contextValue)\n      ? contextValue : {};\n    const unresolvedSlots = Array.isArray(context.unresolvedSlots)\n      ? context.unresolvedSlots.map(slot => ({\n          code: clean(slot?.code), label: clean(slot?.label), questionHint: clean(slot?.questionHint)\n        })).filter(slot => slot.code && slot.label && slot.questionHint)\n      : [];\n    const currentLocalDate = localDate(timezone, localTimestamp);\n    const sourceLocalDate = clean(context.sourceLocalDate);\n    const reference = dateReference(sourceLocalDate, currentLocalDate);\n    const eventLabel = clean(context.eventLabel);\n    const eventSummary = clean(context.eventSummary);\n    const evidenceText = clean(context.evidenceText);\n    const resolvedSlots = context.resolvedSlots && typeof context.resolvedSlots === 'object' && !Array.isArray(context.resolvedSlots)\n      ? context.resolvedSlots : {};\n    const baseReady = context.contractVersion === 'chelsea_clarification_context_v1' &&\n      /^[a-z][a-z0-9_]{1,63}$/.test(clean(context.eventRuleCode)) &&\n      Boolean(eventLabel && (eventSummary || evidenceText) && unresolvedSlots.length && reference.ready);\n    return {\n      ready: baseReady,\n      error: baseReady ? '' : (reference.error || 'clarification_context_invalid'),\n      contractVersion: clean(context.contractVersion),\n      sourceLocalDate,\n      currentLocalDate,\n      dateReference: reference.value || '',\n      deltaDays: reference.deltaDays,\n      eventRuleCode: clean(context.eventRuleCode),\n      eventLabel,\n      eventSummary,\n      evidenceText,\n      anchorQuality: clean(context.anchorQuality),\n      resolvedSlots,\n      unresolvedSlots,\n      unresolvedSlotCodes: unresolvedSlots.map(slot => slot.code)\n    };\n  }\n\n  function tokens(value) {\n    return normalized(value).match(/[\\p{L}\\p{N}]+/gu)?.filter(token => token.length >= 3 && !tokenStop.has(token)) || [];\n  }\n\n  function exactCodes(actual, expected) {\n    if (!Array.isArray(actual) || actual.some(code => !clean(code))) return false;\n    const left = actual.map(clean);\n    const right = expected.map(clean);\n    return left.length === new Set(left).size && left.length === right.length &&\n      [...left].sort().join('\\u0000') === [...right].sort().join('\\u0000');\n  }\n\n  function validateResponse(parsed, contract, preferredName, maxLength = 350) {\n    const text = clean(parsed?.text);\n    const dateRef = clean(parsed?.dateReference);\n    const eventRef = clean(parsed?.eventReference);\n    const asked = Array.isArray(parsed?.askedSlotCodes) ? parsed.askedSlotCodes.map(clean) : [];\n    const normalizedText = normalized(text);\n    const normalizedName = normalized(preferredName);\n    let nameCount = 0;\n    let cursor = 0;\n    while (normalizedName && (cursor = normalizedText.indexOf(normalizedName,cursor)) >= 0) {\n      nameCount += 1;\n      cursor += normalizedName.length;\n    }\n    const dateValid = dateRef === contract.dateReference && normalizedText.includes(normalized(dateRef));\n    const eventVisible = Boolean(eventRef && normalizedText.includes(normalized(eventRef)));\n    const grounding = normalized(`${contract.eventLabel} ${contract.eventSummary} ${contract.evidenceText}`);\n    const eventTokens = tokens(eventRef);\n    const eventGrounded = eventVisible && !vagueReferences.has(normalized(eventRef)) &&\n      eventTokens.length > 0 && eventTokens.some(token => grounding.includes(token));\n    const slotsValid = exactCodes(asked,contract.unresolvedSlotCodes);\n    const checks = {\n      text: Boolean(text && text.length <= maxLength),\n      name: nameCount === 1,\n      informal: !formalPattern.test(text),\n      date: dateValid,\n      event: eventGrounded,\n      slots: slotsValid\n    };\n    const firstError = Object.entries(checks).find(([,passed]) => !passed)?.[0] || '';\n    return {\n      ready: Object.values(checks).every(Boolean),\n      error: firstError ? `contextual_clarification_${firstError}_invalid` : '',\n      text,dateReference:dateRef,eventReference:eventRef,askedSlotCodes:asked,checks\n    };\n  }\n\n  return { clean, normalized, derive, validateResponse };\n})();\n\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateProactivityClaim || {};\nconst clean = ContextualClarification.clean;\nconst composition = claim.composition_context && typeof claim.composition_context === 'object'\n  ? claim.composition_context\n  : (claim.compositionContext && typeof claim.compositionContext === 'object' ? claim.compositionContext : {});\nconst preferredName = clean(\n  claim.preferred_name ?? claim.preferredName ?? composition.preferredName ??\n  composition.displayName ?? claim.current_username ?? claim.currentUsername\n).replace(/[,;:]+$/u,'').trim();\nconst intent = input.stateProactivityMessageIntent || {};\nconst category = clean(intent.category || claim.category);\nconst semanticInstruction = clean(intent.semanticInstruction || input.stateProactivityPromptText);\nconst payload = intent.payload && typeof intent.payload === 'object' ? intent.payload : {};\nconst contextual = category === 'unfinished_clarification';\nconst timezone = clean(claim.timezone || composition.timezone) || 'UTC';\nconst contract = contextual\n  ? ContextualClarification.derive(payload.clarificationContext,timezone,clean(composition.localTimestamp))\n  : { ready: true,dateReference: '',unresolvedSlotCodes: [] };\nconst ready = input.stateProactivityTelegramSendAllowed === true &&\n  Boolean(preferredName && category && semanticInstruction && contract.ready);\n\nconst commonRules = [\n  'Ты — Челси и пишешь короткое живое сообщение одному человеку в Telegram.',\n  `Его имя: ${preferredName}. Назови его ровно один раз и общайся только на «ты».`,\n  'Не используй «Вы», «вас», «вам», «ваш» и другие формальные формы.',\n  'Не используй шаблонные служебные фразы, не объясняй правила и не упоминай модель.',\n  'Не выдумывай факты. Верни только JSON по схеме.'\n];\nconst contextualRules = [\n  'Это напоминание о незавершённом уточнении. Используй только clarificationContext; recentEvents для привязки запрещены.',\n  'В первом коротком предложении обязательно явно назови dateReference и конкретное исходное событие.',\n  'eventReference должен быть коротким буквальным фрагментом eventSummary или evidenceText и обязан присутствовать в text.',\n  'Спроси только про unresolvedSlots; resolvedSlots повторно не спрашивай.',\n  'Запрещены самостоятельные расплывчатые ссылки «эта нагрузка», «это», «всё», «ситуация». Сначала назови событие.',\n  'askedSlotCodes верни ровно для всех и только unresolvedSlots. dateReference верни без изменения.',\n  'Текст — 1–2 коротких предложения, не более 350 символов.'\n];\nconst ordinaryRules = [\n  'Сформулируй 1–3 коротких предложения, сохрани заданный смысл.',\n  'Поля dateReference и eventReference верни пустыми строками, askedSlotCodes — пустым массивом.'\n];\nconst userPayload = contextual ? {\n  category,semanticInstruction,preferredName,timezone,\n  dateReference: contract.dateReference,\n  sourceLocalDate: contract.sourceLocalDate,\n  eventRuleCode: contract.eventRuleCode,\n  eventLabel: contract.eventLabel,\n  eventSummary: contract.eventSummary,\n  evidenceText: contract.evidenceText,\n  anchorQuality: contract.anchorQuality,\n  resolvedSlots: contract.resolvedSlots,\n  unresolvedSlots: contract.unresolvedSlots,\n  recentEvents: []\n} : {\n  category,semanticInstruction,preferredName,\n  targetLocalDate: clean(intent.targetLocalDate || claim.target_local_date || claim.targetLocalDate),\n  timezone,localTimestamp: clean(composition.localTimestamp),\n  mode: clean(intent.mode || claim.mode_code || claim.modeCode),payload,\n  currentState: Array.isArray(composition.currentState) ? composition.currentState.slice(0,10) : [],\n  recentEvents: Array.isArray(composition.recentEvents) ? composition.recentEvents.slice(0,5) : []\n};\nconst request = {\n  model: 'gpt-4.1-mini',\n  input: [\n    { role: 'system',content: [{ type: 'input_text',text: [...commonRules,...(contextual ? contextualRules : ordinaryRules)].join('\\n') }] },\n    { role: 'user',content: [{ type: 'input_text',text: JSON.stringify(userPayload) }] }\n  ],\n  temperature: contextual ? 0.65 : 0.85,\n  max_output_tokens: 240,\n  text: { format: { type: 'json_schema',name: 'chelsea_micro_message_v2',strict: true,schema: {\n    type: 'object',additionalProperties: false,\n    required: ['text','dateReference','eventReference','askedSlotCodes'],\n    properties: {\n      text: { type: 'string',minLength: 8,maxLength: 500 },\n      dateReference: { type: 'string',maxLength: 40 },\n      eventReference: { type: 'string',maxLength: 160 },\n      askedSlotCodes: { type: 'array',items: { type: 'string' },maxItems: 12 }\n    }\n  } } }\n};\n\nreturn [{ json: {\n  ...input,\n  chelseaMicroPreferredName: preferredName,\n  chelseaMicroRequestReady: ready,\n  chelseaMicroRequestError: ready ? '' : (contract.error || 'proactivity_request_invalid'),\n  chelseaMicroRequest: ready ? request : {},\n  chelseaMicroContextualClarification: contextual,\n  chelseaMicroClarificationContract: contract,\n  chelseaMicroPromptVersion: contextual ? 'chelsea_micro_proactivity_contextual_v2' : 'chelsea_micro_proactivity_v2',\n  chelseaMicroModel: 'gpt-4.1-mini'\n} }];\n"
+      },
+      "id": "7c9560a2-1c64-576d-93bb-875d0fcaba33",
+      "name": "Code | Build Chelsea Micro Message Request | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.chelseaMicroRequest }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "72536e44-1fe0-508b-b8dd-21fb0f98a82e",
+      "name": "Call | OpenAI Responses | Compose Proactivity Message | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        0
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst ContextualClarification = (() => {\n  const clean = value => String(value ?? '').normalize('NFKC').replace(/\\s+/g, ' ').trim();\n  const normalized = value => clean(value).toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');\n  const ymdPattern = /^\\d{4}-\\d{2}-\\d{2}$/;\n  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];\n  const formalPattern = /(?:^|[^\\p{L}])(?:вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашего|вашей|вашим|вашими|ваших)(?=$|[^\\p{L}])/iu;\n  const vagueReferences = new Set([\n    'это','эта нагрузка','нагрузка','все','всё','ситуация','эта ситуация','это событие','произошедшее'\n  ].map(normalized));\n  const tokenStop = new Set([\n    'это','эта','этот','эти','была','было','были','сегодня','вчера','июля','августа','сентября',\n    'октября','ноября','декабря','января','февраля','марта','апреля','мая','июня','событие'\n  ]);\n\n  function localDate(timezone, localTimestamp = '') {\n    const supplied = clean(localTimestamp).slice(0, 10);\n    if (ymdPattern.test(supplied)) return supplied;\n    const parts = new Intl.DateTimeFormat('en-US', {\n      timeZone: clean(timezone) || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit'\n    }).formatToParts(new Date());\n    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));\n    return `${values.year}-${values.month}-${values.day}`;\n  }\n\n  function utcDay(value) {\n    if (!ymdPattern.test(value)) return Number.NaN;\n    const [year,month,day] = value.split('-').map(Number);\n    const time = Date.UTC(year,month - 1,day);\n    const check = new Date(time);\n    return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day\n      ? Math.floor(time / 86400000)\n      : Number.NaN;\n  }\n\n  function dateReference(sourceLocalDate, currentLocalDate) {\n    const sourceDay = utcDay(sourceLocalDate);\n    const currentDay = utcDay(currentLocalDate);\n    if (!Number.isFinite(sourceDay) || !Number.isFinite(currentDay)) return { ready: false, error: 'local_date_invalid' };\n    const delta = currentDay - sourceDay;\n    if (delta < 0) return { ready: false, error: 'future_event_for_state_clarification', deltaDays: delta };\n    if (delta === 0) return { ready: true, value: 'сегодня', deltaDays: 0 };\n    if (delta === 1) return { ready: true, value: 'вчера', deltaDays: 1 };\n    const [sourceYear,sourceMonth,sourceDate] = sourceLocalDate.split('-').map(Number);\n    const currentYear = Number(currentLocalDate.slice(0,4));\n    return {\n      ready: true,\n      value: `${sourceDate} ${months[sourceMonth - 1]}${sourceYear === currentYear ? '' : ` ${sourceYear} года`}`,\n      deltaDays: delta\n    };\n  }\n\n  function derive(contextValue, timezone, localTimestamp = '') {\n    const context = contextValue && typeof contextValue === 'object' && !Array.isArray(contextValue)\n      ? contextValue : {};\n    const unresolvedSlots = Array.isArray(context.unresolvedSlots)\n      ? context.unresolvedSlots.map(slot => ({\n          code: clean(slot?.code), label: clean(slot?.label), questionHint: clean(slot?.questionHint)\n        })).filter(slot => slot.code && slot.label && slot.questionHint)\n      : [];\n    const currentLocalDate = localDate(timezone, localTimestamp);\n    const sourceLocalDate = clean(context.sourceLocalDate);\n    const reference = dateReference(sourceLocalDate, currentLocalDate);\n    const eventLabel = clean(context.eventLabel);\n    const eventSummary = clean(context.eventSummary);\n    const evidenceText = clean(context.evidenceText);\n    const resolvedSlots = context.resolvedSlots && typeof context.resolvedSlots === 'object' && !Array.isArray(context.resolvedSlots)\n      ? context.resolvedSlots : {};\n    const baseReady = context.contractVersion === 'chelsea_clarification_context_v1' &&\n      /^[a-z][a-z0-9_]{1,63}$/.test(clean(context.eventRuleCode)) &&\n      Boolean(eventLabel && (eventSummary || evidenceText) && unresolvedSlots.length && reference.ready);\n    return {\n      ready: baseReady,\n      error: baseReady ? '' : (reference.error || 'clarification_context_invalid'),\n      contractVersion: clean(context.contractVersion),\n      sourceLocalDate,\n      currentLocalDate,\n      dateReference: reference.value || '',\n      deltaDays: reference.deltaDays,\n      eventRuleCode: clean(context.eventRuleCode),\n      eventLabel,\n      eventSummary,\n      evidenceText,\n      anchorQuality: clean(context.anchorQuality),\n      resolvedSlots,\n      unresolvedSlots,\n      unresolvedSlotCodes: unresolvedSlots.map(slot => slot.code)\n    };\n  }\n\n  function tokens(value) {\n    return normalized(value).match(/[\\p{L}\\p{N}]+/gu)?.filter(token => token.length >= 3 && !tokenStop.has(token)) || [];\n  }\n\n  function exactCodes(actual, expected) {\n    if (!Array.isArray(actual) || actual.some(code => !clean(code))) return false;\n    const left = actual.map(clean);\n    const right = expected.map(clean);\n    return left.length === new Set(left).size && left.length === right.length &&\n      [...left].sort().join('\\u0000') === [...right].sort().join('\\u0000');\n  }\n\n  function validateResponse(parsed, contract, preferredName, maxLength = 350) {\n    const text = clean(parsed?.text);\n    const dateRef = clean(parsed?.dateReference);\n    const eventRef = clean(parsed?.eventReference);\n    const asked = Array.isArray(parsed?.askedSlotCodes) ? parsed.askedSlotCodes.map(clean) : [];\n    const normalizedText = normalized(text);\n    const normalizedName = normalized(preferredName);\n    let nameCount = 0;\n    let cursor = 0;\n    while (normalizedName && (cursor = normalizedText.indexOf(normalizedName,cursor)) >= 0) {\n      nameCount += 1;\n      cursor += normalizedName.length;\n    }\n    const dateValid = dateRef === contract.dateReference && normalizedText.includes(normalized(dateRef));\n    const eventVisible = Boolean(eventRef && normalizedText.includes(normalized(eventRef)));\n    const grounding = normalized(`${contract.eventLabel} ${contract.eventSummary} ${contract.evidenceText}`);\n    const eventTokens = tokens(eventRef);\n    const eventGrounded = eventVisible && !vagueReferences.has(normalized(eventRef)) &&\n      eventTokens.length > 0 && eventTokens.some(token => grounding.includes(token));\n    const slotsValid = exactCodes(asked,contract.unresolvedSlotCodes);\n    const checks = {\n      text: Boolean(text && text.length <= maxLength),\n      name: nameCount === 1,\n      informal: !formalPattern.test(text),\n      date: dateValid,\n      event: eventGrounded,\n      slots: slotsValid\n    };\n    const firstError = Object.entries(checks).find(([,passed]) => !passed)?.[0] || '';\n    return {\n      ready: Object.values(checks).every(Boolean),\n      error: firstError ? `contextual_clarification_${firstError}_invalid` : '',\n      text,dateReference:dateRef,eventReference:eventRef,askedSlotCodes:asked,checks\n    };\n  }\n\n  return { clean, normalized, derive, validateResponse };\n})();\n\n\nconst source = $('Code | Build Chelsea Micro Message Request | Proactivity').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst clean = ContextualClarification.clean;\nconst extractText = response => typeof response?.output_text === 'string'\n  ? response.output_text\n  : (Array.isArray(response?.output) ? response.output.flatMap(part => Array.isArray(part?.content) ? part.content : [])\n      .map(part => part?.text || part?.output_text || '').filter(Boolean).join('\\n') : '');\nlet parsed = {};\nlet parseError = '';\ntry {\n  parsed = JSON.parse(clean(extractText(body)).replace(/^```json\\s*/i,'').replace(/^```\\s*/i,'').replace(/```$/i,'').trim());\n} catch (error) {\n  parseError = clean(error?.message || 'micro_message_json_invalid');\n}\nconst contextual = source.chelseaMicroContextualClarification === true;\nlet validation;\nif (parseError) {\n  validation = { ready: false,error: parseError,text: '' };\n} else if (contextual) {\n  validation = ContextualClarification.validateResponse(\n    parsed,source.chelseaMicroClarificationContract || {},clean(source.chelseaMicroPreferredName),350\n  );\n} else {\n  const text = clean(parsed?.text).slice(0,500);\n  const preferredName = clean(source.chelseaMicroPreferredName);\n  const normalizedText = ContextualClarification.normalized(text);\n  const normalizedName = ContextualClarification.normalized(preferredName);\n  const nameCount = normalizedName ? normalizedText.split(normalizedName).length - 1 : 0;\n  const formal = /(?:^|[^\\p{L}])(?:вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашего|вашей|вашим|вашими|ваших)(?=$|[^\\p{L}])/iu.test(text);\n  const emptyContextFields = clean(parsed?.dateReference)==='' && clean(parsed?.eventReference)==='' &&\n    Array.isArray(parsed?.askedSlotCodes) && parsed.askedSlotCodes.length===0;\n  const ordinaryReady = Boolean(text && nameCount===1 && !formal && emptyContextFields);\n  validation = { ready: ordinaryReady,error: ordinaryReady ? '' : 'proactivity_message_contract_invalid',text };\n}\nconst ready = source.chelseaMicroRequestReady === true && validation.ready === true;\nconst claim = source.stateProactivityClaim || {};\nconst sendingVersion = Number(source.stateProactivitySendingVersion);\nconst errorCode = ready ? null : (validation.error || source.chelseaMicroRequestError || 'micro_message_invalid');\n\nreturn [{ json: {\n  ...source,\n  stateProactivityPromptText: ready ? validation.text : '',\n  stateProactivityCompositionReady: ready,\n  stateProactivityCompositionError: ready ? '' : errorCode,\n  stateProactivityCompositionValidation: validation,\n  stateProactivityCompositionResponse: body,\n  stateRpcBody: {\n    p_candidate_id: clean(claim.candidate_id ?? claim.candidateId),\n    p_lease_token: clean(claim.lease_token ?? claim.leaseToken),\n    p_expected_version: sendingVersion,\n    p_error_code: errorCode\n  }\n} }];\n"
+      },
+      "id": "41d90fb2-f7d3-5081-b58e-2d4360ce60c6",
+      "name": "Code | Parse Chelsea Micro Message | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1750,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d2100000-0000-4000-8000-000000000014",
+              "leftValue": "={{ $json.stateProactivityCompositionReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "33587d3e-40aa-566b-916c-50a5b207e1a3",
+      "name": "If | Proactivity Composition Ready | Proactivity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_proactivity_fail_composition_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "3e09b059-1f59-5e61-8494-dcde038a07e2",
+      "name": "Call | Supabase RPC | Fail Proactivity Composition | Proactivity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2250,
+        100
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "2a07894a-1675-53be-a167-40a6277346e3",
+      "name": "End | Proactivity Worker Receipt | ProactivityWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3030,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        -100
+      ],
+      "id": "e2cdf78a-b472-4dab-b7e7-044668e0d111",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Compose Proactivity Message   Proactivity | Proactivity"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ModelOutSecV1b6QrS",
+          "mode": "list",
+          "cachedResultName": "Chelsea Model Output Security Validator v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1970,
+        80
+      ],
+      "id": "20336973-e4d1-460c-8708-a6253402089a",
+      "name": "Call | Chelsea Model Output Security Validator | Validate Micro Output | Proactivity"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1720,
+        0
+      ],
+      "id": "4fc71281-71ff-4cfc-b994-f13bf55c2e89",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Proactivity"
+    },
+    {
+      "id": "1a1d291c-b215-51f6-8e67-9971c36a9100",
+      "name": "Code | Build Proactivity Consent Context | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        -260
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const crypto=require('crypto');const source=$input.first()?.json||{};const claim=source.stateProactivityClaim||{};const clean=v=>String(v??'').normalize('NFKC').trim();const actor=clean(claim.telegram_actor_id??claim.telegramActorId??claim.delivery_address??claim.deliveryAddress).replace(/\\D/g,'');if(!/^\\d+$/.test(actor))throw new Error('proactivity_consent_actor_missing');const principal=clean(claim.principal_key??claim.principalKey)||`tgactor_${crypto.createHash('sha256').update(`telegram_actor_v1|${actor}`).digest('hex')}`;if(!/^tgactor_[a-f0-9]{64}$/.test(principal))throw new Error('proactivity_consent_principal_invalid');return [{json:{...source,principalKey:principal,telegramActorId:actor,consentType:'proactive_messages',consentBypass:false}}];"
+      }
+    },
+    {
+      "id": "d09c3004-c4a1-5adb-a0e7-c41335faa6f3",
+      "name": "Call | Chelsea Consent Gate | Require Proactive Messages | Proactivity",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        -260
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CONSENT7A2b3c4d5e6f",
+          "mode": "id",
+          "cachedResultName": "Chelsea Consent Gate v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "principalKey": "={{ $json.principalKey }}",
+            "telegramActorId": "={{ $json.telegramActorId }}",
+            "consentType": "proactive_messages",
+            "consentBypass": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "telegramActorId",
+              "displayName": "telegramActorId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "consentType",
+              "displayName": "consentType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "consentBypass",
+              "displayName": "consentBypass",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "f02374f0-9dfe-53ff-9993-17c0251aee88",
+      "name": "If | Proactive Consent Granted | Proactivity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1910,
+        -260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d2ea5068-387b-5b6c-8b2c-f7b07306250e",
+              "leftValue": "={{ $json.consentGranted === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f0ae9bad-5f20-584b-92fc-46f4fdc109dd",
+      "name": "Code | Build Proactivity Consent Denial | Proactivity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2140,
+        -120
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Build Proactivity Consent Context | Proactivity').first().json;const claim=source.stateProactivityClaim||{};const clean=v=>String(v??'').normalize('NFKC').trim();return [{json:{...source,stateProactivityCompositionReady:false,stateProactivityCompositionError:'proactive_messages_consent_not_granted',stateRpcBody:{p_candidate_id:clean(claim.candidate_id??claim.candidateId),p_lease_token:clean(claim.lease_token??claim.leaseToken),p_expected_version:Number(source.stateProactivitySendingVersion),p_error_code:'proactive_messages_consent_not_granted'}}}];"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ProactivityWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Refresh Proactivity Candidates | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Refresh Proactivity Candidates | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Proactivity Candidates | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Proactivity Candidates | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Proactivity Claims | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Proactivity Candidate Ready | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Begin Proactivity Send | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Proactivity Cycle | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Proactivity Claims | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "If | Proactivity Candidate Ready | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Begin Proactivity Send | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Proactivity Send Begin | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Proactivity Send Begin | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Proactivity Consent Context | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Proactivity Telegram Send Allowed | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Chelsea Micro Message Request | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Proactivity Cycle | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Proactivity Prompt | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Proactivity Send Result | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Proactivity Send Result | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "If | Proactivity Telegram Receipt Exact | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Proactivity Telegram Receipt Exact | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Proactivity Send | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Proactivity Send Uncertain | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Proactivity Send | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "End | Proactivity Cycle | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Proactivity Send Uncertain | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "If | Proactivity Send Uncertain Ready | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Proactivity Send Uncertain Ready | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark Proactivity Send Uncertain | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "End | Proactivity Cycle | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark Proactivity Send Uncertain | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "End | Proactivity Cycle | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Chelsea Micro Message Request | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Compose Proactivity Message   Proactivity | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Compose Proactivity Message | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse Chelsea Micro Message | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Model Output Security Validator | Validate Micro Output | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Proactivity Composition Ready | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Proactivity Prompt | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Supabase RPC | Fail Proactivity Composition | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail Proactivity Composition | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "End | Proactivity Cycle | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Proactivity Cycle | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "End | Proactivity Worker Receipt | ProactivityWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Compose Proactivity Message   Proactivity | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Compose Proactivity Message | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Model Output Security Validator | Validate Micro Output | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "If | Proactivity Composition Ready | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse Chelsea Micro Message | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Proactivity Consent Context | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Consent Gate | Require Proactive Messages | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Consent Gate | Require Proactive Messages | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "If | Proactive Consent Granted | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Proactive Consent Granted | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "If | Proactivity Telegram Send Allowed | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Proactivity Consent Denial | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Proactivity Consent Denial | Proactivity": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail Proactivity Composition | Proactivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

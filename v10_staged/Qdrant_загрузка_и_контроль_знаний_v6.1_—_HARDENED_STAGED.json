@@ -1,0 +1,385 @@
+{
+  "id": "QRD9aL2xK7mP4vNs",
+  "name": "Qdrant загрузка и контроль знаний v6.1 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "c7fb13bb-a761-5464-bc87-49e8d076895b",
+  "nodes": [
+    {
+      "id": "57a1208f-bbb6-5b73-b2c8-31b7da5b153d",
+      "name": "Trigger | Parent Workflow | QdrantLoader",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1200,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "63bf024a-0278-500c-9984-bf45a9c60d4c",
+      "name": "Code | Validate and Prepare Qdrant Items | QdrantLoader",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input=$input.first()?.json||{};\nconst text=v=>String(v??'').normalize('NFKC').trim();\nconst collection=text(input.qdrantCollection);\nif(!/^[A-Za-z0-9._-]{1,240}$/.test(collection)) throw new Error('Qdrant loader: invalid collection');\nif(!/^tgactor_[a-f0-9]{64}$/.test(text(input.principalKey))||!/^tenant_actor_[a-f0-9]{32}$/.test(text(input.tenantId))) throw new Error('Qdrant loader: immutable identity required');\nconst arr=Array.isArray(input.qdrantDirectItems)&&input.qdrantDirectItems.length?input.qdrantDirectItems:[{sourceText:input.sourceText||'',sourceTitle:input.sourceTitle||'',pointId:''}];\nconst hash128=s=>{const x=String(s).normalize('NFKC');let a=0xdeadbeef^x.length,b=0x41c6ce57^x.length,c=0xc0decafe^x.length,d=0x9e3779b9^x.length;for(let i=0;i<x.length;i++){const q=x.charCodeAt(i);a=Math.imul(a^q,2654435761);b=Math.imul(b^q,1597334677);c=Math.imul(c^q,2246822507);d=Math.imul(d^q,3266489909);}return[a,b,c,d].map(n=>(n>>>0).toString(16).padStart(8,'0')).join('')};\nconst toUuid=s=>{const h=hash128(s);return `${h.slice(0,8)}-${h.slice(8,12)}-4${h.slice(13,16)}-a${h.slice(17,20)}-${h.slice(20,32)}`};\nconst canonical=v=>{if(Array.isArray(v))return '['+v.map(canonical).join(',')+']';if(v&&typeof v==='object')return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';return JSON.stringify(v)};\nconst items=arr.map((raw,i)=>{\n const envelope=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};\n const nested=envelope.item&&typeof envelope.item==='object'&&!Array.isArray(envelope.item)?envelope.item:{};\n const explicitPayload=envelope.payload&&typeof envelope.payload==='object'&&!Array.isArray(envelope.payload)?envelope.payload:{};\n const sourceText=text(envelope.sourceText||nested.sourceText||explicitPayload.sourceText||nested.content||nested.fact||nested.text||nested.statement||nested.question||nested.answerText||explicitPayload.content||explicitPayload.fact||input.sourceText);\n if(!sourceText) throw new Error(`Qdrant loader: item ${i} has no semantic text`);\n const payload={...nested,...explicitPayload};\n for(const [k,v] of Object.entries(envelope)) if(!['item','payload','vector','sourceText','pointId','id','index','type'].includes(k)&&payload[k]===undefined) payload[k]=v;\n delete payload.vector; delete payload.item;\n if(input.universalMemoryMode===true&& !text(payload.pointType)) payload.pointType='knowledge_item';\n const explicitId=text(envelope.pointId||envelope.id||nested.qdrantPointId||nested.stableQdrantPointId||nested.pointId||explicitPayload.pointId);\n const pointId=explicitId||toUuid(`${input.principalKey}|${text(payload.knowledgeId||payload.semanticKey||payload.predicateKey||input.uploadId)}|${i}|${sourceText}`);\n if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pointId)&&!/^[0-9]+$/.test(pointId)) throw new Error(`Qdrant loader: invalid point id ${pointId}`);\n const hashPayload={...payload}; for(const k of ['updatedAt','createdAt','lastSeenAt','observedAt','loadedAt']) delete hashPayload[k];\n const contentHash=hash128(sourceText+'|'+canonical(hashPayload));\n return {pointId,sourceText,payload:{...payload,pointId,principalKey:input.principalKey,tenantId:input.tenantId,memoryTenantId:input.memoryTenantId||input.tenantId,userId:input.userId||'',sourceTitle:envelope.sourceTitle||nested.sourceTitle||input.sourceTitle||'',sourceText,contentHash,loaderContractVersion:'chelsea_qdrant_loader_v2_0',payloadShape:text(payload.payloadShape)|| (input.universalMemoryMode===true?'chelsea_qdrant_memory_point_v2':'chelsea_qdrant_direct_point_v2')}};\n});\nconst instructionItems=items.filter(x=>text(x.payload.memoryKind).toLowerCase()==='triggered_instruction');\nfor(const x of instructionItems){if(!text(x.payload.instructionId)||!/^([a-f0-9]{64}|sha256:[a-f0-9]{64})$/i.test(text(x.payload.assistantArtifactHash))||!text(x.payload.sourceAnswerMessageId))throw new Error('Qdrant loader: triggered instruction provenance incomplete');}\nreturn [{json:{...input,qdrantCollection:collection,preparedItems:items,preparedFileCount:items.length,pointIds:items.map(x=>x.pointId),embeddingRequestBody:{model:$env.CHELSEA_OPENAI_EMBEDDING_MODEL||'text-embedding-3-small',input:items.map(x=>x.sourceText)},skipExistingQdrantPoints:input.skipExistingQdrantPoints===true,reindexChangedQdrantPoints:input.reindexChangedQdrantPoints!==false,instructionExpectedCount:instructionItems.length}}];"
+      },
+      "notes": "v6.1 contract: nested memory items are flattened into retrieval-compatible top-level payload and embedded from each item semantic text."
+    },
+    {
+      "id": "23e47f31-2aaf-5535-80ee-f8c6f587914f",
+      "name": "Call | Qdrant | Retrieve Existing Points | QdrantLoader",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        -120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333') + '/collections/' + encodeURIComponent($json.qdrantCollection) + '/points' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { ids: $json.pointIds, with_payload: true, with_vector: false } }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "14c6d94f-2328-52ff-a91c-9d338b2137de",
+      "name": "Call | OpenAI | Embed Qdrant Items | QdrantLoader",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.CHELSEA_OPENAI_EMBEDDINGS_URL || 'https://api.openai.com/v1/embeddings' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.embeddingRequestBody }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "8bf5c449-f3be-59f4-a525-9aede9ce8a03",
+      "name": "Code | Select Qdrant Mutations | QdrantLoader",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const prepared=$('Code | Validate and Prepare Qdrant Items | QdrantLoader').first().json;\nconst existingResp=$('Call | Qdrant | Retrieve Existing Points | QdrantLoader').first().json||{};\nconst embedResp=$('Call | OpenAI | Embed Qdrant Items | QdrantLoader').first().json||{};\nif(embedResp.error) throw new Error(`Qdrant loader embedding failed: ${embedResp.error.message||'unknown'}`);\nconst vectors=Array.isArray(embedResp.data)?embedResp.data.slice().sort((a,b)=>Number(a.index)-Number(b.index)).map(x=>x.embedding):[];\nif(vectors.length!==prepared.preparedItems.length||vectors.some(v=>!Array.isArray(v)||!v.length)) throw new Error('Qdrant loader: embedding count mismatch');\nconst existingRows=Array.isArray(existingResp.result)?existingResp.result:[];const existing=new Map(existingRows.map(x=>[String(x.id),x]));\nconst selected=[],skipped=[];\nprepared.preparedItems.forEach((item,i)=>{const old=existing.get(String(item.pointId));const same=old&&String(old.payload?.contentHash||'')===String(item.payload.contentHash);if(prepared.skipExistingQdrantPoints&&old&&(!prepared.reindexChangedQdrantPoints||same)){skipped.push(item.pointId);}else selected.push({id:item.pointId,vector:vectors[i],payload:item.payload});});\nreturn [{json:{...prepared,selectedPoints:selected,selectedForIndexingCount:selected.length,skippedExistingQdrantPointCount:skipped.length,skippedExamples:skipped.slice(0,20),upsertBody:{points:selected}}}];"
+      }
+    },
+    {
+      "id": "b519ef44-98b2-5754-b446-af4ecb302f3d",
+      "name": "If | Qdrant Upsert Required | QdrantLoader",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -200,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "15b72075-7217-51d5-9de7-f125662b2ff3",
+              "leftValue": "={{ $json.selectedForIndexingCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "890fd60d-58d7-51e0-b7b2-c4460241a627",
+      "name": "Call | Qdrant | Upsert Selected Points | QdrantLoader",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        -80
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333') + '/collections/' + encodeURIComponent($json.qdrantCollection) + '/points?wait=true' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.upsertBody }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "aa3b7f46-1bb8-516a-9a4c-2125b03febbd",
+      "name": "Code | Mark Qdrant Upsert Not Required | QdrantLoader",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        100
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{...$json,qdrantUpsertSkipped:true}}];"
+      }
+    },
+    {
+      "id": "9d09c86f-4060-5ce3-be3e-6473f2471500",
+      "name": "Call | Qdrant | Read Back Indexed Points | QdrantLoader",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_QDRANT_URL || 'http://qdrant:6333') + '/collections/' + encodeURIComponent($json.qdrantCollection) + '/points' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.CHELSEA_QDRANT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { ids: $json.pointIds, with_payload: true, with_vector: false } }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "c49e1ee7-6d12-5832-8d00-e2ca2abe12a1",
+      "name": "Code | Verify Qdrant Read Back and Build Receipt | QdrantLoader",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const plan=$('Code | Select Qdrant Mutations | QdrantLoader').first().json;const resp=$input.first()?.json||{};const rows=Array.isArray(resp.result)?resp.result:[];const byId=new Map(rows.map(x=>[String(x.id),x]));let instructionVerified=0;for(const item of plan.preparedItems){const row=byId.get(String(item.pointId));if(!row) throw new Error(`Qdrant loader read-back missing ${item.pointId}`);const p=row.payload||{};if(String(p.principalKey||'')!==String(plan.principalKey)||String(p.tenantId||'')!==String(plan.tenantId)) throw new Error(`Qdrant loader tenant isolation mismatch ${item.pointId}`);if(String(p.contentHash||'')!==String(item.payload.contentHash)) throw new Error(`Qdrant loader content hash mismatch ${item.pointId}`);if(String(p.sourceText||'')!==String(item.sourceText)) throw new Error(`Qdrant loader semantic text mismatch ${item.pointId}`);for(const k of ['memoryKind','fact','predicateKey','scopeKey','semanticKey','pointType']){if(item.payload[k]!==undefined&&JSON.stringify(p[k])!==JSON.stringify(item.payload[k]))throw new Error(`Qdrant loader payload flatten mismatch ${k}:${item.pointId}`);}if(String(item.payload.memoryKind||'').toLowerCase()==='triggered_instruction'){if(String(p.instructionId||'')!==String(item.payload.instructionId)||String(p.sourceAnswerMessageId||'')!==String(item.payload.sourceAnswerMessageId)||String(p.assistantArtifactHash||'').replace(/^sha256:/,'').toLowerCase()!==String(item.payload.assistantArtifactHash||'').replace(/^sha256:/,'').toLowerCase())throw new Error(`Qdrant loader instruction provenance mismatch ${item.pointId}`);instructionVerified++;}}\nconst indexed=plan.selectedPoints.map(x=>String(x.id));return [{json:{...plan,status:'done',preparedFileCount:plan.preparedFileCount,selectedForIndexingCount:indexed.length,skippedExistingQdrantPointCount:plan.skippedExistingQdrantPointCount,upsertPreparedCount:indexed.length,qdrantReadBackVerifiedCount:plan.preparedItems.length,checkedQdrantPointCount:plan.preparedItems.length,qdrantReadBackStatus:'verified',indexedExamples:indexed.slice(0,20),skippedExamples:plan.skippedExamples||[],qdrantInstructionExpectedCount:Number(plan.instructionExpectedCount||0),qdrantReadBackInstructionVerifiedCount:instructionVerified,runtimeVersion:'chelsea_qdrant_loader_runtime_v2_0',loaderReturnVersion:'chelsea_qdrant_loader_return_v2_0',completedAt:new Date().toISOString()}}];"
+      }
+    },
+    {
+      "id": "36e2fb9e-911d-52a1-b776-aad338f23998",
+      "name": "End | Qdrant Loader Receipt | QdrantLoader",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        820,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate and Prepare Qdrant Items | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate and Prepare Qdrant Items | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Retrieve Existing Points | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Retrieve Existing Points | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI | Embed Qdrant Items | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI | Embed Qdrant Items | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Code | Select Qdrant Mutations | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Select Qdrant Mutations | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "If | Qdrant Upsert Required | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Qdrant Upsert Required | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Upsert Selected Points | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Mark Qdrant Upsert Not Required | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Upsert Selected Points | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Read Back Indexed Points | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Mark Qdrant Upsert Not Required | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant | Read Back Indexed Points | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant | Read Back Indexed Points | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Qdrant Read Back and Build Receipt | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Qdrant Read Back and Build Receipt | QdrantLoader": {
+      "main": [
+        [
+          {
+            "node": "End | Qdrant Loader Receipt | QdrantLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

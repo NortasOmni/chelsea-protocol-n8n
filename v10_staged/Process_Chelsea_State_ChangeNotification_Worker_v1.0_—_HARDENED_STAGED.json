@@ -1,0 +1,1044 @@
+{
+  "id": "jMZYEOqeUpKg19oD",
+  "name": "Process Chelsea State ChangeNotification Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "fe40b45c-eb26-59c3-bfa5-54a93a3c5555",
+  "nodes": [
+    {
+      "id": "1cb99606-f25f-586a-9d96-7fed040405fd",
+      "name": "Trigger | Parent Workflow | ChangeNotificationWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c64f8eb5-5775-56cf-b3d9-94e13f61e291",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "width": 2850,
+        "height": 720,
+        "color": 5,
+        "content": "## РЈРІРµРґРѕРјР»РµРЅРёСЏ РѕР± РёР·РјРµРЅРµРЅРёСЏС… СЃРѕСЃС‚РѕСЏРЅРёСЏ (ChangeNotification)\nDurable outbox worker: claim в†’ format в†’ begin-send CAS в†’ Telegram в†’ exact receipt.\nBefore-send failures use bounded retry. A send without an exact receipt is terminal-uncertain and is not resent automatically."
+      },
+      "id": "9a94c414-2a28-59d8-98ed-09542f9dfef7",
+      "name": "Sticky Note | State Change Notification | ChangeNotification",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_change_notifications_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":change-notification\", p_limit: $json.stateChangeNotificationBatchLimit, p_lease_minutes: $json.fastLeaseMinutes, p_notification_id: null } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "38732c96-ad33-5bf3-9fec-0341c1e29a67",
+      "name": "Call | Supabase RPC | Claim State Change Notifications | ChangeNotification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\nconst CHAT_ID_RE = /^-?\\d+$/;\nconst DATE_RE = /^\\d{4}-\\d{2}-\\d{2}$/;\nconst HASH_RE = /^[0-9a-f]{32}$/i;\nconst SPHERES = Object.freeze({\n  health: { position: 1 },\n  energy: { position: 2 },\n  mood: { position: 3 },\n  calm: { position: 4 },\n  clarity: { position: 5 },\n  motivation: { position: 6 },\n  relationships: { position: 7 },\n  progress: { position: 8 },\n  inspiration: { position: 9 },\n  finance: { position: 10 }\n});\nconst CHANGE_KINDS = new Set(['effect', 'retract', 'user_score']);\nconst DURATION_DAYS = new Set([1, 3, 7, 14]);\n\nconst clean = (value, limit = 500) => String(value ?? '').trim().slice(0, limit);\nconst integer = value => {\n  const parsed = Number(value);\n  return Number.isSafeInteger(parsed) ? parsed : null;\n};\nconst parseObject = value => {\n  if (value && typeof value === 'object' && !Array.isArray(value)) return value;\n  if (typeof value !== 'string' || !value.trim()) return null;\n  try {\n    const parsed = JSON.parse(value);\n    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;\n  } catch {\n    return null;\n  }\n};\nconst decimalToCents = value => {\n  const text = String(value ?? '').trim().replace(',', '.');\n  const match = text.match(/^([+-]?)(\\d+)(?:\\.(\\d+))?$/);\n  if (!match) return null;\n  const fraction = match[3] || '';\n  if (fraction.length > 2 && /[1-9]/.test(fraction.slice(2))) return null;\n  const whole = Number(match[2]);\n  if (!Number.isSafeInteger(whole)) return null;\n  const cents = whole * 100 + Number(fraction.slice(0, 2).padEnd(2, '0'));\n  return match[1] === '-' ? -cents : cents;\n};\nconst unwrapRows = item => {\n  let value = item?.json?.body ?? item?.json ?? {};\n  if (typeof value === 'string') {\n    try {\n      value = JSON.parse(value);\n    } catch {\n      return [{ _invalidResponse: true }];\n    }\n  }\n  if (Array.isArray(value)) return value;\n  if (Array.isArray(value?.data)) return value.data;\n  return value && typeof value === 'object' ? [value] : [];\n};\n\nconst rawRows = $input.all()\n  .flatMap(unwrapRows)\n  .filter(row => row && typeof row === 'object' && (\n    row.notification_id ||\n    row.notificationId ||\n    row.lease_token ||\n    row.leaseToken ||\n    row._invalidResponse\n  ));\n\nreturn rawRows.map(raw => {\n  const errors = [];\n  const payload = parseObject(raw.payload_json ?? raw.payloadJson);\n  const notificationId = clean(raw.notification_id ?? raw.notificationId, 80);\n  const principalId = clean(raw.principal_id ?? raw.principalId, 200);\n  const inputId = clean(raw.input_id ?? raw.inputId, 80);\n  const analysisRunId = clean(raw.analysis_run_id ?? raw.analysisRunId, 80);\n  const snapshotId = clean(raw.snapshot_id ?? raw.snapshotId, 80);\n  const sourceMessageId = clean(raw.source_message_id ?? raw.sourceMessageId, 120);\n  const localDate = clean(raw.local_date ?? raw.localDate, 20);\n  const telegramChatId = clean(raw.telegram_chat_id ?? raw.telegramChatId, 120);\n  const deliveryAddress = clean(raw.delivery_address ?? raw.deliveryAddress, 120);\n  const payloadHash = clean(raw.payload_hash ?? raw.payloadHash, 80).toLowerCase();\n  const rowCount = integer(raw.row_count ?? raw.rowCount);\n  const notificationStatus = clean(raw.notification_status ?? raw.notificationStatus, 40);\n  const notificationVersion = integer(raw.notification_version ?? raw.notificationVersion);\n  const attemptCount = integer(raw.attempt_count ?? raw.attemptCount);\n  const maxAttempts = integer(raw.max_attempts ?? raw.maxAttempts);\n  const leaseToken = clean(raw.lease_token ?? raw.leaseToken, 80);\n  const leaseUntil = clean(raw.lease_until ?? raw.leaseUntil, 80);\n\n  if (!UUID_RE.test(notificationId)) errors.push('notification_id_invalid');\n  if (!principalId) errors.push('principal_id_missing');\n  if (!UUID_RE.test(inputId)) errors.push('input_id_invalid');\n  if (!UUID_RE.test(analysisRunId)) errors.push('analysis_run_id_invalid');\n  if (!UUID_RE.test(snapshotId)) errors.push('snapshot_id_invalid');\n  if (!sourceMessageId) errors.push('source_message_id_missing');\n  if (!DATE_RE.test(localDate)) errors.push('local_date_invalid');\n  if (!CHAT_ID_RE.test(telegramChatId)) errors.push('telegram_chat_id_invalid');\n  if (!deliveryAddress) errors.push('delivery_address_missing');\n  if (!HASH_RE.test(payloadHash)) errors.push('payload_hash_invalid');\n  if (rowCount === null || rowCount < 1 || rowCount > 50) errors.push('row_count_invalid');\n  if (notificationStatus !== 'leased') errors.push('notification_status_invalid');\n  if (notificationVersion === null || notificationVersion < 1) errors.push('notification_version_invalid');\n  if (attemptCount === null || attemptCount < 1) errors.push('attempt_count_invalid');\n  if (maxAttempts === null || maxAttempts < 1 || maxAttempts > 20) errors.push('max_attempts_invalid');\n  if (!UUID_RE.test(leaseToken)) errors.push('lease_token_invalid');\n  if (!leaseUntil || Number.isNaN(Date.parse(leaseUntil))) errors.push('lease_until_invalid');\n\n  if (!payload) {\n    errors.push('payload_invalid');\n  } else {\n    if (payload.contractVersion !== 'chelsea_state_change_notification_v1') {\n      errors.push('payload_contract_invalid');\n    }\n    if (clean(payload.principalId, 200) !== principalId) errors.push('payload_principal_mismatch');\n    if (clean(payload.inputId, 80) !== inputId) errors.push('payload_input_mismatch');\n    if (clean(payload.analysisRunId, 80) !== analysisRunId) errors.push('payload_run_mismatch');\n    if (clean(payload.snapshotId, 80) !== snapshotId) errors.push('payload_snapshot_mismatch');\n    if (clean(payload.sourceMessageId, 120) !== sourceMessageId) errors.push('payload_message_mismatch');\n    if (clean(payload.localDate, 20) !== localDate) errors.push('payload_date_mismatch');\n    if (integer(payload.rowCount) !== rowCount) errors.push('payload_row_count_mismatch');\n    if (!Array.isArray(payload.rows) || payload.rows.length !== rowCount) {\n      errors.push('payload_rows_invalid');\n    }\n  }\n\n  const seenRowIds = new Set();\n  const normalizedRows = [];\n  if (Array.isArray(payload?.rows)) {\n    payload.rows.forEach((row, index) => {\n      const rowErrors = [];\n      const rowId = clean(row?.rowId, 120);\n      const changeKind = clean(row?.changeKind, 40);\n      const sphereCode = clean(row?.sphereCode, 40);\n      const deltaCents = decimalToCents(row?.delta);\n      const beforeCents = decimalToCents(row?.beforeScore);\n      const afterCents = decimalToCents(row?.afterScore);\n      const durationDays = integer(row?.durationDays);\n      const sphere = SPHERES[sphereCode];\n\n      if (!rowId) rowErrors.push('row_id_missing');\n      if (rowId && seenRowIds.has(rowId)) rowErrors.push('row_id_duplicate');\n      if (!CHANGE_KINDS.has(changeKind)) rowErrors.push('change_kind_invalid');\n      if (!sphere) rowErrors.push('sphere_code_invalid');\n      if (integer(row?.spherePosition) !== sphere?.position) rowErrors.push('sphere_position_invalid');\n      if (deltaCents === null || deltaCents < -900 || deltaCents > 900) rowErrors.push('delta_invalid');\n      if (beforeCents === null || beforeCents < 100 || beforeCents > 1000) rowErrors.push('before_score_invalid');\n      if (afterCents === null || afterCents < 100 || afterCents > 1000) rowErrors.push('after_score_invalid');\n      if (!DURATION_DAYS.has(durationDays)) rowErrors.push('duration_days_invalid');\n      if (\n        deltaCents !== null &&\n        beforeCents !== null &&\n        afterCents !== null &&\n        afterCents - beforeCents !== deltaCents\n      ) {\n        rowErrors.push('delta_score_mismatch');\n      }\n\n      if (rowId) seenRowIds.add(rowId);\n      if (rowErrors.length) {\n        errors.push(`row_${index + 1}:${rowErrors.join(',')}`);\n        return;\n      }\n      normalizedRows.push({\n        rowId,\n        changeKind,\n        sphereCode,\n        spherePosition: sphere.position,\n        deltaCents,\n        beforeCents,\n        afterCents,\n        durationDays,\n        comment: clean(row?.comment, 500),\n        sourceOrder: index\n      });\n    });\n  }\n\n  const rowsBySphere = new Map();\n  for (const row of normalizedRows) {\n    if (!rowsBySphere.has(row.sphereCode)) rowsBySphere.set(row.sphereCode, []);\n    rowsBySphere.get(row.sphereCode).push(row);\n  }\n  for (const [sphereCode, sphereRows] of rowsBySphere) {\n    sphereRows.sort((left, right) => left.sourceOrder - right.sourceOrder);\n    for (let index = 1; index < sphereRows.length; index += 1) {\n      if (sphereRows[index - 1].afterCents !== sphereRows[index].beforeCents) {\n        errors.push(`sphere_${sphereCode}:score_chain_break_at_row_${index + 1}`);\n      }\n    }\n    const totalDeltaCents = sphereRows.reduce((sum, row) => sum + row.deltaCents, 0);\n    const chainDeltaCents =\n      sphereRows[sphereRows.length - 1].afterCents - sphereRows[0].beforeCents;\n    if (totalDeltaCents !== chainDeltaCents) {\n      errors.push(`sphere_${sphereCode}:delta_chain_mismatch`);\n    }\n  }\n\n  const claim = {\n    notificationId,\n    principalId,\n    inputId,\n    analysisRunId,\n    snapshotId,\n    sourceMessageId,\n    localDate,\n    telegramChatId,\n    deliveryAddress,\n    payloadHash,\n    rowCount,\n    notificationStatus,\n    notificationVersion,\n    attemptCount,\n    maxAttempts,\n    leaseToken,\n    leaseUntil,\n    rows: normalizedRows\n  };\n  const valid = errors.length === 0 && normalizedRows.length === rowCount;\n\n  return {\n    json: {\n      stateChangeNotificationClaim: claim,\n      stateChangeNotificationClaimValid: valid,\n      stateChangeNotificationClaimErrors: errors.slice(0, 20),\n      stateChangeNotificationErrorCode: valid ? '' : 'state_change_notification_claim_invalid',\n      stateChangeNotificationContractVersion: 'chelsea_state_change_notification_claim_v1'\n    }\n  };\n});\n"
+      },
+      "id": "90b6b300-e405-5c8c-95bc-79463f69d909",
+      "name": "Code | Normalize State Change Notification Claim | ChangeNotification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateChangeNotificationClaim || {};\nconst MAX_RICH_MARKDOWN_LENGTH = 30000;\nconst MAX_COMMENT_CODE_POINTS = 72;\nconst DURATION_DAYS = new Set([1, 3, 7, 14]);\nconst SPHERES = Object.freeze({\n  health: { position: 1, emoji: '🩺', name: 'Здоровье' },\n  energy: { position: 2, emoji: '⚡️', name: 'Энергия' },\n  mood: { position: 3, emoji: '😊', name: 'Настроение' },\n  calm: { position: 4, emoji: '🧘', name: 'Спокойствие' },\n  clarity: { position: 5, emoji: '🧠', name: 'Ясность' },\n  motivation: { position: 6, emoji: '🔥', name: 'Мотивация' },\n  relationships: { position: 7, emoji: '🤝', name: 'Отношения' },\n  progress: { position: 8, emoji: '📈', name: 'Прогресс' },\n  inspiration: { position: 9, emoji: '✨', name: 'Вдохновлённость' },\n  finance: { position: 10, emoji: '💰', name: 'Финансы' }\n});\n\nconst escapeMarkdownCell = value => String(value ?? '')\n  .replace(/\\\\/g, '\\\\\\\\')\n  .replace(/\\|/g, '\\\\|')\n  .replace(/([*_`\\[\\]<>])/g, '\\\\$1')\n  .replace(/\\r?\\n/g, ' ')\n  .trim();\nconst truncateCodePoints = (value, limit) => {\n  const chars = Array.from(String(value ?? ''));\n  if (chars.length <= limit) return chars.join('');\n  if (limit <= 0) return '';\n  if (limit === 1) return '…';\n  return `${chars.slice(0, limit - 1).join('')}…`;\n};\nconst sanitizeComment = row => {\n  if (row.changeKind === 'user_score') return 'прямая оценка пользователя';\n  const fallback = row.changeKind === 'retract'\n    ? 'пересмотр предыдущего влияния'\n    : 'изменение состояния';\n  const normalized = String(row.comment || fallback)\n    .normalize('NFKC')\n    .replace(/[\\u0000-\\u001f\\u007f-\\u009f]+/g, ' ')\n    .replace(/[«»„“”\"'`]+/g, '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  return normalized || fallback;\n};\nconst formatDelta = cents => {\n  const value = Number(cents);\n  if (!Number.isSafeInteger(value) || value === 0) return '0';\n  const sign = value > 0 ? '➕' : '➖';\n  const absolute = Math.abs(value);\n  const whole = Math.floor(absolute / 100);\n  const remainder = absolute % 100;\n  if (remainder === 0) return `${sign}${whole}`;\n  const decimal = String(remainder).padStart(2, '0').replace(/0$/, '');\n  return `${sign}${whole},${decimal}`;\n};\nconst fail = (code, details = []) => [{\n  json: {\n    ...input,\n    stateChangeNotificationReady: false,\n    stateChangeNotificationErrorCode: code,\n    stateChangeNotificationErrors: details.slice(0, 20),\n    stateChangeNotificationMessageVersion: 'chelsea_state_change_notification_message_v3_rich_table_days'\n  }\n}];\n\nif (input.stateChangeNotificationClaimValid !== true) {\n  return fail(\n    input.stateChangeNotificationErrorCode || 'state_change_notification_claim_invalid',\n    input.stateChangeNotificationClaimErrors\n  );\n}\n\nconst rows = (Array.isArray(claim.rows) ? claim.rows : [])\n  .filter(row => (\n    Number.isSafeInteger(row?.deltaCents) &&\n    row.deltaCents !== 0 &&\n    DURATION_DAYS.has(row?.durationDays) &&\n    SPHERES[row.sphereCode]\n  ))\n  .map(row => ({\n    ...row,\n    comment: sanitizeComment(row)\n  }))\n  .sort((left, right) => (\n    SPHERES[left.sphereCode].position - SPHERES[right.sphereCode].position ||\n    Number(left.sourceOrder) - Number(right.sourceOrder)\n  ));\n\nif (rows.length === 0) {\n  return fail('state_change_notification_no_nonzero_rows');\n}\n\nconst indicatorLabels = rows.map(row => {\n  const sphere = SPHERES[row.sphereCode];\n  return `${sphere.emoji} ${sphere.name}`;\n});\nconst dynamics = rows.map(row => formatDelta(row.deltaCents));\nconst render = commentLimit => {\n  const header = '| Показатель | Динамика | Дней | Комментарий |';\n  const separator = '|:---|---:|---:|:---|';\n  const lines = rows.map((row, index) => {\n    const indicator = escapeMarkdownCell(indicatorLabels[index]);\n    const dynamic = escapeMarkdownCell(dynamics[index]);\n    const days = escapeMarkdownCell(row.durationDays);\n    const comment = escapeMarkdownCell(truncateCodePoints(row.comment, commentLimit));\n    return `| ${indicator} | ${dynamic} | ${days} | ${comment} |`;\n  });\n  return ['## Изменения состояния', '', header, separator, ...lines].join('\\n');\n};\n\nlet commentLimit = MAX_COMMENT_CODE_POINTS;\nlet markdown = render(commentLimit);\nwhile (markdown.length > MAX_RICH_MARKDOWN_LENGTH && commentLimit > 0) {\n  commentLimit -= 1;\n  markdown = render(commentLimit);\n}\nif (markdown.length > MAX_RICH_MARKDOWN_LENGTH) {\n  return fail('state_change_notification_telegram_limit_exceeded');\n}\n\nconst sendKey = `state_change:${claim.analysisRunId}`;\nconst telegramRequestBody = {\n  chat_id: claim.telegramChatId,\n  rich_message: {\n    markdown\n  }\n};\n\nreturn [{\n  json: {\n    ...input,\n    stateChangeNotificationReady: true,\n    stateChangeNotificationChatId: claim.telegramChatId,\n    stateChangeNotificationRichMarkdown: markdown,\n    stateChangeNotificationRichMarkdownLength: markdown.length,\n    stateChangeNotificationTransport: 'sendRichMessage',\n    stateChangeNotificationRenderedRowCount: rows.length,\n    stateChangeNotificationTableCount: 1,\n    stateChangeNotificationCommentLimit: commentLimit,\n    stateChangeNotificationSendKey: sendKey,\n    stateChangeNotificationClaimVersion: claim.notificationVersion,\n    stateChangeNotificationTelegramRequestBody: telegramRequestBody,\n    telegramRequestBody,\n    stateRpcBody: {\n      p_notification_id: claim.notificationId,\n      p_lease_token: claim.leaseToken,\n      p_expected_notification_version: claim.notificationVersion,\n      p_send_key: sendKey\n    },\n    stateChangeNotificationMessageVersion: 'chelsea_state_change_notification_message_v3_rich_table_days'\n  }\n}];\n"
+      },
+      "id": "fa3de214-d0b6-5fcc-bda1-9e6aec51d076",
+      "name": "Code | Build State Change Notification | ChangeNotification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c100000004",
+              "leftValue": "={{ $json.stateChangeNotificationReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "85a92310-0a6d-576e-8d19-f6e12fbee9ed",
+      "name": "If | State Change Notification Ready | ChangeNotification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        290,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_begin_change_notification_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "c9990785-68e6-5ddd-97a9-176e2084db5d",
+      "name": "Call | Supabase RPC | Begin State Change Notification Send | ChangeNotification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst incoming = $input.first()?.json || {};\nconst unwrapBody = value => {\n  const body = value?.body ?? value;\n  if (Array.isArray(body)) return body[0] || {};\n  return body && typeof body === 'object' ? body : {};\n};\nconst readSource = () => {\n  if (incoming.stateChangeNotificationClaim && incoming.stateChangeNotificationSendKey) return incoming;\n  try {\n    return $('Code | Build State Change Notification | ChangeNotification').item.json || {};\n  } catch {\n    try {\n      return $('Code | Build State Change Notification | ChangeNotification').first().json || {};\n    } catch {\n      return {};\n    }\n  }\n};\n\nconst source = readSource();\nconst body = unwrapBody(incoming);\nconst claim = source.stateChangeNotificationClaim || {};\nconst responseVersion = Number(body.notificationVersion);\nconst claimVersion = Number(claim.notificationVersion);\nconst idempotentReplay = body.idempotentReplay === true;\nconst errors = [];\n\nif (source.stateChangeNotificationReady !== true) errors.push('notification_message_not_ready');\nif (body.contractVersion !== 'chelsea_state_change_notification_begin_v1') errors.push('begin_contract_invalid');\nif (idempotentReplay) errors.push('begin_replay_blocked');\nif (String(body.notificationId || '') !== String(claim.notificationId || '')) errors.push('begin_notification_mismatch');\nif (body.status !== 'sending') errors.push('begin_status_invalid');\nif (String(body.sendKey || '') !== String(source.stateChangeNotificationSendKey || '')) {\n  errors.push('begin_send_key_mismatch');\n}\nif (!Number.isSafeInteger(responseVersion) || !Number.isSafeInteger(claimVersion)) {\n  errors.push('begin_version_invalid');\n} else if (responseVersion !== claimVersion + 1) {\n  errors.push('begin_version_mismatch');\n}\n\nconst validated = errors.length === 0;\nreturn [{\n  json: {\n    ...source,\n    stateRpcBody: null,\n    stateChangeNotificationBeginAttempted: true,\n    stateChangeNotificationBeginValidated: validated,\n    stateChangeNotificationBeginIdempotentReplay: idempotentReplay,\n    stateChangeNotificationBeginReplayBlocked: idempotentReplay,\n    stateChangeNotificationBeginResult: body,\n    stateChangeNotificationSendingVersion: validated ? responseVersion : null,\n    stateChangeNotificationBeginError: validated\n      ? ''\n      : errors.join(';').slice(0, 500),\n    stateChangeNotificationErrorCode: validated\n      ? ''\n      : 'state_change_notification_begin_invalid',\n    stateChangeNotificationBeginVersion: 'chelsea_state_change_notification_begin_validation_v1'\n  }\n}];\n"
+      },
+      "id": "048bf7de-c95a-542b-9653-4b8e7dfd7d17",
+      "name": "Code | Validate State Change Notification Begin | ChangeNotification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        790,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c100000007",
+              "leftValue": "={{ $json.stateChangeNotificationBeginValidated }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4203caa2-33ed-5066-ba27-0c1d78ce98de",
+      "name": "If | State Change Notification Begin Validated | ChangeNotification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.CHELSEA_TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $(\"Code | Build State Change Notification | ChangeNotification\").item.json.stateChangeNotificationTelegramRequestBody }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "39262462-a76c-5018-81f9-7ca8ae9694b8",
+      "name": "Call | Telegram | Send State Change Notification | ChangeNotification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1290,
+        220
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst incoming = $input.first()?.json || {};\nconst unwrapBody = value => {\n  const body = value?.body ?? value;\n  if (Array.isArray(body)) return body[0] || {};\n  return body && typeof body === 'object' ? body : {};\n};\nconst readSource = () => {\n  if (incoming.stateChangeNotificationBeginValidated !== undefined) return incoming;\n  try {\n    return $('Code | Validate State Change Notification Begin | ChangeNotification').item.json || {};\n  } catch {\n    try {\n      return $('Code | Validate State Change Notification Begin | ChangeNotification').first().json || {};\n    } catch {\n      return {};\n    }\n  }\n};\nconst sanitizedText = value => String(value || '')\n  .replace(/https:\\/\\/api\\.telegram\\.org\\/bot[^/\\s]+/giu, 'https://api.telegram.org/bot[redacted]')\n  .replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]')\n  .replace(/[\\u0000-\\u001f\\u007f-\\u009f]+/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 500);\n\nconst source = readSource();\nconst response = unwrapBody(incoming);\nconst message = response.result && typeof response.result === 'object'\n  ? response.result\n  : response;\nconst messageId = String(message?.message_id ?? '').trim();\nconst responseChatId = String(message?.chat?.id ?? '').trim();\nconst expectedChatId = String(source.stateChangeNotificationChatId || '').trim();\nconst explicitFailure = Boolean(\n  response.ok === false ||\n  incoming.ok === false ||\n  response.error ||\n  incoming.error\n);\nconst exactReceipt = Boolean(\n  source.stateChangeNotificationBeginValidated === true &&\n  !explicitFailure &&\n  /^\\d+$/.test(messageId) &&\n  /^-?\\d+$/.test(responseChatId) &&\n  responseChatId === expectedChatId\n);\nconst telegramDate = Number(message?.date);\nconst sentAt = Number.isSafeInteger(telegramDate) && telegramDate > 0\n  ? new Date(telegramDate * 1000).toISOString()\n  : new Date().toISOString();\nconst claim = source.stateChangeNotificationClaim || {};\nconst sendingVersion = Number(source.stateChangeNotificationSendingVersion);\nconst safeReceipt = {\n  contractVersion: 'chelsea_state_change_notification_telegram_receipt_v1',\n  verified: exactReceipt,\n  notificationId: String(claim.notificationId || ''),\n  analysisRunId: String(claim.analysisRunId || ''),\n  chatId: responseChatId,\n  messageId,\n  sentAt\n};\n\nlet errorCode = '';\nif (!exactReceipt) {\n  if (source.stateChangeNotificationBeginValidated !== true) {\n    errorCode = 'state_change_notification_begin_not_validated';\n  } else if (explicitFailure) {\n    errorCode = 'state_change_notification_telegram_rejected';\n  } else if (responseChatId && responseChatId !== expectedChatId) {\n    errorCode = 'state_change_notification_chat_receipt_mismatch';\n  } else {\n    errorCode = 'state_change_notification_receipt_missing';\n  }\n}\nconst errorText = exactReceipt\n  ? ''\n  : sanitizedText(\n    response.description ||\n    response.error?.message ||\n    incoming.error?.message ||\n    incoming.message ||\n    errorCode\n  );\nconst confirmationKey = exactReceipt\n  ? `state_change_confirmation:${claim.analysisRunId}:${messageId}`\n  : '';\n\nreturn [{\n  json: {\n    ...source,\n    stateChangeNotificationReceiptExact: exactReceipt,\n    stateChangeNotificationTelegramReceipt: safeReceipt,\n    stateChangeNotificationExternalMessageId: exactReceipt ? messageId : '',\n    stateChangeNotificationConfirmationKey: confirmationKey,\n    stateChangeNotificationSentAt: exactReceipt ? sentAt : '',\n    stateChangeNotificationSendErrorCode: errorCode,\n    stateChangeNotificationSendErrorText: errorText,\n    stateRpcBody: exactReceipt ? {\n      p_notification_id: claim.notificationId,\n      p_lease_token: claim.leaseToken,\n      p_expected_notification_version: sendingVersion,\n      p_confirmation_key: confirmationKey,\n      p_external_message_id: messageId,\n      p_sent_at: sentAt,\n      p_receipt_json: safeReceipt\n    } : null,\n    stateChangeNotificationCompleteBuildVersion: 'chelsea_state_change_notification_complete_build_v1'\n  }\n}];\n"
+      },
+      "id": "4a106753-94ec-52c2-aee1-3dd1fa19eacf",
+      "name": "Code | Build State Change Notification Complete | ChangeNotification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c10000000a",
+              "leftValue": "={{ $json.stateChangeNotificationReceiptExact }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8517309-d38e-53b2-b81c-be27c771d61e",
+      "name": "If | State Change Notification Receipt Exact | ChangeNotification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1790,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_change_notification_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "548110c3-8e73-5058-b320-db8ffe79a02c",
+      "name": "Call | Supabase RPC | Complete State Change Notification | ChangeNotification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst incoming = $input.first()?.json || {};\nconst readNode = name => {\n  try {\n    return $(name).item.json || {};\n  } catch {\n    try {\n      return $(name).first().json || {};\n    } catch {\n      return {};\n    }\n  }\n};\nconst readSource = () => {\n  if (incoming.stateChangeNotificationClaim) return incoming;\n  const formatted = readNode('Code | Build State Change Notification | ChangeNotification');\n  if (formatted.stateChangeNotificationClaim) return formatted;\n  return readNode('Code | Normalize State Change Notification Claim | ChangeNotification');\n};\nconst safeCode = value => String(value || 'state_change_notification_pre_send_failed')\n  .toLowerCase()\n  .replace(/[^a-z0-9_:-]+/g, '_')\n  .replace(/^_+|_+$/g, '')\n  .slice(0, 100) || 'state_change_notification_pre_send_failed';\nconst safeText = value => String(value || 'State change notification failed before Telegram send.')\n  .replace(/https:\\/\\/api\\.telegram\\.org\\/bot[^/\\s]+/giu, 'https://api.telegram.org/bot[redacted]')\n  .replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]')\n  .replace(/[\\u0000-\\u001f\\u007f-\\u009f]+/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 1000);\n\nconst source = readSource();\nconst claim = source.stateChangeNotificationClaim || {};\nconst version = Number(claim.notificationVersion);\nconst errors = [];\nif (!claim.notificationId || !claim.leaseToken) errors.push('claim_identifiers_missing');\nif (!Number.isSafeInteger(version) || version < 1) errors.push('claim_version_invalid');\nif (claim.notificationStatus !== 'leased') errors.push('claim_status_invalid');\nif (source.stateChangeNotificationBeginAttempted === true) errors.push('begin_already_attempted');\nif (source.stateChangeNotificationSendingVersion !== undefined &&\n    source.stateChangeNotificationSendingVersion !== null) {\n  errors.push('notification_already_sending');\n}\n\nconst ready = errors.length === 0;\nconst errorCode = safeCode(\n  incoming.stateChangeNotificationErrorCode ||\n  source.stateChangeNotificationErrorCode ||\n  incoming.error?.code\n);\nconst errorText = safeText(\n  incoming.stateChangeNotificationErrorText ||\n  incoming.error?.message ||\n  source.stateChangeNotificationErrors?.join(';') ||\n  source.stateChangeNotificationClaimErrors?.join(';') ||\n  errorCode\n);\n\nreturn [{\n  json: {\n    ...source,\n    stateChangeNotificationPreSendFailReady: ready,\n    stateChangeNotificationPreSendFailError: ready ? '' : errors.join(';'),\n    stateRpcBody: ready ? {\n      p_notification_id: claim.notificationId,\n      p_lease_token: claim.leaseToken,\n      p_expected_notification_version: version,\n      p_failure_key: `state_change_pre_send_fail:${claim.notificationId}:v${version}`,\n      p_error_code: errorCode,\n      p_error_text: errorText,\n      p_retry_delay_minutes: 1\n    } : null,\n    stateChangeNotificationPreSendFailVersion: 'chelsea_state_change_notification_pre_send_fail_v1'\n  }\n}];\n"
+      },
+      "id": "9c4fc856-4c77-557e-a6ba-e5043e8be34b",
+      "name": "Code | Build State Change Notification Pre-Send Fail | ChangeNotification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c100000010",
+              "leftValue": "={{ $json.stateChangeNotificationPreSendFailReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "50a351ea-e45f-5859-aed6-1b979d84fd5e",
+      "name": "If | State Change Notification Pre-Send Fail Ready | ChangeNotification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        790,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_change_notification_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "88a77a77-5e94-50d4-b5fe-1d982ef1d04c",
+      "name": "Call | Supabase RPC | Fail State Change Notification | ChangeNotification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        460
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst incoming = $input.first()?.json || {};\nconst unwrapBody = value => {\n  let body = value?.body ?? value;\n  if (typeof body === 'string') {\n    try {\n      body = JSON.parse(body);\n    } catch {\n      return {};\n    }\n  }\n  if (Array.isArray(body)) return body[0] || {};\n  return body && typeof body === 'object' ? body : {};\n};\nconst readNode = name => {\n  try {\n    return $(name).item.json || {};\n  } catch {\n    try {\n      return $(name).first().json || {};\n    } catch {\n      return {};\n    }\n  }\n};\nconst readSource = () => {\n  if (incoming.stateChangeNotificationClaim) return incoming;\n  const completed = readNode('Code | Build State Change Notification Complete | ChangeNotification');\n  if (completed.stateChangeNotificationClaim) return completed;\n  return readNode('Code | Validate State Change Notification Begin | ChangeNotification');\n};\nconst safeCode = value => String(value || 'state_change_notification_delivery_uncertain')\n  .toLowerCase()\n  .replace(/[^a-z0-9_:-]+/g, '_')\n  .replace(/^_+|_+$/g, '')\n  .slice(0, 100) || 'state_change_notification_delivery_uncertain';\nconst safeText = value => String(value || 'Telegram delivery has no exact receipt.')\n  .replace(/https:\\/\\/api\\.telegram\\.org\\/bot[^/\\s]+/giu, 'https://api.telegram.org/bot[redacted]')\n  .replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]')\n  .replace(/[\\u0000-\\u001f\\u007f-\\u009f]+/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 1000);\n\nconst source = readSource();\nconst claim = source.stateChangeNotificationClaim || {};\nconst sendingVersion = Number(source.stateChangeNotificationSendingVersion);\nconst completionResult = unwrapBody(incoming);\nconst completionAttempted = Boolean(\n  source.stateChangeNotificationReceiptExact === true &&\n  !incoming.stateChangeNotificationClaim\n);\nconst completionVersion = Number(completionResult.notificationVersion);\nconst completionReplay = completionResult.idempotentReplay === true;\nconst completeConfirmed = Boolean(\n  completionAttempted &&\n  completionResult.contractVersion === 'chelsea_state_change_notification_complete_v1' &&\n  String(completionResult.notificationId || '') === String(claim.notificationId || '') &&\n  completionResult.status === 'sent' &&\n  String(completionResult.externalMessageId || '') ===\n    String(source.stateChangeNotificationExternalMessageId || '') &&\n  Number.isSafeInteger(completionVersion) &&\n  Number.isSafeInteger(sendingVersion) &&\n  (\n    (!completionReplay && completionVersion === sendingVersion + 1) ||\n    (completionReplay && completionVersion >= sendingVersion + 1)\n  )\n);\nconst errors = [];\nif (source.stateChangeNotificationBeginValidated !== true) errors.push('begin_not_validated');\nif (!claim.notificationId || !claim.leaseToken) errors.push('claim_identifiers_missing');\nif (!Number.isSafeInteger(sendingVersion) || sendingVersion < 1) errors.push('sending_version_invalid');\nif (source.stateChangeNotificationReceiptExact === true && !completionAttempted) {\n  errors.push('completion_not_attempted');\n}\n\nconst ready = errors.length === 0 && !completeConfirmed;\nconst completionErrorCode = source.stateChangeNotificationReceiptExact === true &&\n  completionAttempted &&\n  !completeConfirmed\n  ? 'state_change_notification_complete_unconfirmed'\n  : '';\nconst errorCode = safeCode(\n  completionErrorCode ||\n  source.stateChangeNotificationSendErrorCode ||\n  incoming.stateChangeNotificationSendErrorCode ||\n  completionResult.error?.code\n);\nconst errorText = safeText(\n  completionResult.error?.message ||\n  completionResult.message ||\n  source.stateChangeNotificationSendErrorText ||\n  incoming.stateChangeNotificationSendErrorText ||\n  incoming.error?.message ||\n  errorCode\n);\n\nreturn [{\n  json: {\n    ...source,\n    stateChangeNotificationCompletionAttempted: completionAttempted,\n    stateChangeNotificationCompleteConfirmed: completeConfirmed,\n    stateChangeNotificationCompleteResult: completionAttempted ? completionResult : {},\n    stateChangeNotificationCompleteError: completeConfirmed\n      ? ''\n      : completionErrorCode,\n    stateChangeNotificationUncertainReady: ready,\n    stateChangeNotificationUncertainError: ready\n      ? ''\n      : errors.join(';'),\n    stateRpcBody: ready ? {\n      p_notification_id: claim.notificationId,\n      p_lease_token: claim.leaseToken,\n      p_expected_notification_version: sendingVersion,\n      p_failure_key: `state_change_uncertain:${claim.notificationId}:v${sendingVersion}`,\n      p_error_code: errorCode,\n      p_error_text: errorText\n    } : null,\n    stateChangeNotificationUncertainVersion: 'chelsea_state_change_notification_uncertain_build_v1'\n  }\n}];\n"
+      },
+      "id": "f7d84591-3350-5622-b5e0-e8f7681fd3c9",
+      "name": "Code | Build State Change Notification Post-Send Uncertain | ChangeNotification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2290,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c100000011",
+              "leftValue": "={{ $json.stateChangeNotificationCompleteConfirmed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6239e9b2-90d5-5bb5-8d32-c1a4fe54c918",
+      "name": "If | State Change Notification Complete Confirmed | ChangeNotification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2540,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c100000012",
+              "leftValue": "={{ $json.stateChangeNotificationUncertainReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f7577b52-6316-5d08-b38d-d59db57e098b",
+      "name": "If | State Change Notification Uncertain Ready | ChangeNotification",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2790,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_mark_change_notification_uncertain_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "99449aa0-2388-5e72-985e-4403df4fa627",
+      "name": "Call | Supabase RPC | Mark State Change Notification Uncertain | ChangeNotification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3040,
+        460
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().length ? $input.all().map(item => ({ json: { ...item.json, credentialSource: 'environment', credentialReady: true } })) : [{ json: { credentialSource: 'environment', credentialReady: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1070,
+        220
+      ],
+      "id": "5060fd4a-1387-5845-b2cf-a4bce18c575a",
+      "name": "Config | Data Table Key | Telegram Bot | ChangeNotification",
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d54adc29-2b67-558d-8a9e-8a33e466507e",
+      "name": "End | ChangeNotification Worker Receipt | ChangeNotificationWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChangeNotificationWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim State Change Notifications | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim State Change Notifications | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Change Notification Claim | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Change Notification Claim | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Change Notification | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Change Notification | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "If | State Change Notification Ready | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Change Notification Ready | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Begin State Change Notification Send | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Change Notification Pre-Send Fail | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Begin State Change Notification Send | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate State Change Notification Begin | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate State Change Notification Begin | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "If | State Change Notification Begin Validated | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Change Notification Begin Validated | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Config | Data Table Key | Telegram Bot | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Call | Telegram | Send State Change Notification | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Change Notification Complete | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Change Notification Complete | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Change Notification Complete | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "If | State Change Notification Receipt Exact | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Change Notification Receipt Exact | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete State Change Notification | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Change Notification Post-Send Uncertain | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete State Change Notification | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Change Notification Post-Send Uncertain | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Change Notification Pre-Send Fail | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "If | State Change Notification Pre-Send Fail Ready | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Change Notification Pre-Send Fail Ready | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail State Change Notification | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code | Build State Change Notification Post-Send Uncertain | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "If | State Change Notification Complete Confirmed | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Change Notification Complete Confirmed | ChangeNotification": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If | State Change Notification Uncertain Ready | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Change Notification Uncertain Ready | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark State Change Notification Uncertain | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Config | Data Table Key | Telegram Bot | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send State Change Notification | ChangeNotification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | State Change Notification | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "End | ChangeNotification Worker Receipt | ChangeNotificationWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail State Change Notification | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "End | ChangeNotification Worker Receipt | ChangeNotificationWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark State Change Notification Uncertain | ChangeNotification": {
+      "main": [
+        [
+          {
+            "node": "End | ChangeNotification Worker Receipt | ChangeNotificationWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

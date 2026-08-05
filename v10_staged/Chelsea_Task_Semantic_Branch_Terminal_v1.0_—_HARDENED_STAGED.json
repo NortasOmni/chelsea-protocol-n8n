@@ -1,0 +1,63 @@
+{
+  "id": "TM10576b8acf8d316",
+  "name": "Chelsea Task Semantic Branch Terminal v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "3bdee20a-ea6a-593d-997a-da629aa09c3b",
+  "nodes": [
+    {
+      "id": "c51c0af9-9d5e-59a5-b03f-8df144b9fbb7",
+      "name": "Trigger | Parent Workflow | ChelseaTaskSemanticBranchTerminalv10",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "envelope",
+              "type": "object"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "03f9a6a2-344c-508e-979b-d03a8e6d1456",
+      "name": "Code | Execute Terminal | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const raw=$input.first()?.json||{};const e=raw.envelope&&typeof raw.envelope==='object'?raw.envelope:raw;return (Array.isArray(e.terminalItems)?e.terminalItems:[]).map(json=>({json}));"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskSemanticBranchTerminalv10": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Terminal | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

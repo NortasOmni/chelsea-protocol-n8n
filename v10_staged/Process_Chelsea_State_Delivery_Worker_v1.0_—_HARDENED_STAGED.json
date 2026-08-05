@@ -1,0 +1,670 @@
+{
+  "id": "VFcTLbdfS3Ec838w",
+  "name": "Process Chelsea State Delivery Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "107d9216-20fd-5e16-84a3-a87dd8a15a3e",
+  "nodes": [
+    {
+      "id": "8c5e99cd-c138-5b18-9454-6e70630ce141",
+      "name": "Trigger | Parent Workflow | DeliveryWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c5e83133-8292-5e43-9858-3abfeb4313ac",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_reserve_selected_deliveries_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":delivery\", p_limit: $json.deliveryBatchLimit, p_lease_minutes: $json.fastLeaseMinutes, p_channel: \"telegram\" } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "2da4c7af-b1f9-56c9-a584-6bdd7df82eeb",
+      "name": "Call | Supabase RPC | Reserve State Deliveries | Delivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        240
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst rows=$input.all().flatMap(item=>{const value=item.json?.body??item.json??{};return Array.isArray(value)?value:(Array.isArray(value.data)?value.data:[value]);});\nreturn rows.filter(row=>row&&row.delivery_id&&row.lease_token).map(row=>({json:{...row,stateDelivery:row}}));"
+      },
+      "id": "d93d7365-2681-5a00-9632-6401010908d4",
+      "name": "Code | Normalize State Delivery Claims | Delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst row=$input.first()?.json||{};\nconst chatId=String(row.telegram_chat_id||row.telegramChatId||row.delivery_address||row.deliveryAddress||'').trim();\nconst content=String(row.content_text||row.contentText||'').trim();\nreturn [{json:{...row,stateDelivery:row.stateDelivery||row,telegramRequestBody:{chat_id:chatId,text:content},stateDeliveryReady:Boolean(chatId&&content),stateDeliveryError:chatId&&content?'':'delivery_context_missing'}}];"
+      },
+      "id": "809639f8-fa3e-54bf-9f44-bb34c0ed2335",
+      "name": "Code | Build State Delivery Telegram Request | Delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7ff4c7ea-526e-42f1-b8c1-05b1ad10113f",
+              "leftValue": "={{ $json.stateDeliveryReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ad4bbbf1-e82b-526c-9189-c388436359c7",
+      "name": "If | State Delivery Ready | Delivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        290,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramRequestBody.chat_id }}",
+        "text": "={{ $json.telegramRequestBody.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e32a59f5-9bb3-515d-b1de-d73fad5a2e17",
+      "name": "Call | Telegram | Send State Action | Delivery",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        540,
+        160
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "UcyKnC2iZoXPPYxc",
+          "name": "Протокол Челси"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$('Code | Build State Delivery Telegram Request | Delivery').item.json||{};\nconst response=$input.first()?.json||{};\nconst externalId=String(response.message_id||response.result?.message_id||'').trim();\nconst zone=String(source.timezone||'Asia/Novosibirsk');\nconst parts=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());\nconst part=type=>parts.find(value=>value.type===type)?.value||'';\nconst sentOn=`${part('year')}-${part('month')}-${part('day')}`;\nreturn [{json:{...source,stateDeliverySendConfirmed:Boolean(externalId),stateDeliveryExternalMessageId:externalId,stateRpcBody:{p_delivery_id:source.delivery_id||source.deliveryId,p_lease_token:source.lease_token||source.leaseToken,p_expected_delivery_version:Number(source.delivery_version??source.deliveryVersion),p_confirmation_key:`delivery_confirm:${source.delivery_id||source.deliveryId}`,p_external_message_id:externalId,p_sent_at:new Date().toISOString(),p_sent_on:sentOn,p_evaluation_delay_days:null}}}];"
+      },
+      "id": "f461ae68-04a6-5802-9ba1-aaa3da12cb97",
+      "name": "Code | Build State Delivery Confirm RPC | Delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        790,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "905eb330-d241-4688-b0c9-48a706f0d0d8",
+              "leftValue": "={{ $json.stateDeliverySendConfirmed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9b10943a-0572-598f-8993-50312fb62815",
+      "name": "If | State Delivery Send Confirmed | Delivery",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_confirm_delivery_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "bf71a616-310b-5d18-934e-c981174ab955",
+      "name": "Call | Supabase RPC | Confirm State Delivery | Delivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1290,
+        80
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nlet source=input;\ntry{source=$('Code | Build State Delivery Telegram Request | Delivery').item.json||input;}catch{}\nconst message=String(input.error?.message||input.message||input.stateDeliveryError||'delivery_send_failed');\nreturn [{json:{...source,stateRpcBody:{p_delivery_id:source.delivery_id||source.deliveryId,p_lease_token:source.lease_token||source.leaseToken,p_expected_delivery_version:Number(source.delivery_version??source.deliveryVersion),p_failure_key:`delivery_fail:${source.delivery_id||source.deliveryId}:v${Number(source.delivery_version??source.deliveryVersion)}`,p_error_code:'delivery_send_failed',p_error_text:message.slice(0,2000),p_retry_delay_minutes:1}}}];"
+      },
+      "id": "6957ecfb-0558-592f-b8c8-b3bef0824bc0",
+      "name": "Code | Build State Delivery Fail RPC | Delivery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        790,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_delivery_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "270c8f0a-30c4-5945-9dd9-399561d732e4",
+      "name": "Call | Supabase RPC | Fail State Delivery | Delivery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        400
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "width": 2200,
+        "height": 650,
+        "color": 5,
+        "content": "## Action delivery (Delivery)\nReserve and lease are separate from Telegram delivery and separate confirm or fail. Evaluation exists only after confirmed delivery."
+      },
+      "id": "d00d42b7-7e9c-57dd-8d91-c1a3d9b69318",
+      "name": "Sticky Note | State Delivery | Delivery",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "id": "f73e8e8a-3732-5bb2-a2fc-12cf79b4d87b",
+      "name": "End | Delivery Worker Receipt | DeliveryWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1570,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | DeliveryWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Reserve State Deliveries | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Reserve State Deliveries | Delivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Delivery Claims | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Delivery Claims | Delivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Delivery Telegram Request | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Delivery Telegram Request | Delivery": {
+      "main": [
+        [
+          {
+            "node": "If | State Delivery Ready | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Delivery Ready | Delivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send State Action | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Delivery Fail RPC | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send State Action | Delivery": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Delivery Confirm RPC | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Delivery Fail RPC | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Delivery Confirm RPC | Delivery": {
+      "main": [
+        [
+          {
+            "node": "If | State Delivery Send Confirmed | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Delivery Send Confirmed | Delivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Confirm State Delivery | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Delivery Fail RPC | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Delivery Fail RPC | Delivery": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail State Delivery | Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Confirm State Delivery | Delivery": {
+      "main": [
+        [
+          {
+            "node": "End | Delivery Worker Receipt | DeliveryWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail State Delivery | Delivery": {
+      "main": [
+        [
+          {
+            "node": "End | Delivery Worker Receipt | DeliveryWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | State Delivery | Delivery": {
+      "main": [
+        [
+          {
+            "node": "End | Delivery Worker Receipt | DeliveryWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

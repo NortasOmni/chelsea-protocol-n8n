@@ -1,0 +1,448 @@
+{
+  "id": "TM10d624728b9541f",
+  "name": "Chelsea Task Semantic Branch Resume Series v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "a4e9420f-763e-5e60-a557-5aa55fe49a55",
+  "nodes": [
+    {
+      "id": "dee2b7c7-422e-55f0-90ab-f5ac4610d8ac",
+      "name": "Trigger | Parent Workflow | ChelseaTaskSemanticBranchResumeSerie",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "47c2f275-da1d-5983-a4cb-ac6f893a4560",
+      "name": "Code | Classify Task Mutation | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst raw=$input.first()?.json||{};const envelope=raw.envelope&&typeof raw.envelope==='object'?raw.envelope:raw;let contexts={};try{contexts=typeof envelope.contextsJson==='string'?JSON.parse(envelope.contextsJson||'{}'):(envelope.contextsJson||{});}catch{contexts={};}\nconst route=Array.isArray(contexts['Code | Route Task Operation | TaskSemantic'])?(contexts['Code | Route Task Operation | TaskSemantic'][0]||{}):{};const trusted=JSON.parse(route._trustedJson||'{}');const rows=JSON.parse(route._rowsJson||'[]');const refs=JSON.parse(route._targetRefsJson||'{}');\nfunction terminal(fields){return [{json:{...envelope,resumeBranch:'terminal',terminalItems:[{...route,_mutationNeeded:false,_taskOutcomeJson:JSON.stringify(fields),taskHandled:fields.taskHandled!==false,taskOperation:fields.operation||'failed_review',taskRecordId:fields.recordId||'',taskErrorCode:String(fields.errorCode||route.taskErrorCode||'').slice(0,80),memoryWriteAllowed:false}]}}];}\ntry{const command=JSON.parse(envelope.semanticCommandJson||'{}');const recordId=refs[String(command.targetRef||'')];if(!recordId)throw Object.assign(new Error('Target must resolve through a local opaque reference'),{code:'target_not_exact'});const matches=rows.filter((row)=>row.recordId===recordId&&row.tenantId===trusted.tenantId&&row.ownerUserId===trusted.userId&&row.chatId===trusted.chatId);if(matches.length!==1)throw Object.assign(new Error('Target exact read is not unique'),{code:'target_not_exact'});const series=matches[0];if(series.recordType!=='series')throw Object.assign(new Error('Series resume target must be a series'),{code:'invalid_series_transition'});let resumeBranch='saga';if(series.status==='active')resumeBranch='active';else if(series.statusReason==='mutation_in_progress'&&series.pendingCommandJson)resumeBranch='interrupted';else if(!series.currentOccurrenceId)resumeBranch='direct';return [{json:{...envelope,resumeBranch,resumeSeriesRecordId:series.recordId}}];}catch(error){const retry=String(error.code||'')==='concurrency_conflict'||String(error.code||'')==='lease_conflict';return terminal(retry?{taskHandled:true,operation:'task_deferred_retry',text:'Задача сейчас обрабатывается планировщиком. Повторите команду чуть позже.',errorCode:String(error.code).slice(0,80)}:{taskHandled:true,operation:'failed_review',text:'Команда задач остановлена безопасно; изменения не применены.',errorCode:String(error.code||'contract_violation').slice(0,80)});}\n"
+      }
+    },
+    {
+      "id": "9f9b69cd-8ad7-5b91-913f-ae2c901b1f09",
+      "name": "Switch | Task Mutation Branch | TaskMutation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "844cde3c-cab8-58bd-82cc-204718b28753",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "active",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "add91db5-8447-5efb-9f4f-37bbfd5a8fce",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "interrupted",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba7075a9-56fa-5c79-8141-76d6ed704aa7",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "direct",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a219f168-cf17-5766-80be-dbe69b3efbc1",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "saga",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f29b8566-63fe-5b6c-b9ba-f2dcf1aae6b4",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "terminal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fd6f4b5c-2e9d-5e94-93ca-1bb1e3a1e298",
+      "name": "Call | Chelsea Task Resume Branch Already Active | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -600
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10cec23d5534890",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Resume Branch Already Active v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "3444d2d6-9597-5b3d-a9af-12812699442c",
+      "name": "Call | Chelsea Task Resume Branch Interrupted | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM101c19853253419",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Resume Branch Interrupted v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "239dbc9a-c0ee-5aca-8574-2cc64e12e995",
+      "name": "Call | Chelsea Task Resume Branch Direct | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10e68b25d803c8b",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Resume Branch Direct v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "0445d73a-b97b-512b-904a-a008041006a4",
+      "name": "Call | Chelsea Task Resume Branch Saga | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -60
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10ccbadad402fbc",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Resume Branch Saga v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "e67eba3d-bc68-5208-8b63-8e2422e744d5",
+      "name": "Call | Chelsea Task Resume Branch Terminal | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        120
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10474f43359d19a",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Resume Branch Terminal v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskSemanticBranchResumeSerie": {
+      "main": [
+        [
+          {
+            "node": "Code | Classify Task Mutation | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Classify Task Mutation | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Switch | Task Mutation Branch | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch | Task Mutation Branch | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Resume Branch Already Active | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Resume Branch Interrupted | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Resume Branch Direct | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Resume Branch Saga | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Resume Branch Terminal | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,1731 @@
+{
+  "id": "q6omiaG4yYgYcwVl",
+  "name": "Process Chelsea State StateDateRoute Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "a8abc4b7-6a5b-58ad-90b2-e8e3b9894163",
+  "nodes": [
+    {
+      "id": "3cf2fece-9f04-5a85-bd68-031a7a8c4613",
+      "name": "Trigger | Parent Workflow | StateDateRouteWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "11828d5f-015c-5fc9-a994-f8984d4d392e",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "width": 4800,
+        "height": 1320,
+        "color": 5,
+        "content": "## Ночная маршрутизация State`nProbe определяет только рассказ пользователя о своём дне. Prompt отправляется один раз через begin-send CAS; повторная автоматическая отправка после begin запрещена."
+      },
+      "id": "33967a78-bdcc-56de-ba3e-abf5c7a58a83",
+      "name": "Sticky Note | State Date Routing | StateDateRoute",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_date_probes_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":date-probe\", p_limit: $json.stateDateProbeBatchLimit, p_lease_minutes: $json.modelLeaseMinutes, p_route_id: null } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "1e52a7f4-c78c-5883-9342-8c03e0457efb",
+      "name": "Call | Supabase RPC | Claim State Date Probes | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -270,
+        240
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst rows = $input.all().flatMap(item => {\n  const value = item.json?.body ?? item.json ?? {};\n  if (Array.isArray(value)) return value;\n  if (Array.isArray(value.data)) return value.data;\n  return [value];\n});\nconst uuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));\nreturn rows\n  .filter(row =>\n    row &&\n    uuid(row.route_id) &&\n    uuid(row.lease_token) &&\n    Number.isSafeInteger(Number(row.route_version)) &&\n    String(row.content || '').trim() &&\n    String(row.classifier_instruction || '').trim()\n  )\n  .map(row => ({\n    json: {\n      ...row,\n      stateDateProbeClaim: row,\n      stateDateProbeClaimReady: true\n    }\n  }));\n\n"
+      },
+      "id": "d45224e6-ee83-5415-9ba8-b463d2e94003",
+      "name": "Code | Normalize State Date Probe Claims | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDateProbeClaim || input;\nconst instruction = String(claim.classifier_instruction || '').trim();\nconst content = String(claim.content || '').trim().slice(0, 12000);\nconst model = String(claim.classifier_model || '').trim();\nconst ready = Boolean(instruction && content && model);\nconst schema = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['contractVersion', 'aboutSelf', 'describesDay', 'decision', 'confidence', 'evidenceText'],\n  properties: {\n    contractVersion: { type: 'string', const: 'chelsea_state_date_probe_v1' },\n    aboutSelf: { type: 'boolean' },\n    describesDay: { type: 'boolean' },\n    decision: { type: 'string', enum: ['ask', 'today'] },\n    confidence: { type: 'number', minimum: 0, maximum: 1 },\n    evidenceText: { anyOf: [{ type: 'string', maxLength: 300 }, { type: 'null' }] }\n  }\n};\nconst stateDateProbeRequest = ready ? {\n  model,\n  input: [\n    { role: 'system', content: [{ type: 'input_text', text: instruction }] },\n    {\n      role: 'user',\n      content: [{\n        type: 'input_text',\n        text: JSON.stringify({\n          contractVersion: 'chelsea_state_date_probe_input_v1',\n          message: content\n        })\n      }]\n    }\n  ],\n  temperature: 0,\n  text: {\n    format: {\n      type: 'json_schema',\n      name: 'chelsea_state_date_probe_v1',\n      strict: true,\n      schema\n    }\n  }\n} : {};\n\nreturn [{\n  json: {\n    ...input,\n    stateDateProbeReady: ready,\n    stateDateProbeRequest,\n    stateDateProbeSourceText: content,\n    stateDateProbeSchema: schema\n  }\n}];\n\n"
+      },
+      "id": "eb1ff8d1-f5a0-5452-b552-76975248b228",
+      "name": "Code | Build State Date Probe Request | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        230,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000007",
+              "leftValue": "={{ $json.stateDateProbeReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4449a96d-54b7-50cd-a665-5683832ec14a",
+      "name": "If | State Date Probe Request Ready | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateDateProbeRequest }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "3f5866df-9c7e-52f5-b7e5-66708cb6b5b3",
+      "name": "Call | OpenAI Responses | Classify State Date | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        730,
+        160
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst root = $('Code | Build State Date Probe Request | StateDateRoute').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst response = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst sourceText = String(root.stateDateProbeSourceText || '').normalize('NFKC');\nconst extractText = value => {\n  if (typeof value?.output_text === 'string') return value.output_text;\n  if (Array.isArray(value?.output)) {\n    for (const output of value.output) {\n      if (!Array.isArray(output?.content)) continue;\n      for (const part of output.content) {\n        if (typeof part?.text === 'string') return part.text;\n        if (typeof part?.json === 'object' && part.json) return JSON.stringify(part.json);\n      }\n    }\n  }\n  if (typeof value?.choices?.[0]?.message?.content === 'string') {\n    return value.choices[0].message.content;\n  }\n  return '';\n};\nconst raw = extractText(response).trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet parsed = null;\nlet parseError = '';\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  parseError = String(error?.message || error);\n}\nconst keys = parsed && typeof parsed === 'object' && !Array.isArray(parsed)\n  ? Object.keys(parsed).sort()\n  : [];\nconst expectedKeys = ['aboutSelf', 'confidence', 'contractVersion', 'decision', 'describesDay', 'evidenceText'];\nconst evidence = parsed?.evidenceText;\nconst validEvidence = evidence === null ||\n  (typeof evidence === 'string' && evidence.length <= 300 &&\n   evidence.length > 0 && sourceText.includes(evidence.normalize('NFKC')));\nconst factDecisionConsistent = parsed?.aboutSelf === true && parsed?.describesDay === true\n  ? parsed?.decision === 'ask'\n  : parsed?.decision === 'today';\nconst valid = Boolean(\n  parsed &&\n  keys.length === expectedKeys.length &&\n  keys.every((key, index) => key === expectedKeys[index]) &&\n  parsed.contractVersion === 'chelsea_state_date_probe_v1' &&\n  typeof parsed.aboutSelf === 'boolean' &&\n  typeof parsed.describesDay === 'boolean' &&\n  ['ask', 'today'].includes(parsed.decision) &&\n  Number.isFinite(parsed.confidence) &&\n  parsed.confidence >= 0 &&\n  parsed.confidence <= 1 &&\n  validEvidence &&\n  factDecisionConsistent\n);\n\nreturn [{\n  json: {\n    ...root,\n    stateDateProbeValid: valid,\n    stateDateProbeResult: valid ? parsed : null,\n    stateDateProbeRaw: raw.slice(0, 4000),\n    stateDateProbeError: valid\n      ? ''\n      : (parseError || 'state_date_probe_contract_invalid').slice(0, 1000)\n  }\n}];\n"
+      },
+      "id": "457a6179-8311-53d4-874d-69d77877db41",
+      "name": "Code | Parse State Date Probe Response | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000010",
+              "leftValue": "={{ $json.stateDateProbeValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b84131ae-08b9-501e-8851-66ae6181167d",
+      "name": "If | State Date Probe Valid | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1230,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDateProbeClaim || {};\nconst schema = input.stateDateProbeSchema || {};\nconst instruction = String(claim.classifier_instruction || '').trim();\nconst content = String(input.stateDateProbeSourceText || claim.content || '').trim().slice(0, 12000);\nconst invalid = String(input.stateDateProbeRaw || input.stateDateProbeError || '').slice(0, 4000);\nconst ready = Boolean(instruction && content && claim.classifier_model);\nconst stateDateProbeRequest = ready ? {\n  model: String(claim.classifier_model),\n  input: [\n    {\n      role: 'system',\n      content: [{\n        type: 'input_text',\n        text: `${instruction}\\nПредыдущий ответ не прошёл строгую проверку. Исправь только JSON-контракт.`\n      }]\n    },\n    {\n      role: 'user',\n      content: [{\n        type: 'input_text',\n        text: JSON.stringify({\n          contractVersion: 'chelsea_state_date_probe_repair_input_v1',\n          message: content,\n          invalidResponse: invalid\n        })\n      }]\n    }\n  ],\n  temperature: 0,\n  text: {\n    format: {\n      type: 'json_schema',\n      name: 'chelsea_state_date_probe_v1',\n      strict: true,\n      schema\n    }\n  }\n} : {};\n\nreturn [{\n  json: {\n    ...input,\n    stateDateProbeReady: ready,\n    stateDateProbeRequest\n  }\n}];\n\n"
+      },
+      "id": "a230855f-7b22-5b6e-8ac4-f01d4eafc237",
+      "name": "Code | Build State Date Probe Repair Request | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateDateProbeRequest }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "f0db4ef6-2e01-5bb6-975a-1bcb9820756a",
+      "name": "Call | OpenAI Responses | Repair State Date Probe | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1730,
+        360
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst root = $('Code | Build State Date Probe Repair Request | StateDateRoute').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst response = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst sourceText = String(root.stateDateProbeSourceText || '').normalize('NFKC');\nconst extractText = value => {\n  if (typeof value?.output_text === 'string') return value.output_text;\n  if (Array.isArray(value?.output)) {\n    for (const output of value.output) {\n      if (!Array.isArray(output?.content)) continue;\n      for (const part of output.content) {\n        if (typeof part?.text === 'string') return part.text;\n        if (typeof part?.json === 'object' && part.json) return JSON.stringify(part.json);\n      }\n    }\n  }\n  if (typeof value?.choices?.[0]?.message?.content === 'string') {\n    return value.choices[0].message.content;\n  }\n  return '';\n};\nconst raw = extractText(response).trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet parsed = null;\nlet parseError = '';\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  parseError = String(error?.message || error);\n}\nconst keys = parsed && typeof parsed === 'object' && !Array.isArray(parsed)\n  ? Object.keys(parsed).sort()\n  : [];\nconst expectedKeys = ['aboutSelf', 'confidence', 'contractVersion', 'decision', 'describesDay', 'evidenceText'];\nconst evidence = parsed?.evidenceText;\nconst validEvidence = evidence === null ||\n  (typeof evidence === 'string' && evidence.length <= 300 &&\n   evidence.length > 0 && sourceText.includes(evidence.normalize('NFKC')));\nconst factDecisionConsistent = parsed?.aboutSelf === true && parsed?.describesDay === true\n  ? parsed?.decision === 'ask'\n  : parsed?.decision === 'today';\nconst valid = Boolean(\n  parsed &&\n  keys.length === expectedKeys.length &&\n  keys.every((key, index) => key === expectedKeys[index]) &&\n  parsed.contractVersion === 'chelsea_state_date_probe_v1' &&\n  typeof parsed.aboutSelf === 'boolean' &&\n  typeof parsed.describesDay === 'boolean' &&\n  ['ask', 'today'].includes(parsed.decision) &&\n  Number.isFinite(parsed.confidence) &&\n  parsed.confidence >= 0 &&\n  parsed.confidence <= 1 &&\n  validEvidence &&\n  factDecisionConsistent\n);\n\nreturn [{\n  json: {\n    ...root,\n    stateDateProbeValid: valid,\n    stateDateProbeResult: valid ? parsed : null,\n    stateDateProbeRaw: raw.slice(0, 4000),\n    stateDateProbeError: valid\n      ? ''\n      : (parseError || 'state_date_probe_contract_invalid').slice(0, 1000)\n  }\n}];\n"
+      },
+      "id": "f238724f-69a0-50d8-a114-fc943742fc00",
+      "name": "Code | Parse Repaired State Date Probe | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000014",
+              "leftValue": "={{ $json.stateDateProbeValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f14a489f-3eb7-53d0-b7a1-0e0f3e770161",
+      "name": "If | Repaired State Date Probe Valid | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2230,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDateProbeClaim || {};\nconst result = input.stateDateProbeResult;\nconst ready = input.stateDateProbeValid === true && result && claim.route_id && claim.lease_token;\nreturn [{\n  json: {\n    ...input,\n    stateDateProbeCompleteReady: Boolean(ready),\n    stateRpcBody: ready ? {\n      p_route_id: String(claim.route_id),\n      p_lease_token: String(claim.lease_token),\n      p_expected_route_version: Number(claim.route_version),\n      p_model: String(claim.classifier_model),\n      p_prompt_version: String(claim.classifier_prompt_version),\n      p_probe_result: result\n    } : {}\n  }\n}];\n\n"
+      },
+      "id": "8d580c9a-5905-5e1d-ab48-f669c8895988",
+      "name": "Code | Build State Date Probe Complete RPC | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_date_probe_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "230ad8ed-0b2a-5ac5-8200-a7cc9e547089",
+      "name": "Call | Supabase RPC | Complete State Date Probe | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2730,
+        160
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDateProbeClaim || {};\nconst ready = Boolean(claim.route_id && claim.lease_token && Number.isSafeInteger(Number(claim.route_version)));\nconst failureKey = `state_date_probe_fail:${claim.route_id || 'unknown'}:v${Number(claim.route_version || 0)}:${Number(claim.attempt_count || 0)}`;\nreturn [{\n  json: {\n    ...input,\n    stateDateProbeFailReady: ready,\n    stateRpcBody: ready ? {\n      p_route_id: String(claim.route_id),\n      p_lease_token: String(claim.lease_token),\n      p_expected_route_version: Number(claim.route_version),\n      p_failure_key: failureKey,\n      p_error_code: 'classifier_contract_invalid',\n      p_error_text: String(input.stateDateProbeError || 'classifier response remained invalid after repair').slice(0, 8000),\n      p_retry_delay_minutes: 1\n    } : {}\n  }\n}];\n\n"
+      },
+      "id": "d56ec64e-a612-5801-92a6-afde0d564455",
+      "name": "Code | Build State Date Probe Fail RPC | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_date_probe_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "fba5ff0e-fbc3-5279-8b42-ad09e93107de",
+      "name": "Call | Supabase RPC | Fail State Date Probe | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2730,
+        520
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_date_prompts_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":date-prompt\", p_limit: $json.stateDatePromptBatchLimit, p_lease_minutes: $json.fastLeaseMinutes, p_route_id: null } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "599a4c46-27b1-5dc4-9be9-562c6023e6ab",
+      "name": "Call | Supabase RPC | Claim State Date Prompts | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -270,
+        960
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst rows = $input.all().flatMap(item => {\n  const value = item.json?.body ?? item.json ?? {};\n  if (Array.isArray(value)) return value;\n  if (Array.isArray(value.data)) return value.data;\n  return [value];\n});\nconst uuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));\nreturn rows\n  .filter(row =>\n    row &&\n    uuid(row.route_id) &&\n    uuid(row.lease_token) &&\n    /^[0-9a-f]{32}$/.test(String(row.callback_token || '')) &&\n    Number.isSafeInteger(Number(row.route_version))\n  )\n  .map(row => ({\n    json: {\n      ...row,\n      stateDatePromptClaim: row,\n      stateDatePromptClaimReady: true\n    }\n  }));\n\n"
+      },
+      "id": "8dd1ad56-16b7-54be-8071-3ff8fa1fb7b6",
+      "name": "Code | Normalize State Date Prompt Claims | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDatePromptClaim || input;\nconst clean = (value, limit = 0) => {\n  const text = String(value ?? '').normalize('NFKC').trim();\n  return limit > 0 ? text.slice(0, limit) : text;\n};\nconst routeId = clean(claim.route_id, 80);\nconst principalId = clean(claim.principal_id, 200);\nconst chatId = clean(claim.telegram_chat_id, 120);\nconst token = clean(claim.callback_token, 32);\nconst promptText = clean(claim.prompt_text, 500);\nconst yesterdayText = clean(claim.yesterday_button_text, 64);\nconst todayText = clean(claim.today_button_text, 64);\nconst yesterdayData = `chelsea_state_date:v1:y:${token}`;\nconst todayData = `chelsea_state_date:v1:t:${token}`;\nconst callbackPattern = /^chelsea_state_date:v1:[yt]:[a-f0-9]{32}$/;\nconst ready = Boolean(\n  routeId &&\n  principalId &&\n  chatId &&\n  promptText &&\n  yesterdayText &&\n  todayText &&\n  callbackPattern.test(yesterdayData) &&\n  callbackPattern.test(todayData) &&\n  yesterdayData.length <= 64 &&\n  todayData.length <= 64\n);\nconst sendKey = `state_date_prompt:${routeId}:${token}`;\nconst inlineKeyboard = {\n  rows: [{\n    row: {\n      buttons: [\n        { text: yesterdayText, additionalFields: { callback_data: yesterdayData } },\n        { text: todayText, additionalFields: { callback_data: todayData } }\n      ]\n    }\n  }]\n};\n\nreturn [{\n  json: {\n    ...input,\n    stateDatePromptReady: ready,\n    stateDatePromptRouteId: routeId,\n    stateDatePromptPrincipalId: principalId,\n    stateDatePromptChatId: chatId,\n    stateDatePromptText: promptText,\n    stateDatePromptInlineKeyboard: inlineKeyboard,\n    stateDatePromptSendKey: sendKey,\n    stateRpcBody: ready ? {\n      p_route_id: routeId,\n      p_lease_token: String(claim.lease_token || ''),\n      p_expected_route_version: Number(claim.route_version),\n      p_send_key: sendKey\n    } : {}\n  }\n}];\n"
+      },
+      "id": "bf76aa04-536d-5d16-a8be-bac7a744f3ec",
+      "name": "Code | Build State Date Prompt | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        230,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000022",
+              "leftValue": "={{ $json.stateDatePromptReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "397c61de-5eed-5d09-8181-bac2adba5c30",
+      "name": "If | State Date Prompt Ready | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_begin_date_prompt_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "147513fc-a13b-55f4-9095-2ac145ab9c76",
+      "name": "Call | Supabase RPC | Begin State Date Prompt Send | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        730,
+        880
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst root = $('Code | Build State Date Prompt | StateDateRoute').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst valid = body && typeof body === 'object' &&\n  body.contractVersion === 'chelsea_state_date_prompt_begin_v1' &&\n  String(body.routeId || '') === String(root.stateDatePromptRouteId || '') &&\n  String(body.sendKey || '') === String(root.stateDatePromptSendKey || '') &&\n  typeof body.idempotentReplay === 'boolean' &&\n  typeof body.telegramSendAllowed === 'boolean' &&\n  Number.isSafeInteger(Number(body.routeVersion));\nconst sendAllowed = valid &&\n  body.idempotentReplay === false &&\n  body.telegramSendAllowed === true &&\n  body.status === 'prompt_sending';\n\nreturn [{\n  json: {\n    ...root,\n    stateDatePromptBeginValid: valid,\n    stateDatePromptBeginReceipt: valid ? body : null,\n    stateDatePromptSendingVersion: valid ? Number(body.routeVersion) : -1,\n    stateDatePromptTelegramSendAllowed: sendAllowed,\n    stateDatePromptBeginError: valid\n      ? ''\n      : String(body?.message || body?.error || body?.hint || 'state_date_prompt_begin_failed').slice(0, 1000)\n  }\n}];\n\n"
+      },
+      "id": "cef90a32-b2a6-5ef2-9b10-ccd55ad63e97",
+      "name": "Code | Validate State Date Prompt Begin | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000026",
+              "leftValue": "={{ $json.stateDatePromptBeginValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b204d9f4-6c02-50ce-987d-445a892bee5c",
+      "name": "If | State Date Prompt Begin Valid | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1230,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000027",
+              "leftValue": "={{ $json.stateDatePromptTelegramSendAllowed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b8c5e8f2-e108-544a-9838-39cfd5cca0e8",
+      "name": "If | State Date Prompt Send Allowed | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1480,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.stateDatePromptChatId }}",
+        "text": "={{ $json.stateDatePromptText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        },
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": "={{ $json.stateDatePromptInlineKeyboard }}"
+      },
+      "id": "2b8cbcf3-ac6d-5f33-aaa8-62c507fe89a7",
+      "name": "Call | Telegram | Send State Date Prompt | StateDateRoute",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1780,
+        960
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "UcyKnC2iZoXPPYxc",
+          "name": "Протокол Челси"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst root = $('Code | Validate State Date Prompt Begin | StateDateRoute').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst messageId = String(body?.message_id ?? body?.result?.message_id ?? '').trim();\nconst chatId = String(body?.chat?.id ?? body?.result?.chat?.id ?? '').trim();\nconst sentAt = new Date().toISOString();\nconst exact = Boolean(\n  root.stateDatePromptTelegramSendAllowed === true &&\n  messageId &&\n  chatId &&\n  chatId === String(root.stateDatePromptChatId || '')\n);\nconst receipt = exact ? {\n  contractVersion: 'chelsea_state_date_prompt_telegram_receipt_v1',\n  verified: true,\n  routeId: String(root.stateDatePromptRouteId || ''),\n  principalId: String(root.stateDatePromptPrincipalId || ''),\n  chatId,\n  messageId,\n  sentAt\n} : null;\n\nreturn [{\n  json: {\n    ...root,\n    stateDatePromptReceiptExact: exact,\n    stateDatePromptTelegramReceipt: receipt,\n    stateDatePromptTelegramError: exact\n      ? ''\n      : String(body?.description || body?.message || body?.error || 'state_date_prompt_receipt_invalid').slice(0, 1000),\n    stateRpcBody: exact ? {\n      p_route_id: String(root.stateDatePromptRouteId || ''),\n      p_lease_token: String(root.stateDatePromptClaim?.lease_token || ''),\n      p_expected_route_version: Number(root.stateDatePromptSendingVersion),\n      p_send_key: String(root.stateDatePromptSendKey || ''),\n      p_prompt_message_id: messageId,\n      p_sent_at: sentAt,\n      p_receipt_json: receipt\n    } : {}\n  }\n}];\n\n"
+      },
+      "id": "d82a3473-c152-50c0-82e7-5cfb6f635266",
+      "name": "Code | Build State Date Prompt Receipt | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2030,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000029",
+              "leftValue": "={{ $json.stateDatePromptReceiptExact }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2a7bdb44-48c9-544e-a003-d62cb3d667d5",
+      "name": "If | State Date Prompt Receipt Exact | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2280,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_date_prompt_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "110a7a50-e5ac-5f79-9b66-4f6ca9cf45ba",
+      "name": "Call | Supabase RPC | Complete State Date Prompt Send | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2530,
+        880
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDatePromptClaim || {};\nconst ready = Boolean(\n  claim.route_id &&\n  claim.lease_token &&\n  Number.isSafeInteger(Number(claim.route_version)) &&\n  input.stateDatePromptTelegramSendAllowed !== true\n);\nconst failureKey = `state_date_prompt_pre_send:${claim.route_id || 'unknown'}:v${Number(claim.route_version || 0)}:${Number(claim.attempt_count || 0)}`;\nreturn [{\n  json: {\n    ...input,\n    stateDatePromptPreSendFailReady: ready,\n    stateRpcBody: ready ? {\n      p_route_id: String(claim.route_id),\n      p_lease_token: String(claim.lease_token),\n      p_expected_route_version: Number(claim.route_version),\n      p_failure_key: failureKey,\n      p_error_code: 'prompt_request_invalid_before_begin',\n      p_error_text: String(input.stateDatePromptBeginError || 'date prompt request was invalid before begin-send').slice(0, 8000),\n      p_retry_delay_minutes: 1\n    } : {}\n  }\n}];\n\n"
+      },
+      "id": "9c780cd0-f1b4-5217-b4a4-e5da4ab39da3",
+      "name": "Code | Build State Date Prompt Fail RPC | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        1240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_date_prompt_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "42a97142-4543-5893-8550-3227bbc96e95",
+      "name": "Call | Supabase RPC | Fail State Date Prompt Send | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1730,
+        1240
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateDatePromptClaim || {};\nconst ready = Boolean(\n  input.stateDatePromptTelegramSendAllowed === true &&\n  input.stateDatePromptReceiptExact === false &&\n  claim.route_id &&\n  claim.lease_token &&\n  Number.isSafeInteger(Number(input.stateDatePromptSendingVersion))\n);\nconst failureKey = `state_date_prompt_uncertain:${claim.route_id || 'unknown'}:v${Number(input.stateDatePromptSendingVersion || 0)}`;\nreturn [{\n  json: {\n    ...input,\n    stateDatePromptUncertainReady: ready,\n    stateRpcBody: ready ? {\n      p_route_id: String(claim.route_id),\n      p_lease_token: String(claim.lease_token),\n      p_expected_route_version: Number(input.stateDatePromptSendingVersion),\n      p_send_key: String(input.stateDatePromptSendKey || ''),\n      p_failure_key: failureKey,\n      p_error_code: 'telegram_receipt_uncertain_after_begin',\n      p_error_text: String(input.stateDatePromptTelegramError || 'Telegram send has no exact receipt').slice(0, 8000)\n    } : {}\n  }\n}];\n\n"
+      },
+      "id": "8971d0f7-2c43-5e59-ad25-e1c4d83c874c",
+      "name": "Code | Build State Date Prompt Uncertain RPC | StateDateRoute",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2530,
+        1080
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d8300000-0000-4000-8000-000000000034",
+              "leftValue": "={{ $json.stateDatePromptUncertainReady }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "22060b34-796b-54b4-8d23-c2c62c7fafb1",
+      "name": "If | State Date Prompt Uncertain Ready | StateDateRoute",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2780,
+        1080
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_mark_date_prompt_uncertain_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "aaf650f2-4bd2-5203-a5cb-a1a062d7c1eb",
+      "name": "Call | Supabase RPC | Mark State Date Prompt Uncertain | StateDateRoute",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3030,
+        1080
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "ebf560cd-6ee8-59ae-ba91-5f03c9fecece",
+      "name": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3310,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        510,
+        60
+      ],
+      "id": "bf16003c-7ce2-4cdd-a8ae-2ca275241bbd",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Classify State Date   StateDateRoute | StateDateRoute"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1510,
+        260
+      ],
+      "id": "9cbb53d5-9c70-455b-bfc5-8d6916a94277",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Repair State Date Probe   StateDateRoute | StateDateRoute"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        950,
+        160
+      ],
+      "id": "a95b387f-c065-4084-ab7f-e848c1182d07",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | StateDateRoute"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1950,
+        360
+      ],
+      "id": "885f983f-02ec-4e4e-9007-8028d50acc88",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | StateDateRoute 2"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | StateDateRouteWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim State Date Probes | StateDateRoute",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Supabase RPC | Claim State Date Prompts | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim State Date Probes | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Date Probe Claims | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Date Probe Claims | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Date Probe Request | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Probe Request | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Probe Request Ready | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Probe Request Ready | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Classify State Date   StateDateRoute | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Probe Fail RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Classify State Date | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse State Date Probe Response | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Probe Valid | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Probe Valid | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Date Probe Complete RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Probe Repair Request | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Probe Repair Request | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Repair State Date Probe   StateDateRoute | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Repair State Date Probe | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | StateDateRoute 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse Repaired State Date Probe | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | Repaired State Date Probe Valid | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Repaired State Date Probe Valid | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Date Probe Complete RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Probe Fail RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Probe Complete RPC | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete State Date Probe | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Probe Fail RPC | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail State Date Probe | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim State Date Prompts | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Date Prompt Claims | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Date Prompt Claims | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Date Prompt | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Prompt | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Prompt Ready | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Prompt Ready | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Begin State Date Prompt Send | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Prompt Fail RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Begin State Date Prompt Send | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate State Date Prompt Begin | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate State Date Prompt Begin | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Prompt Begin Valid | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Prompt Begin Valid | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Prompt Send Allowed | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Prompt Fail RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Prompt Send Allowed | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send State Date Prompt | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Call | Telegram | Send State Date Prompt | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Date Prompt Receipt | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Prompt Receipt | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Prompt Receipt | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Prompt Receipt Exact | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Prompt Receipt Exact | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete State Date Prompt Send | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Date Prompt Uncertain RPC | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Prompt Fail RPC | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail State Date Prompt Send | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Date Prompt Uncertain RPC | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "If | State Date Prompt Uncertain Ready | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Date Prompt Uncertain Ready | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Mark State Date Prompt Uncertain | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Sticky Note | State Date Routing | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete State Date Probe | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail State Date Probe | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete State Date Prompt Send | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail State Date Prompt Send | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Mark State Date Prompt Uncertain | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Worker Receipt | StateDateRouteWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Classify State Date   StateDateRoute | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Classify State Date | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Repair State Date Probe   StateDateRoute | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Repair State Date Probe | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | StateDateRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse State Date Probe Response | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | StateDateRoute 2": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse Repaired State Date Probe | StateDateRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

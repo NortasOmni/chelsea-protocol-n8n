@@ -1,0 +1,1246 @@
+{
+  "id": "AnAStMDvOcgg9QQj",
+  "name": "Process Chelsea State ClarificationAsk Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "a72a9656-1313-5832-9cae-cea918dcbb6c",
+  "nodes": [
+    {
+      "id": "80510cf8-2c0f-5e7d-9adc-95e1945afac9",
+      "name": "Trigger | Parent Workflow | ClarificationAskWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "0889f0b3-c7e9-5367-8299-00e923c91210",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_clarification_steps_v3\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":clarification-ask-v2\", p_phase: \"ask\", p_limit: $json.clarificationAskBatchLimit, p_lease_minutes: $json.fastLeaseMinutes } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a0b8426d-be04-5632-8eb0-5c929f2b35d1",
+      "name": "Call | Supabase RPC | Claim Clarification Ask Steps | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        380
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet base = {};\ntry { base = $('Set | Scheduler Constants | StateScheduler').first().json || {}; } catch {}\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst rows = $input.all().flatMap(item => {\n  const value = item?.json?.body ?? item?.json ?? {};\n  return Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : [value]);\n});\n\nreturn rows.filter(row => row && clean(row.step_id ?? row.stepId) &&\n  clean(row.lease_token ?? row.leaseToken) &&\n  Number.isSafeInteger(Number(row.step_version ?? row.stepVersion)) &&\n  ['ask', 'answer'].includes(clean(row.lease_phase ?? row.leasePhase)) &&\n  clean(row.principal_id ?? row.principalId) && clean(row.session_id ?? row.sessionId)\n).map(row => ({ json: {\n  ...base,\n  ...row,\n  stateClarificationStep: row,\n  stateClarificationStepPhase: clean(row.lease_phase ?? row.leasePhase),\n  stateClarificationStepContractVersion: clean(row.clarification_context?.contractVersion) === 'chelsea_clarification_context_v1'\n    ? 'chelsea_state_clarification_step_claim_v3'\n    : 'chelsea_state_clarification_step_claim_invalid'\n} }));\n"
+      },
+      "id": "1764cb97-5c0c-5cab-88cb-c6b81b0eb9a5",
+      "name": "Code | Normalize Clarification Ask Claims | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_get_summary_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_principal_id: $json.principal_id, p_as_of_date: $json.schedulerAsOfDate } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "e34ba63b-96f4-5939-8ffe-a3b17bee454c",
+      "name": "Call | Supabase RPC | Get Delivery Context | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        380
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst claim = $('Code | Normalize Clarification Ask Claims | ClarificationAsk').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst principalId = clean(claim.principal_id ?? claim.principalId);\nconst contextValid = body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_summary_v1' &&\n  clean(body.principalId ?? body.principal_id) === principalId;\nconst delivery = contextValid && body.deliveryContext && typeof body.deliveryContext === 'object'\n  ? body.deliveryContext : {};\nconst preferredName = clean(delivery.displayName ?? delivery.currentUsername).replace(/[,;:]+$/u, '').trim();\nconst chatId = clean(delivery.telegramChatId ?? delivery.deliveryAddress);\nconst questionText = clean(claim.question_text ?? claim.questionText);\nconst questionKey = clean(claim.question_key ?? claim.questionKey);\nconst replyToken = clean(claim.reply_token ?? claim.replyToken);\nconst clarificationContext = claim.clarification_context && typeof claim.clarification_context === 'object'\n  ? claim.clarification_context\n  : (claim.clarificationContext && typeof claim.clarificationContext === 'object' ? claim.clarificationContext : {});\nconst options = Array.isArray(claim.callback_options ?? claim.callbackOptions)\n  ? (claim.callback_options ?? claim.callbackOptions) : [];\nconst normalizedOptions = options.map(option => ({\n  optionCode: clean(option?.optionCode ?? option?.option_code),\n  label: clean(option?.label),\n  token: clean(option?.token),\n  callbackData: clean(option?.callbackData ?? option?.callback_data)\n})).filter(option => option.optionCode && option.label && /^[0-9a-f]{16}$/.test(option.token) &&\n  option.callbackData === `csq:${questionKey}:${option.token}`);\nconst skipOptions = normalizedOptions.filter(option => option.optionCode === 'skip_analysis');\nconst regularOptions = normalizedOptions.filter(option => option.optionCode !== 'skip_analysis');\nconst optionsUnique = new Set(normalizedOptions.map(option => option.optionCode)).size === normalizedOptions.length &&\n  new Set(normalizedOptions.map(option => option.token)).size === normalizedOptions.length &&\n  new Set(normalizedOptions.map(option => option.callbackData)).size === normalizedOptions.length;\nconst rows = [];\nconst withEmoji = label => {\n  if (/^[\\p{Extended_Pictographic}\\u2600-\\u27BF]/u.test(label)) return label;\n  const value = label.toLocaleLowerCase('ru-RU');\n  if (value === 'стало лучше') return `📈 ${label}`;\n  if (value === 'без явного эффекта') return `😐 ${label}`;\n  if (value === 'стало хуже') return `📉 ${label}`;\n  return `🔹 ${label}`;\n};\nfor (let index = 0; index < regularOptions.length; index += 2) {\n  rows.push({ row: { buttons: regularOptions.slice(index,index + 2).map(option => ({\n    text: option.optionCode === 'other_text' ? '✍️ Ответить' : withEmoji(option.label),\n    additionalFields: { callback_data: option.callbackData }\n  })) } });\n}\nif (skipOptions.length === 1) {\n  rows.push({ row: { buttons: [{\n    text: '⏭️ Пропустить уточнения',\n    additionalFields: { callback_data: skipOptions[0].callbackData }\n  }] } });\n}\nconst telegramInlineKeyboard = rows.map(row => row.row.buttons.map(button => ({\n  text: button.text,callback_data: button.additionalFields.callback_data\n})));\nconst clarificationContextValid = clarificationContext.contractVersion === 'chelsea_clarification_context_v1' &&\n  Array.isArray(clarificationContext.unresolvedSlots) && clarificationContext.unresolvedSlots.length > 0;\nconst ready = Boolean(contextValid && chatId && preferredName && questionText && clarificationContextValid &&\n  /^[0-9a-f]{16}$/.test(questionKey) && replyToken === `CS-${questionKey}` && regularOptions.length &&\n  skipOptions.length === 1 && optionsUnique && normalizedOptions.length === options.length);\n\nreturn [{ json: {\n  ...claim,\n  stateClarificationStep: claim.stateClarificationStep || claim,\n  stateClarificationPromptReady: ready,\n  stateClarificationPromptError: ready ? '' : 'clarification_prompt_delivery_or_context_invalid',\n  stateClarificationChatId: chatId,\n  stateClarificationPreferredName: preferredName,\n  stateClarificationStateContext: Array.isArray(body.state) ? body.state.slice(0,10) : [],\n  stateClarificationDeliveryContext: delivery,\n  stateClarificationContext: clarificationContext,\n  stateClarificationPromptText: questionText,\n  stateClarificationInlineKeyboard: { rows },\n  telegramRequestBody: { chat_id: chatId,text: questionText },\n  stateClarificationTelegramRequestBody: {\n    chat_id: chatId,text: questionText,reply_markup: { inline_keyboard: telegramInlineKeyboard }\n  },\n  stateRpcBody: {\n    p_step_id: clean(claim.step_id ?? claim.stepId),\n    p_lease_token: clean(claim.lease_token ?? claim.leaseToken),\n    p_expected_version: Number(claim.step_version ?? claim.stepVersion),\n    p_send_key: `clarification_send:${clean(claim.step_id ?? claim.stepId)}:v${Number(claim.step_version ?? claim.stepVersion)}`\n  }\n} }];\n"
+      },
+      "id": "99396943-4cd1-575f-bc5e-54da0dfcd56f",
+      "name": "Code | Build Clarification Telegram Request | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        290,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb7287a2-d4cc-4de2-82a8-c5ff1e4334e6",
+              "leftValue": "={{ $json.stateClarificationPromptReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c6c338c9-e20b-5fe7-b728-50c164cd08a1",
+      "name": "If | Clarification Prompt Ready | ClarificationAsk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        540,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_begin_clarification_step_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "f696951b-3a3f-5251-a9ce-21e0838f38cc",
+      "name": "Call | Supabase RPC | Begin Clarification Send | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        790,
+        300
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Build Clarification Telegram Request | ClarificationAsk').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst expectedStepId = String(source.stateRpcBody?.p_step_id || '');\nconst expectedSendKey = String(source.stateRpcBody?.p_send_key || '');\nconst baseValid = body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_clarification_send_begin_v1' &&\n  String(body.stepId || '') === expectedStepId && String(body.sendKey || '') === expectedSendKey &&\n  Number.isSafeInteger(Number(body.stepVersion)) &&\n  typeof body.idempotentReplay === 'boolean' && typeof body.telegramSendAllowed === 'boolean';\nconst replay = baseValid && body.idempotentReplay === true;\nconst decisionConsistent = baseValid && (replay\n  ? body.telegramSendAllowed === false\n  : body.telegramSendAllowed === true);\nconst valid = baseValid && decisionConsistent;\n\nreturn [{ json: {\n  ...source,\n  stateClarificationSendBeginResult: body,\n  stateClarificationSendBeginValid: valid,\n  stateClarificationTelegramSendAllowed: valid && body.telegramSendAllowed === true,\n  stateClarificationPostSendUncertain: valid && replay,\n  stateClarificationSendingStepVersion: valid ? Number(body.stepVersion) : Number(source.stateRpcBody?.p_expected_version),\n  stateClarificationSendBeginError: valid\n    ? (replay ? 'clarification_send_begin_replay_uncertain' : '')\n    : String(body?.message || body?.error?.message || body?.hint || 'clarification_send_begin_invalid').slice(0, 2000)\n} }];\n"
+      },
+      "id": "181beba4-4ff3-5330-9811-0b62cdd2f29b",
+      "name": "Code | Validate Clarification Send Begin | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a9ccb9dc-9b39-4966-9886-a8316b34846b",
+              "leftValue": "={{ $json.stateClarificationSendBeginValid === true && $json.stateClarificationTelegramSendAllowed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bf5d8116-8945-5d45-bd58-c1956318f6f5",
+      "name": "If | Clarification Telegram Send Allowed | ClarificationAsk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1290,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.CHELSEA_TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $(\"Code | Parse Chelsea Micro Message | ClarificationAsk\").item.json.stateClarificationTelegramRequestBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "57d47925-c073-51b0-be7a-d38ef409fa7a",
+      "name": "Call | Telegram | Send Clarification Prompt | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2790,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Validate Clarification Send Begin | ClarificationAsk').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst response = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst message = response.result && typeof response.result === 'object' ? response.result : response;\nconst externalMessageId = String(message?.message_id ?? '').trim();\nconst responseChatId = String(message?.chat?.id ?? '').trim();\nconst expectedChatId = String(source.stateClarificationChatId || '').trim();\nconst exactReceipt = Boolean(externalMessageId && responseChatId && responseChatId === expectedChatId);\n\nreturn [{ json: {\n  ...source,\n  stateClarificationTelegramReceipt: response,\n  stateClarificationTelegramReceiptExact: exactReceipt,\n  stateClarificationTelegramReceiptError: exactReceipt ? '' : 'clarification_telegram_receipt_invalid',\n  stateRpcBody: {\n    p_step_id: String(source.stateRpcBody?.p_step_id || ''),\n    p_lease_token: String(source.stateRpcBody?.p_lease_token || ''),\n    p_expected_version: Number(source.stateClarificationSendingStepVersion),\n    p_external_message_id: externalMessageId,\n    p_receipt_json: response\n  }\n} }];\n"
+      },
+      "id": "607fcef5-322d-5728-ac77-9563fb6239a3",
+      "name": "Code | Build Clarification Send Complete RPC | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "65609fa6-643d-48e0-a662-abc72480d6b7",
+              "leftValue": "={{ $json.stateClarificationTelegramReceiptExact === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "793879c9-41e1-5690-a0c8-e28555dbee53",
+      "name": "If | Clarification Telegram Receipt Exact | ClarificationAsk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2040,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_clarification_step_send_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "0fb38d7b-d87c-521c-8f8f-9a0d41b837ba",
+      "name": "Call | Supabase RPC | Complete Clarification Send | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2290,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Build Clarification Send Complete RPC | ClarificationAsk').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst valid = body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_clarification_send_complete_v1' &&\n  String(body.stepId || '') === String(source.stateRpcBody?.p_step_id || '') &&\n  String(body.externalMessageId || '') === String(source.stateRpcBody?.p_external_message_id || '');\n\nreturn [{ json: {\n  ...source,\n  stateClarificationSendCompleteResult: body,\n  stateClarificationSendCompleted: valid,\n  stateClarificationSendCompleteError: valid\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'clarification_send_complete_invalid').slice(0, 2000)\n} }];\n"
+      },
+      "id": "f8c24e08-9f3b-59e8-9259-b155529e9304",
+      "name": "Code | Validate Clarification Send Complete | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2540,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3d5ebb88-b743-4b2a-b37e-540acfd5f877",
+              "leftValue": "={{ $json.stateClarificationSendCompleted === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "0523bf67-f6f5-5d21-81a4-c4bdb04f8ce3",
+      "name": "If | Clarification Send Completed | ClarificationAsk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2790,
+        220
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3040,
+        140
+      ],
+      "id": "7c61c86a-6cfa-5e24-bc47-58cff38e9b8f",
+      "name": "End | Clarification Prompt Sent | ClarificationAsk"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nlet source = input;\nfor (const nodeName of [\n  'Code | Validate Clarification Send Begin | ClarificationAsk',\n  'Code | Build Clarification Telegram Request | ClarificationAsk',\n  'Code | Normalize Clarification Ask Claims | ClarificationAsk',\n  'Code | Normalize Clarification Answer Claims | ClarificationAnswer'\n]) {\n  try {\n    const candidate = $(nodeName).item.json || {};\n    if (candidate.step_id || candidate.stepId || candidate.stateClarificationStep) {\n      source = { ...candidate, ...input };\n      break;\n    }\n  } catch {}\n}\nconst claim = source.stateClarificationStep || source;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst postSend = source.stateClarificationPostSendUncertain === true ||\n  Boolean(source.stateClarificationTelegramReceipt || source.stateClarificationTelegramReceiptError);\nconst expectedVersion = Number.isSafeInteger(Number(source.stateClarificationSendingStepVersion))\n  ? Number(source.stateClarificationSendingStepVersion)\n  : Number(claim.step_version ?? claim.stepVersion);\nconst errorText = [\n  source.stateClarificationPromptError,\n  source.stateClarificationCompositionError,\n  source.stateClarificationSendBeginError,\n  source.stateClarificationTelegramReceiptError,\n  source.stateClarificationSendCompleteError,\n  ...(Array.isArray(source.stateClarificationAnswerErrors) ? source.stateClarificationAnswerErrors : []),\n  source.message,\n  source.error?.message\n].map(clean).filter(Boolean).join('; ').slice(0, 2000) || 'Clarification step failed.';\n\nreturn [{ json: {\n  ...source,\n  stateRpcBody: {\n    p_step_id: clean(claim.step_id ?? claim.stepId),\n    p_lease_token: clean(claim.lease_token ?? claim.leaseToken),\n    p_expected_version: expectedVersion,\n    p_error_code: (postSend ? 'clarification_send_uncertain' : 'clarification_step_failed'),\n    p_error_text: errorText,\n    p_post_send_uncertain: postSend,\n    p_retry_delay_minutes: 1\n  }\n} }];\n"
+      },
+      "id": "5087d9eb-b558-586f-8e36-fa6f866b373d",
+      "name": "Code | Build Clarification Step Fail RPC | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_clarification_step_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "18472835-92c8-5105-893d-5bd2ada315bf",
+      "name": "Call | Supabase RPC | Fail Clarification Step | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        540
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Clarification prompt (ClarificationAsk)\nCatalog question/options only. Skip is a separate final row. Send uses begin/complete CAS; uncertain delivery fails closed.",
+        "height": 660,
+        "width": 3900,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        60
+      ],
+      "id": "5fbed9d7-a9a3-587f-bf8b-4e1d206c4f69",
+      "name": "Sticky Note | Clarification Ask Contract | ClarificationAsk"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst ContextualClarification = (() => {\n  const clean = value => String(value ?? '').normalize('NFKC').replace(/\\s+/g, ' ').trim();\n  const normalized = value => clean(value).toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');\n  const ymdPattern = /^\\d{4}-\\d{2}-\\d{2}$/;\n  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];\n  const formalPattern = /(?:^|[^\\p{L}])(?:вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашего|вашей|вашим|вашими|ваших)(?=$|[^\\p{L}])/iu;\n  const vagueReferences = new Set([\n    'это','эта нагрузка','нагрузка','все','всё','ситуация','эта ситуация','это событие','произошедшее'\n  ].map(normalized));\n  const tokenStop = new Set([\n    'это','эта','этот','эти','была','было','были','сегодня','вчера','июля','августа','сентября',\n    'октября','ноября','декабря','января','февраля','марта','апреля','мая','июня','событие'\n  ]);\n\n  function localDate(timezone, localTimestamp = '') {\n    const supplied = clean(localTimestamp).slice(0, 10);\n    if (ymdPattern.test(supplied)) return supplied;\n    const parts = new Intl.DateTimeFormat('en-US', {\n      timeZone: clean(timezone) || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit'\n    }).formatToParts(new Date());\n    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));\n    return `${values.year}-${values.month}-${values.day}`;\n  }\n\n  function utcDay(value) {\n    if (!ymdPattern.test(value)) return Number.NaN;\n    const [year,month,day] = value.split('-').map(Number);\n    const time = Date.UTC(year,month - 1,day);\n    const check = new Date(time);\n    return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day\n      ? Math.floor(time / 86400000)\n      : Number.NaN;\n  }\n\n  function dateReference(sourceLocalDate, currentLocalDate) {\n    const sourceDay = utcDay(sourceLocalDate);\n    const currentDay = utcDay(currentLocalDate);\n    if (!Number.isFinite(sourceDay) || !Number.isFinite(currentDay)) return { ready: false, error: 'local_date_invalid' };\n    const delta = currentDay - sourceDay;\n    if (delta < 0) return { ready: false, error: 'future_event_for_state_clarification', deltaDays: delta };\n    if (delta === 0) return { ready: true, value: 'сегодня', deltaDays: 0 };\n    if (delta === 1) return { ready: true, value: 'вчера', deltaDays: 1 };\n    const [sourceYear,sourceMonth,sourceDate] = sourceLocalDate.split('-').map(Number);\n    const currentYear = Number(currentLocalDate.slice(0,4));\n    return {\n      ready: true,\n      value: `${sourceDate} ${months[sourceMonth - 1]}${sourceYear === currentYear ? '' : ` ${sourceYear} года`}`,\n      deltaDays: delta\n    };\n  }\n\n  function derive(contextValue, timezone, localTimestamp = '') {\n    const context = contextValue && typeof contextValue === 'object' && !Array.isArray(contextValue)\n      ? contextValue : {};\n    const unresolvedSlots = Array.isArray(context.unresolvedSlots)\n      ? context.unresolvedSlots.map(slot => ({\n          code: clean(slot?.code), label: clean(slot?.label), questionHint: clean(slot?.questionHint)\n        })).filter(slot => slot.code && slot.label && slot.questionHint)\n      : [];\n    const currentLocalDate = localDate(timezone, localTimestamp);\n    const sourceLocalDate = clean(context.sourceLocalDate);\n    const reference = dateReference(sourceLocalDate, currentLocalDate);\n    const eventLabel = clean(context.eventLabel);\n    const eventSummary = clean(context.eventSummary);\n    const evidenceText = clean(context.evidenceText);\n    const resolvedSlots = context.resolvedSlots && typeof context.resolvedSlots === 'object' && !Array.isArray(context.resolvedSlots)\n      ? context.resolvedSlots : {};\n    const baseReady = context.contractVersion === 'chelsea_clarification_context_v1' &&\n      /^[a-z][a-z0-9_]{1,63}$/.test(clean(context.eventRuleCode)) &&\n      Boolean(eventLabel && (eventSummary || evidenceText) && unresolvedSlots.length && reference.ready);\n    return {\n      ready: baseReady,\n      error: baseReady ? '' : (reference.error || 'clarification_context_invalid'),\n      contractVersion: clean(context.contractVersion),\n      sourceLocalDate,\n      currentLocalDate,\n      dateReference: reference.value || '',\n      deltaDays: reference.deltaDays,\n      eventRuleCode: clean(context.eventRuleCode),\n      eventLabel,\n      eventSummary,\n      evidenceText,\n      anchorQuality: clean(context.anchorQuality),\n      resolvedSlots,\n      unresolvedSlots,\n      unresolvedSlotCodes: unresolvedSlots.map(slot => slot.code)\n    };\n  }\n\n  function tokens(value) {\n    return normalized(value).match(/[\\p{L}\\p{N}]+/gu)?.filter(token => token.length >= 3 && !tokenStop.has(token)) || [];\n  }\n\n  function exactCodes(actual, expected) {\n    if (!Array.isArray(actual) || actual.some(code => !clean(code))) return false;\n    const left = actual.map(clean);\n    const right = expected.map(clean);\n    return left.length === new Set(left).size && left.length === right.length &&\n      [...left].sort().join('\\u0000') === [...right].sort().join('\\u0000');\n  }\n\n  function validateResponse(parsed, contract, preferredName, maxLength = 350) {\n    const text = clean(parsed?.text);\n    const dateRef = clean(parsed?.dateReference);\n    const eventRef = clean(parsed?.eventReference);\n    const asked = Array.isArray(parsed?.askedSlotCodes) ? parsed.askedSlotCodes.map(clean) : [];\n    const normalizedText = normalized(text);\n    const normalizedName = normalized(preferredName);\n    let nameCount = 0;\n    let cursor = 0;\n    while (normalizedName && (cursor = normalizedText.indexOf(normalizedName,cursor)) >= 0) {\n      nameCount += 1;\n      cursor += normalizedName.length;\n    }\n    const dateValid = dateRef === contract.dateReference && normalizedText.includes(normalized(dateRef));\n    const eventVisible = Boolean(eventRef && normalizedText.includes(normalized(eventRef)));\n    const grounding = normalized(`${contract.eventLabel} ${contract.eventSummary} ${contract.evidenceText}`);\n    const eventTokens = tokens(eventRef);\n    const eventGrounded = eventVisible && !vagueReferences.has(normalized(eventRef)) &&\n      eventTokens.length > 0 && eventTokens.some(token => grounding.includes(token));\n    const slotsValid = exactCodes(asked,contract.unresolvedSlotCodes);\n    const checks = {\n      text: Boolean(text && text.length <= maxLength),\n      name: nameCount === 1,\n      informal: !formalPattern.test(text),\n      date: dateValid,\n      event: eventGrounded,\n      slots: slotsValid\n    };\n    const firstError = Object.entries(checks).find(([,passed]) => !passed)?.[0] || '';\n    return {\n      ready: Object.values(checks).every(Boolean),\n      error: firstError ? `contextual_clarification_${firstError}_invalid` : '',\n      text,dateReference:dateRef,eventReference:eventRef,askedSlotCodes:asked,checks\n    };\n  }\n\n  return { clean, normalized, derive, validateResponse };\n})();\n\n\nconst input = $input.first()?.json || {};\nconst clean = ContextualClarification.clean;\nconst preferredName = clean(input.stateClarificationPreferredName).replace(/[,;:]+$/u,'').trim();\nconst delivery = input.stateClarificationDeliveryContext && typeof input.stateClarificationDeliveryContext === 'object'\n  ? input.stateClarificationDeliveryContext : {};\nconst timezone = clean(delivery.timezone) || 'UTC';\nconst contract = ContextualClarification.derive(input.stateClarificationContext,timezone);\nconst ready = input.stateClarificationPromptReady === true && Boolean(preferredName && contract.ready);\nconst request = {\n  model: 'gpt-4.1-mini',\n  input: [\n    { role: 'system', content: [{ type: 'input_text', text: [\n      'Ты — Челси. Сформулируй один живой и конкретный уточняющий вопрос для Telegram.',\n      `Обращение: ${preferredName}. Назови его ровно один раз и общайся только на «ты».`,\n      'В первом коротком предложении обязательно явно назови переданные dateReference и конкретное исходное событие.',\n      'Во втором предложении спроси только про unresolvedSlots. resolvedSlots повторно не спрашивай.',\n      'eventReference должен быть коротким буквальным фрагментом eventSummary или evidenceText и обязан присутствовать в text.',\n      'Не подменяй событие другими recent events и не выдумывай подробности.',\n      'Запрещены самостоятельные расплывчатые ссылки «эта нагрузка», «это», «всё», «ситуация». Сначала всегда назови событие.',\n      'askedSlotCodes верни ровно для всех и только переданных unresolvedSlots.',\n      'dateReference верни без изменения. Текст — 1–2 коротких предложения, не более 350 символов.',\n      'Не используй «Вы», «вас», «вам», «ваш» и другие формальные формы.',\n      'Верни только JSON по схеме.'\n    ].join('\\n') }] },\n    { role: 'user', content: [{ type: 'input_text', text: JSON.stringify({\n      preferredName,\n      dateReference: contract.dateReference,\n      sourceLocalDate: contract.sourceLocalDate,\n      eventRuleCode: contract.eventRuleCode,\n      eventLabel: contract.eventLabel,\n      eventSummary: contract.eventSummary,\n      evidenceText: contract.evidenceText,\n      anchorQuality: contract.anchorQuality,\n      resolvedSlots: contract.resolvedSlots,\n      unresolvedSlots: contract.unresolvedSlots\n    }) }] }\n  ],\n  temperature: 0.65,\n  max_output_tokens: 220,\n  text: { format: { type: 'json_schema',name: 'chelsea_contextual_clarification',strict: true,schema: {\n    type: 'object',additionalProperties: false,\n    required: ['text','dateReference','eventReference','askedSlotCodes'],\n    properties: {\n      text: { type: 'string',minLength: 12,maxLength: 350 },\n      dateReference: { type: 'string',minLength: 5,maxLength: 40 },\n      eventReference: { type: 'string',minLength: 3,maxLength: 160 },\n      askedSlotCodes: { type: 'array',items: { type: 'string' },minItems: 1,maxItems: 12 }\n    }\n  } } }\n};\n\nreturn [{ json: {\n  ...input,\n  chelseaMicroPreferredName: preferredName,\n  chelseaMicroRequestReady: ready,\n  chelseaMicroRequestError: ready ? '' : (contract.error || 'clarification_request_invalid'),\n  chelseaMicroRequest: ready ? request : {},\n  chelseaMicroClarificationContract: contract,\n  chelseaMicroPromptVersion: 'chelsea_micro_contextual_clarification_v2',\n  chelseaMicroModel: 'gpt-4.1-mini'\n} }];\n"
+      },
+      "id": "97086bb8-99c4-5947-8252-3b8210089eb7",
+      "name": "Code | Build Chelsea Micro Message Request | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.chelseaMicroRequest }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "2f24e418-1632-5509-bf13-6ee5150a722b",
+      "name": "Call | OpenAI Responses | Compose Clarification Message | ClarificationAsk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1790,
+        0
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst ContextualClarification = (() => {\n  const clean = value => String(value ?? '').normalize('NFKC').replace(/\\s+/g, ' ').trim();\n  const normalized = value => clean(value).toLocaleLowerCase('ru-RU').replace(/ё/g, 'е');\n  const ymdPattern = /^\\d{4}-\\d{2}-\\d{2}$/;\n  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];\n  const formalPattern = /(?:^|[^\\p{L}])(?:вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашего|вашей|вашим|вашими|ваших)(?=$|[^\\p{L}])/iu;\n  const vagueReferences = new Set([\n    'это','эта нагрузка','нагрузка','все','всё','ситуация','эта ситуация','это событие','произошедшее'\n  ].map(normalized));\n  const tokenStop = new Set([\n    'это','эта','этот','эти','была','было','были','сегодня','вчера','июля','августа','сентября',\n    'октября','ноября','декабря','января','февраля','марта','апреля','мая','июня','событие'\n  ]);\n\n  function localDate(timezone, localTimestamp = '') {\n    const supplied = clean(localTimestamp).slice(0, 10);\n    if (ymdPattern.test(supplied)) return supplied;\n    const parts = new Intl.DateTimeFormat('en-US', {\n      timeZone: clean(timezone) || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit'\n    }).formatToParts(new Date());\n    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));\n    return `${values.year}-${values.month}-${values.day}`;\n  }\n\n  function utcDay(value) {\n    if (!ymdPattern.test(value)) return Number.NaN;\n    const [year,month,day] = value.split('-').map(Number);\n    const time = Date.UTC(year,month - 1,day);\n    const check = new Date(time);\n    return check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day\n      ? Math.floor(time / 86400000)\n      : Number.NaN;\n  }\n\n  function dateReference(sourceLocalDate, currentLocalDate) {\n    const sourceDay = utcDay(sourceLocalDate);\n    const currentDay = utcDay(currentLocalDate);\n    if (!Number.isFinite(sourceDay) || !Number.isFinite(currentDay)) return { ready: false, error: 'local_date_invalid' };\n    const delta = currentDay - sourceDay;\n    if (delta < 0) return { ready: false, error: 'future_event_for_state_clarification', deltaDays: delta };\n    if (delta === 0) return { ready: true, value: 'сегодня', deltaDays: 0 };\n    if (delta === 1) return { ready: true, value: 'вчера', deltaDays: 1 };\n    const [sourceYear,sourceMonth,sourceDate] = sourceLocalDate.split('-').map(Number);\n    const currentYear = Number(currentLocalDate.slice(0,4));\n    return {\n      ready: true,\n      value: `${sourceDate} ${months[sourceMonth - 1]}${sourceYear === currentYear ? '' : ` ${sourceYear} года`}`,\n      deltaDays: delta\n    };\n  }\n\n  function derive(contextValue, timezone, localTimestamp = '') {\n    const context = contextValue && typeof contextValue === 'object' && !Array.isArray(contextValue)\n      ? contextValue : {};\n    const unresolvedSlots = Array.isArray(context.unresolvedSlots)\n      ? context.unresolvedSlots.map(slot => ({\n          code: clean(slot?.code), label: clean(slot?.label), questionHint: clean(slot?.questionHint)\n        })).filter(slot => slot.code && slot.label && slot.questionHint)\n      : [];\n    const currentLocalDate = localDate(timezone, localTimestamp);\n    const sourceLocalDate = clean(context.sourceLocalDate);\n    const reference = dateReference(sourceLocalDate, currentLocalDate);\n    const eventLabel = clean(context.eventLabel);\n    const eventSummary = clean(context.eventSummary);\n    const evidenceText = clean(context.evidenceText);\n    const resolvedSlots = context.resolvedSlots && typeof context.resolvedSlots === 'object' && !Array.isArray(context.resolvedSlots)\n      ? context.resolvedSlots : {};\n    const baseReady = context.contractVersion === 'chelsea_clarification_context_v1' &&\n      /^[a-z][a-z0-9_]{1,63}$/.test(clean(context.eventRuleCode)) &&\n      Boolean(eventLabel && (eventSummary || evidenceText) && unresolvedSlots.length && reference.ready);\n    return {\n      ready: baseReady,\n      error: baseReady ? '' : (reference.error || 'clarification_context_invalid'),\n      contractVersion: clean(context.contractVersion),\n      sourceLocalDate,\n      currentLocalDate,\n      dateReference: reference.value || '',\n      deltaDays: reference.deltaDays,\n      eventRuleCode: clean(context.eventRuleCode),\n      eventLabel,\n      eventSummary,\n      evidenceText,\n      anchorQuality: clean(context.anchorQuality),\n      resolvedSlots,\n      unresolvedSlots,\n      unresolvedSlotCodes: unresolvedSlots.map(slot => slot.code)\n    };\n  }\n\n  function tokens(value) {\n    return normalized(value).match(/[\\p{L}\\p{N}]+/gu)?.filter(token => token.length >= 3 && !tokenStop.has(token)) || [];\n  }\n\n  function exactCodes(actual, expected) {\n    if (!Array.isArray(actual) || actual.some(code => !clean(code))) return false;\n    const left = actual.map(clean);\n    const right = expected.map(clean);\n    return left.length === new Set(left).size && left.length === right.length &&\n      [...left].sort().join('\\u0000') === [...right].sort().join('\\u0000');\n  }\n\n  function validateResponse(parsed, contract, preferredName, maxLength = 350) {\n    const text = clean(parsed?.text);\n    const dateRef = clean(parsed?.dateReference);\n    const eventRef = clean(parsed?.eventReference);\n    const asked = Array.isArray(parsed?.askedSlotCodes) ? parsed.askedSlotCodes.map(clean) : [];\n    const normalizedText = normalized(text);\n    const normalizedName = normalized(preferredName);\n    let nameCount = 0;\n    let cursor = 0;\n    while (normalizedName && (cursor = normalizedText.indexOf(normalizedName,cursor)) >= 0) {\n      nameCount += 1;\n      cursor += normalizedName.length;\n    }\n    const dateValid = dateRef === contract.dateReference && normalizedText.includes(normalized(dateRef));\n    const eventVisible = Boolean(eventRef && normalizedText.includes(normalized(eventRef)));\n    const grounding = normalized(`${contract.eventLabel} ${contract.eventSummary} ${contract.evidenceText}`);\n    const eventTokens = tokens(eventRef);\n    const eventGrounded = eventVisible && !vagueReferences.has(normalized(eventRef)) &&\n      eventTokens.length > 0 && eventTokens.some(token => grounding.includes(token));\n    const slotsValid = exactCodes(asked,contract.unresolvedSlotCodes);\n    const checks = {\n      text: Boolean(text && text.length <= maxLength),\n      name: nameCount === 1,\n      informal: !formalPattern.test(text),\n      date: dateValid,\n      event: eventGrounded,\n      slots: slotsValid\n    };\n    const firstError = Object.entries(checks).find(([,passed]) => !passed)?.[0] || '';\n    return {\n      ready: Object.values(checks).every(Boolean),\n      error: firstError ? `contextual_clarification_${firstError}_invalid` : '',\n      text,dateReference:dateRef,eventReference:eventRef,askedSlotCodes:asked,checks\n    };\n  }\n\n  return { clean, normalized, derive, validateResponse };\n})();\n\n\nconst source = $('Code | Build Chelsea Micro Message Request | ClarificationAsk').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst clean = ContextualClarification.clean;\nconst extractText = response => typeof response?.output_text === 'string'\n  ? response.output_text\n  : (Array.isArray(response?.output) ? response.output.flatMap(part => Array.isArray(part?.content) ? part.content : [])\n      .map(part => part?.text || part?.output_text || '').filter(Boolean).join('\\n') : '');\nlet parsed = {};\nlet parseError = '';\ntry {\n  parsed = JSON.parse(clean(extractText(body)).replace(/^```json\\s*/i,'').replace(/^```\\s*/i,'').replace(/```$/i,'').trim());\n} catch (error) {\n  parseError = clean(error?.message || 'micro_message_json_invalid');\n}\nconst validation = parseError ? { ready: false,error: parseError,text: '' } :\n  ContextualClarification.validateResponse(\n    parsed,source.chelseaMicroClarificationContract || {},clean(source.chelseaMicroPreferredName),350\n  );\nconst ready = source.chelseaMicroRequestReady === true && validation.ready === true;\nconst telegramRequest = source.stateClarificationTelegramRequestBody && typeof source.stateClarificationTelegramRequestBody === 'object'\n  ? { ...source.stateClarificationTelegramRequestBody,text: ready ? validation.text : '' } : {};\n\nreturn [{ json: {\n  ...source,\n  stateClarificationPromptText: ready ? validation.text : '',\n  stateClarificationTelegramRequestBody: telegramRequest,\n  stateClarificationCompositionReady: ready,\n  stateClarificationCompositionError: ready ? '' : (validation.error || source.chelseaMicroRequestError || 'micro_message_invalid'),\n  stateClarificationCompositionValidation: validation,\n  stateClarificationCompositionResponse: body\n} }];\n"
+      },
+      "id": "629aaa59-b59a-545b-b085-05eac531da95",
+      "name": "Code | Parse Chelsea Micro Message | ClarificationAsk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2040,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d2100000-0000-4000-8000-000000000019",
+              "leftValue": "={{ $json.stateClarificationCompositionReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6eda38ed-cf44-5786-ba8b-ec76503dc09e",
+      "name": "If | Clarification Composition Ready | ClarificationAsk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2290,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().length ? $input.all().map(item => ({ json: { ...item.json, credentialSource: 'environment', credentialReady: true } })) : [{ json: { credentialSource: 'environment', credentialReady: true } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2540,
+        0
+      ],
+      "id": "9bd05a4b-1720-514e-a940-43e4cee1ec5e",
+      "name": "Config | Data Table Key | Telegram Bot | ClarificationAsk",
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "1e23f26d-1c47-5081-a83d-df1283362af6",
+      "name": "End | ClarificationAsk Worker Receipt | ClarificationAskWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3320,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1570,
+        -100
+      ],
+      "id": "16f5fae6-f150-4cfe-ab5a-82cec7df6aa6",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Compose Clarification Message   ClarificationAsk | ClarificationAsk"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ModelOutSecV1b6QrS",
+          "mode": "list",
+          "cachedResultName": "Chelsea Model Output Security Validator v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2260,
+        80
+      ],
+      "id": "b2cc2b4a-0c56-4dbb-a4d5-65e7ef43b78b",
+      "name": "Call | Chelsea Model Output Security Validator | Validate Micro Output | ClarificationAsk"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2010,
+        0
+      ],
+      "id": "55df255b-3988-45c9-932e-194d4fa8bf09",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationAsk"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ClarificationAskWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Clarification Ask Steps | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Clarification Ask Steps | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Clarification Ask Claims | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Clarification Ask Claims | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Get Delivery Context | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Get Delivery Context | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Clarification Telegram Request | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Clarification Telegram Request | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Prompt Ready | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Prompt Ready | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Begin Clarification Send | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Step Fail RPC | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Begin Clarification Send | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Clarification Send Begin | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Clarification Send Begin | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Telegram Send Allowed | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Telegram Send Allowed | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Chelsea Micro Message Request | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Step Fail RPC | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Telegram | Send Clarification Prompt | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Clarification Send Complete RPC | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Clarification Send Complete RPC | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Telegram Receipt Exact | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Telegram Receipt Exact | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete Clarification Send | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Step Fail RPC | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete Clarification Send | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Clarification Send Complete | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Clarification Send Complete | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Send Completed | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Send Completed | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "End | Clarification Prompt Sent | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Step Fail RPC | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Clarification Step Fail RPC | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail Clarification Step | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Chelsea Micro Message Request | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Compose Clarification Message   ClarificationAsk | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Compose Clarification Message | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Parse Chelsea Micro Message | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Model Output Security Validator | Validate Micro Output | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Composition Ready | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Config | Data Table Key | Telegram Bot | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Step Fail RPC | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config | Data Table Key | Telegram Bot | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | Telegram | Send Clarification Prompt | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Clarification Prompt Sent | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationAsk Worker Receipt | ClarificationAskWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail Clarification Step | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationAsk Worker Receipt | ClarificationAskWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | Clarification Ask Contract | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationAsk Worker Receipt | ClarificationAskWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Compose Clarification Message   ClarificationAsk | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Compose Clarification Message | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Model Output Security Validator | Validate Micro Output | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Composition Ready | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationAsk": {
+      "main": [
+        [
+          {
+            "node": "Code | Parse Chelsea Micro Message | ClarificationAsk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

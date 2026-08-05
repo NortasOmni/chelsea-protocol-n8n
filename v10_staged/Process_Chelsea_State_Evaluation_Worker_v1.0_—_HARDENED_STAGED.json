@@ -1,0 +1,570 @@
+{
+  "id": "cVYLgM5y9YyBkRxZ",
+  "name": "Process Chelsea State Evaluation Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "db2d75ce-0f6c-5604-9d7f-d84c90462e64",
+  "nodes": [
+    {
+      "id": "240e8f4e-e487-5255-8a78-1c7af68a5b9a",
+      "name": "Trigger | Parent Workflow | EvaluationWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6eaa75a5-955a-5227-bf78-081e4e17aed3",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_due_evaluations_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":evaluation\", p_as_of_date: $json.schedulerAsOfDate, p_limit: $json.evaluationBatchLimit, p_lease_minutes: $json.fastLeaseMinutes } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "e0f3b230-8090-5f6b-8f6d-e31ecebb5639",
+      "name": "Call | Supabase RPC | Claim Due State Evaluations | Evaluation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst rows=$input.all().flatMap(item=>{const value=item.json?.body??item.json??{};return Array.isArray(value)?value:(Array.isArray(value.data)?value.data:[value]);});\nreturn rows.filter(row=>row&&row.evaluation_id&&row.lease_token).map(row=>({json:{...row,stateEvaluation:row}}));"
+      },
+      "id": "6ce18149-21cb-5eb5-b3cf-27db362c700b",
+      "name": "Code | Normalize State Evaluation Claims | Evaluation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst row=$input.first()?.json||{};\nconst zone=String(row.timezone||'Asia/Novosibirsk');\nconst parts=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());\nconst part=type=>parts.find(value=>value.type===type)?.value||'';\nconst localDate=`${part('year')}-${part('month')}-${part('day')}`;\nconst scheduled=String(row.scheduled_on||row.scheduledOn||'');\nconst asOfDate=localDate>=scheduled?localDate:scheduled;\nreturn [{json:{...row,stateEvaluation:row.stateEvaluation||row,stateRpcBody:{p_evaluation_id:row.evaluation_id||row.evaluationId,p_lease_token:row.lease_token||row.leaseToken,p_expected_evaluation_version:Number(row.evaluation_version??row.evaluationVersion),p_completion_key:`evaluation_complete:${row.evaluation_id||row.evaluationId}:${asOfDate}`,p_as_of_date:asOfDate,p_helpfulness_rating:null,p_evaluation_note:null}}}];"
+      },
+      "id": "1986dc3c-4d3a-5c7c-9c8e-5fba3781018c",
+      "name": "Code | Build State Evaluation Complete RPC | Evaluation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_evaluation_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "9d74d5a3-3997-5f11-bfde-63befadc3af5",
+      "name": "Call | Supabase RPC | Complete State Evaluation | Evaluation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        290,
+        220
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$('Code | Build State Evaluation Complete RPC | Evaluation').item.json||{};\nconst incoming=$input.first()?.json||{};\nconst body=incoming.body&&typeof incoming.body==='object'?incoming.body:incoming;\nconst ok=body?.contractVersion==='chelsea_state_evaluation_complete_v1'&&String(body.evaluationId||'')===String(source.evaluation_id||source.evaluationId||'')&&body.status==='completed';\nreturn [{json:{...source,stateEvaluationResult:body,stateEvaluationCompleted:ok,stateEvaluationError:ok?'':String(body?.message||body?.error?.message||'evaluation_complete_failed')}}];"
+      },
+      "id": "3118884d-cc96-524d-882a-be2b78dae755",
+      "name": "Code | Validate State Evaluation Completion | Evaluation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e9380de6-a219-4cab-b308-8c0566b0973c",
+              "leftValue": "={{ $json.stateEvaluationCompleted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4745f5b5-90ed-57f3-81d6-f6ba051e0b21",
+      "name": "If | State Evaluation Completed | Evaluation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        790,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nreturn [{json:{...input,stateRpcBody:{p_evaluation_id:input.evaluation_id||input.evaluationId,p_lease_token:input.lease_token||input.leaseToken,p_expected_evaluation_version:Number(input.evaluation_version??input.evaluationVersion),p_failure_key:`evaluation_fail:${input.evaluation_id||input.evaluationId}:v${Number(input.evaluation_version??input.evaluationVersion)}`,p_error_code:'evaluation_complete_failed',p_error_text:String(input.stateEvaluationError||'State evaluation failed.').slice(0,2000),p_retry_delay_minutes:1}}}];"
+      },
+      "id": "d1503331-6874-578d-b72d-f9dc97562873",
+      "name": "Code | Build State Evaluation Fail RPC | Evaluation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_evaluation_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b10988bf-4650-5677-ba86-dfa61ff8281c",
+      "name": "Call | Supabase RPC | Fail State Evaluation | Evaluation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1290,
+        380
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "width": 2100,
+        "height": 620,
+        "color": 5,
+        "content": "## Benefit evaluation (Evaluation)\nA due evaluation captures a new snapshot, records observed benefit, and enqueues a summary point. Product delay remains 1/3/7/14 days."
+      },
+      "id": "5e733d81-0a48-5b81-8cf1-a051afb748b1",
+      "name": "Sticky Note | State Evaluation | Evaluation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "id": "1acfacdf-bd17-5d87-affa-fca6ed990e09",
+      "name": "End | Evaluation Worker Receipt | EvaluationWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1570,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | EvaluationWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Due State Evaluations | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Due State Evaluations | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Evaluation Claims | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Evaluation Claims | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Evaluation Complete RPC | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Evaluation Complete RPC | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete State Evaluation | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete State Evaluation | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate State Evaluation Completion | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate State Evaluation Completion | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "If | State Evaluation Completed | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Evaluation Completed | Evaluation": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code | Build State Evaluation Fail RPC | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Evaluation Fail RPC | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail State Evaluation | Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail State Evaluation | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "End | Evaluation Worker Receipt | EvaluationWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | State Evaluation | Evaluation": {
+      "main": [
+        [
+          {
+            "node": "End | Evaluation Worker Receipt | EvaluationWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

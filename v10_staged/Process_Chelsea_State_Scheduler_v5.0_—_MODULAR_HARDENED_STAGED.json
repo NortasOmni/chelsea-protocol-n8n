@@ -1,0 +1,923 @@
+{
+  "id": "STF6pQ2mN9xR4vKa",
+  "name": "Process Chelsea State Scheduler v5.0 — MODULAR HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 1080,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "ad4f4595-fb48-5734-869a-5050f8be6e67",
+  "nodes": [
+    {
+      "id": "4346220b-99f3-5030-be06-9617990b2f02",
+      "name": "Trigger | Parent Workflow | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "b1d86620-59d2-5f15-b4b8-f60bc4b16c17",
+      "name": "Trigger | Manual Start | StateSchedulerFanout",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ad40b28e-db6a-59f3-bbdf-951f381a82f7",
+      "name": "Call | Process Chelsea State Analysis Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "1uZ5KCubNPTyKuh5",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "aa1bb48c-60ef-5d7e-b088-8d48a5c7db94",
+      "name": "End | Analysis Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "79e11341-5edc-506e-a11b-309a5cb04a68",
+      "name": "Call | Process Chelsea State ChangeNotification Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jMZYEOqeUpKg19oD",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State ChangeNotification Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "510c93d3-4d10-536f-a504-8907c4a4d765",
+      "name": "End | ChangeNotification Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        40,
+        -420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9a8e4e6c-1da0-5cf9-96fe-e062b30f083d",
+      "name": "Call | Process Chelsea State ClarificationAnswer Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "bE5XAWq7GWHdwZbU",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State ClarificationAnswer Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "a2f3db79-4788-50f8-955b-b508cdaff192",
+      "name": "End | ClarificationAnswer Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a452afb4-633a-58ce-b4ad-672b9a650c03",
+      "name": "Call | Process Chelsea State ClarificationAsk Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "AnAStMDvOcgg9QQj",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State ClarificationAsk Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "4aa622f3-6f59-549d-a154-ff8b7e681726",
+      "name": "End | ClarificationAsk Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        760,
+        -420
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "994facfb-6735-5737-ba34-18abd3c16176",
+      "name": "Call | Process Chelsea State ClarificationFinalize Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        -160
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "4Wi9cqjk2Mz7CSXq",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State ClarificationFinalize Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "67fb83d1-8cba-56a4-96f7-bcf1aafaf6a8",
+      "name": "End | ClarificationFinalize Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "26020c8c-d687-5732-a63b-afcecb678c87",
+      "name": "Call | Process Chelsea State Decision Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        -160
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "OY9mgITJVR4nHuT9",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Decision Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "d1693484-cfea-5c0d-90d3-4b373adbf84b",
+      "name": "End | Decision Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        40,
+        -160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "bd1853f9-699d-52dd-bb41-03c2e17f73c6",
+      "name": "Call | Process Chelsea State Delivery Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        -160
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "VFcTLbdfS3Ec838w",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Delivery Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "da0c4a2b-a3e3-5db6-b7b1-af5858d212f6",
+      "name": "End | Delivery Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c23750f2-7a51-57db-9985-2c61eddea203",
+      "name": "Call | Process Chelsea State Evaluation Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        -160
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "cVYLgM5y9YyBkRxZ",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Evaluation Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "1ed30c39-1eab-5c8e-8f9f-09225439d1b4",
+      "name": "End | Evaluation Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        760,
+        -160
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0f51afea-469c-558e-85ec-0e875391c1f7",
+      "name": "Call | Process Chelsea State FuturePlanFollowUp Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "qgWN2jDgXChDsbbe",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State FuturePlanFollowUp Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "29456869-7e00-58fb-b41d-9048120f2f4d",
+      "name": "End | FuturePlanFollowUp Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "eba23dc6-b834-5ce9-bb95-4ef221597997",
+      "name": "Call | Process Chelsea State InteractionRecovery Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "lairbKhoaq0o05aA",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State InteractionRecovery Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "d35bb08e-9d4c-552f-9ea3-ea4370450dd7",
+      "name": "End | InteractionRecovery Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        40,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3ac7c3ae-8926-5c87-9207-fb0f8b2105dc",
+      "name": "Call | Process Chelsea State Operations Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "04ODyCDlNaIRgTuU",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Operations Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "2ba6e70a-4882-5bd5-8986-2e166b589017",
+      "name": "End | Operations Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        400,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cce361da-28a1-5702-bf72-e9edececabc1",
+      "name": "Call | Process Chelsea State Proactivity Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        100
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "cX6ay5aMXH3wdL0v",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Proactivity Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "c0e22554-5a5a-5955-a424-a8e4b2bb1679",
+      "name": "End | Proactivity Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        760,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ab7fcf51-9fa9-5ffe-88a7-939f8219ca92",
+      "name": "Call | Process Chelsea State QdrantOutbox Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        360
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "puNfqcIG1OEjLpPU",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State QdrantOutbox Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "a46c7a2a-46a6-586b-81fe-c260ddc8822a",
+      "name": "End | QdrantOutbox Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        360
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a6829283-41c4-52e4-b470-68e55e3eb6d5",
+      "name": "Call | Process Chelsea State StateDateRoute Worker | Execute State Stage | StateSchedulerFanout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        360
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "q6omiaG4yYgYcwVl",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State StateDateRoute Worker v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "passthrough",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "a07aa01f-a588-57d2-9ad2-7236a27dcb11",
+      "name": "End | StateDateRoute Stage Receipt | StateSchedulerFanout",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        40,
+        360
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Call | Process Chelsea State Analysis Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | Analysis Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State ChangeNotification Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | ChangeNotification Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State ClarificationAnswer Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationAnswer Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State ClarificationAsk Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationAsk Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State ClarificationFinalize Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationFinalize Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Decision Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | Decision Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Delivery Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | Delivery Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Evaluation Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | Evaluation Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State FuturePlanFollowUp Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | FuturePlanFollowUp Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State InteractionRecovery Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionRecovery Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Operations Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | Operations Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Proactivity Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | Proactivity Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State QdrantOutbox Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | QdrantOutbox Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State StateDateRoute Worker | Execute State Stage | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "End | StateDateRoute Stage Receipt | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Parent Workflow | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ChangeNotification Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ClarificationAnswer Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ClarificationAsk Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ClarificationFinalize Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Decision Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Delivery Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Evaluation Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State FuturePlanFollowUp Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State InteractionRecovery Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Operations Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Proactivity Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State QdrantOutbox Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State StateDateRoute Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger | Manual Start | StateSchedulerFanout": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ChangeNotification Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ClarificationAnswer Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ClarificationAsk Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State ClarificationFinalize Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Decision Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Delivery Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Evaluation Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State FuturePlanFollowUp Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State InteractionRecovery Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Operations Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State Proactivity Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State QdrantOutbox Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call | Process Chelsea State StateDateRoute Worker | Execute State Stage | StateSchedulerFanout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

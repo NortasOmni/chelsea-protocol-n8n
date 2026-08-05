@@ -1,0 +1,1623 @@
+{
+  "id": "1uZ5KCubNPTyKuh5",
+  "name": "Process Chelsea State Analysis Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "89160538-79b1-5ee1-a33a-7a90db633e48",
+  "nodes": [
+    {
+      "id": "334e7c3e-559c-5705-bdc2-e38d6cc3324a",
+      "name": "Trigger | Parent Workflow | AnalysisWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d5269f0d-c127-5a5c-a556-cfe43f7d85a5",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_analysis_jobs_v3\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":analysis-v3\", p_limit: $json.analysisBatchLimit, p_lease_minutes: $json.modelLeaseMinutes } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "7e16db9a-af7a-5a8d-96b1-46f31efa4efb",
+      "name": "Call | Supabase RPC | Claim Analysis Jobs | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        320
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet base = {};\ntry { base = $('Set | Scheduler Constants | StateScheduler').first().json || {}; } catch {}\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst rows = $input.all().flatMap(item => {\n  const value = item?.json?.body ?? item?.json ?? {};\n  return Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : [value]);\n});\nconst validDate = value => /^\\d{4}-\\d{2}-\\d{2}$/.test(clean(value));\n\nreturn rows.filter(row => {\n  const catalog = row?.rule_catalog ?? row?.ruleCatalog;\n  return row && clean(row.job_id ?? row.jobId) && clean(row.lease_token ?? row.leaseToken) &&\n    Number.isSafeInteger(Number(row.job_version ?? row.jobVersion)) &&\n    clean(row.principal_id ?? row.principalId) && clean(row.input_id ?? row.inputId) &&\n    clean(row.content) && validDate(row.local_date ?? row.localDate) &&\n    catalog && typeof catalog === 'object' && !Array.isArray(catalog) &&\n    Number.isSafeInteger(Number(row.rule_catalog_version ?? row.ruleCatalogVersion));\n}).map(row => ({\n  json: {\n    ...base,\n    ...row,\n    stateJob: row,\n    asOfDate: clean(row.local_date ?? row.localDate),\n    stateAnalysisClaimContractVersion: 'chelsea_state_analysis_claim_v3'\n  }\n}));\n"
+      },
+      "id": "12f93e2c-bf2a-5986-aee9-9a0cec7865df",
+      "name": "Code | Normalize Analysis Claims | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_get_analysis_context_v2\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_principal_id: $json.principal_id, p_as_of_date: $json.local_date, p_input_id: $json.input_id, p_limit: 50 } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "85b1c04b-e25f-5b5b-936b-534b8c576b3f",
+      "name": "Call | Supabase RPC | Get Analysis Context | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        320
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst claim = $('Code | Normalize Analysis Claims | Analysis').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst job = claim.stateJob || claim;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst expectedPrincipal = clean(job.principal_id ?? job.principalId);\nconst expectedCatalogVersion = Number(job.rule_catalog_version ?? job.ruleCatalogVersion);\nconst actualCatalogVersion = Number(body?.ruleCatalogVersion ?? body?.rule_catalog_version);\nconst claimCatalog = job.rule_catalog ?? job.ruleCatalog;\nconst catalog = body?.ruleCatalog ?? body?.rule_catalog;\nconst expectedRuleSetCode = clean(job.rule_set_code ?? job.ruleSetCode ?? claimCatalog?.ruleSetCode ?? claimCatalog?.rule_set_code);\nconst expectedRuleSetVersion = Number(job.rule_set_version ?? job.ruleSetVersion ?? claimCatalog?.ruleSetVersion ?? claimCatalog?.rule_set_version);\nconst actualRuleSetCode = clean(catalog?.ruleSetCode ?? catalog?.rule_set_code);\nconst actualRuleSetVersion = Number(catalog?.ruleSetVersion ?? catalog?.rule_set_version);\nconst ready = body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_analysis_context_v2' &&\n  clean(body.principalId ?? body.principal_id) === expectedPrincipal &&\n  Number.isSafeInteger(expectedCatalogVersion) && actualCatalogVersion === expectedCatalogVersion &&\n  expectedRuleSetCode && actualRuleSetCode === expectedRuleSetCode &&\n  Number.isSafeInteger(expectedRuleSetVersion) && actualRuleSetVersion === expectedRuleSetVersion &&\n  catalog && typeof catalog === 'object' && !Array.isArray(catalog) &&\n  Number(catalog.ruleCatalogVersion ?? catalog.rule_catalog_version) === expectedCatalogVersion;\n\nreturn [{ json: {\n  ...claim,\n  stateJob: job,\n  analysisContext: ready ? body : {},\n  stateAnalysisContextReady: ready,\n  stateAnalysisContextError: ready\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'analysis_context_v2_unavailable').slice(0, 1000)\n} }];\n"
+      },
+      "id": "bb0e9167-1a64-5646-920d-64a371609083",
+      "name": "Code | Merge Analysis Context | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        290,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3f5dae93-c2cd-4bf5-a7cc-da3e47c93745",
+              "leftValue": "={{ $json.stateAnalysisContextReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5ee7fe27-b503-5921-834e-7a0b4bf96932",
+      "name": "If | Analysis Context Ready | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        540,
+        320
+      ]
+    },
+    {
+      "id": "ec1ca5ab-b6cb-56cf-9f04-9803ff35db03",
+      "name": "Call | Process Chelsea State Analysis Request Builder | Analysis",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        790,
+        240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "StateReqBuild083e",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Request Builder v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "payload": "={{ $json }}",
+            "profile": "analysis"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "profile",
+              "displayName": "profile",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateAnalysisRequest }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "22d2f94b-92bf-58fa-b66c-39aef55a2c86",
+      "name": "Call | OpenAI Responses | Analyze State | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        240
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d1e7d3d6-8f45-5738-ad03-c1d47250efda",
+      "name": "Call | Process Chelsea State Analysis Parser | Parse Primary Analysis | Analysis",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1290,
+        240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "STPARSE6xA1b2c3d4",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Parser v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "modelResponse": "={{ $json }}",
+            "builtContext": "={{ $(\"Call | Process Chelsea State Analysis Request Builder | Analysis\").first().json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "modelResponse",
+              "displayName": "modelResponse",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "builtContext",
+              "displayName": "builtContext",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "Chelsea Hardening v6: shared parser removes four identical 68k Code-node copies."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bc55d631-b6f2-4ef4-adc3-5750cbeb08a8",
+              "leftValue": "={{ $json.stateAnalysisValid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "01a1a296-a546-58f9-ae0f-d4b89c68712d",
+      "name": "If | Analysis Result Valid | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst parsed = $input.first()?.json || {};\nconst original = parsed.stateAnalysisRequest;\nif (!original || typeof original !== 'object') throw new Error('State analysis repair: original request is missing.');\n\nconst errors = Array.isArray(parsed.stateAnalysisErrors) ? parsed.stateAnalysisErrors.slice(0, 100) : ['unknown_validation_error'];\nconst invalidOutput = String(parsed.stateAnalysisRawText || '').slice(0, 30000);\nconst ruleCatalog = parsed.stateAnalysisRuleCatalog && typeof parsed.stateAnalysisRuleCatalog === 'object'\n  ? parsed.stateAnalysisRuleCatalog\n  : null;\nif (!ruleCatalog) throw new Error('State analysis repair: active rule catalog is missing.');\n\nconst repairInstruction = [\n  'Исправь предыдущий результат полностью. Верни новый полный JSON по той же strict schema, не patch.',\n  'Устрани каждую ошибку валидатора и сохрани schemaVersion=chelsea_state_analysis_v2.',\n  `Используй только этот active ruleCatalog: ${JSON.stringify(ruleCatalog)}.`,\n  'Верхний результат обязан точно копировать ruleSetCode, ruleSetVersion и ruleCatalogVersion из active ruleCatalog.',\n  'Не добавляй собственные связи event→sphere, polarity, impactScale, clarification или finance. Исполняй выбранное правило каталога.',\n  'Каждый event обязан иметь активный ruleCode и точный ruleSetVersion. Каждый effect обязан точно копировать effectRuleCode, sphereCode и direction одного разрешённого allowedEffects.',\n  'Соблюдай все диапазоны strength/confidence, allowedDurationDays, allowedImpactBases, requiredEffectGroups, polarityMode, allowedImpactScales и maxEffects.',\n  'Finance разрешён только financePolicy выбранного правила; outcome/direction/evidencePattern должны совпасть с каталогом.',\n  'Вопрос, его варианты и missingFields должны точно соответствовать одной clarificationPolicy.questions выбранного ruleCode.',\n  'При clarification.needed=true neutralFallback обязателен. Он использует neutral_without_clarification, strength=1, confidence=0.60, neutralScale правила, пустые userScores/retractions, точно повторяет futurePlans верхнего результата и содержит clarification=false.',\n  'При intake_enrichment основные mutation-массивы пусты, target/version null, а fallback содержит минимум одно событие выбранного ruleCode.',\n  'При effect_resolution сохраняй target CAS и ruleCode target. Fallback не содержит supersede/retraction и не меняет неоднозначный target.',\n  'При clarification.needed=false neutralFallback=null, все остальные nullable clarification-поля null, questionOptions/missingFields пусты.',\n  'Буквальные evidence разрешены только из currentMessage.content или currentMessage.collectedClarificationAnswerSegments исходного запроса.',\n  'Исправь временную привязку по currentMessage.temporalContext: today/вчера/явная дата задают occurredOn и startsOn завершённого события; обе даты совпадают и не позже latestMutableDate.',\n  'Полностью удали планы и намерения из events/userScores/retractions и clarification: они не меняют баллы. Конкретный личный план с разрешимой датой сохрани только в futurePlans.',\n  'Для futurePlans plannedFor не раньше anchorLocalDate; сегодня=today, завтра=tomorrow, послезавтра=dayAfterTomorrow, явная дата преобразуется точно. Без надёжной даты план не сохраняй и вопрос не задавай.',\n  'futurePlan.planSemanticKey стабилен и не содержит дату/ID; evidenceText и temporalEvidenceText являются буквальными непрерывными фрагментами источника. Прогнозы и чужие действия не являются планами пользователя.',\n  'temporalEvidenceText копируй буквальным непрерывным фрагментом источника, доказывающим дату и завершённость; не вырезай слова из будущего плана так, чтобы он выглядел свершившимся.',\n  'currentMessage.clarificationSession.resolvedSlots и currentMessage.collectedClarificationAnswerSegments — разрешённые уточнённые данные; не задавай повторный вопрос по уже заполненному slotCode.',\n  'При currentMessage.clarificationSession.status=finalizing и resolutionMode=clarified обязательно верни clarification.needed=false и не создавай новый цикл уточнений.',\n  'Не переставляй слова, не исправляй регистр и не перефразируй evidence. Если короткий фрагмент не получается, используй один разрешённый источник целиком.',\n  'dailySemanticKey должен быть стабильным и не дублировать точный или близкий ключ того же локального дня.',\n  'Для sphere_default бери durationDays из ruleCatalog.sphereDefaults; durationEvidence=null.',\n  'explicit_user_duration используй только с буквальным признаком продолжающегося/повторяющегося влияния; «сегодня» таким признаком не является.',\n  `Ошибки: ${JSON.stringify(errors)}`,\n  `Предыдущий результат: ${invalidOutput || '(пусто)'}`\n].join('\\n');\n\nconst request = {\n  ...original,\n  input: [\n    ...(Array.isArray(original.input) ? original.input : []),\n    { role: 'user', content: [{ type: 'input_text', text: repairInstruction }] }\n  ]\n};\n\nreturn [{\n  json: {\n    ...parsed,\n    stateAnalysisRequest: request,\n    stateAnalysisRepairAttempted: true,\n    stateAnalysisPromptVersion: 'chelsea_state_analysis_prompt_v2_2_future_plans_repair'\n  }\n}];\n"
+      },
+      "id": "6cd85b53-563a-5813-bdbb-0f6ff2e7c620",
+      "name": "Code | Build State Analysis Repair Request | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1790,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateAnalysisRequest }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "d098b68f-9061-516f-9cea-01fc1cf2e733",
+      "name": "Call | OpenAI Responses | Repair State Analysis | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2040,
+        440
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "35e190a0-b125-5fe7-8200-0a27fe0c55bb",
+      "name": "Call | Process Chelsea State Analysis Parser | Parse Repaired Analysis | Analysis",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2290,
+        440
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "STPARSE6xA1b2c3d4",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Parser v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "modelResponse": "={{ $json }}",
+            "builtContext": "={{ $(\"Code | Build State Analysis Repair Request | Analysis\").first().json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "modelResponse",
+              "displayName": "modelResponse",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "builtContext",
+              "displayName": "builtContext",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "Chelsea Hardening v6: shared parser removes four identical 68k Code-node copies."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d0012885-1565-4291-b875-614e3afbf29a",
+              "leftValue": "={{ $json.stateAnalysisValid === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bed49f8c-7335-5553-89fa-4802741b20f3",
+      "name": "If | Repaired Analysis Valid | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2540,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fedb887e-fdb9-4fc2-a1a1-dc7a0b81caa8",
+              "leftValue": "={{ $json.stateAnalysisPreApplyClarificationNeeded === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5fd5694e-3766-5324-9e18-cd06633bedf6",
+      "name": "If | Pre-Apply Clarification Needed | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2790,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst parsed = $input.first()?.json || {};\nconst job = parsed.stateJob && typeof parsed.stateJob === 'object' ? parsed.stateJob : parsed;\nconst result = parsed.stateAnalysisResult;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst jobId = clean(job.job_id ?? job.jobId);\nconst leaseToken = clean(job.lease_token ?? job.leaseToken);\nconst jobVersion = Number(job.job_version ?? job.jobVersion);\nconst catalogVersion = Number(parsed.stateAnalysisRuleCatalogVersion ?? job.rule_catalog_version ?? job.ruleCatalogVersion);\nconst ready = Boolean(jobId && leaseToken && Number.isSafeInteger(jobVersion) &&\n  result?.schemaVersion === 'chelsea_state_analysis_v2' && result?.clarification?.needed === true &&\n  result?.neutralFallback && typeof result.neutralFallback === 'object' &&\n  Number.isSafeInteger(catalogVersion));\n\nreturn [{ json: {\n  ...parsed,\n  stateAnalysisDeferReady: ready,\n  stateAnalysisDeferError: ready ? '' : 'analysis_defer_v1_input_incomplete',\n  stateRpcBody: {\n    p_job_id: jobId,\n    p_lease_token: leaseToken,\n    p_expected_job_version: jobVersion,\n    p_result: result,\n    p_session_key: `state_session:${jobId}`\n  }\n} }];\n"
+      },
+      "id": "1b15a4bf-2017-5569-954a-2585572179f0",
+      "name": "Code | Build Analysis Defer RPC | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2dc73cf3-498a-4dcb-96f8-beb7b702c24f",
+              "leftValue": "={{ $json.stateAnalysisDeferReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3e9254da-263c-5fa2-9548-765cbabf3c7b",
+      "name": "If | Analysis Defer Ready | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3290,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_defer_analysis_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "f8097ed2-fc16-52e1-aaf7-9f925d7a5188",
+      "name": "Call | Supabase RPC | Defer State Analysis | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3540,
+        120
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst source = $('Code | Build Analysis Defer RPC | Analysis').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst valid = body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_defer_analysis_v1' &&\n  Boolean(body.sessionId) && ['collecting', 'ready_finalize', 'finalizing', 'applied', 'fallback_applied'].includes(String(body.status || '')) &&\n  Number(body.appliedEffectCount ?? 0) === 0;\n\nreturn [{ json: {\n  ...source,\n  stateAnalysisDeferResult: body,\n  stateAnalysisDeferSucceeded: valid,\n  stateAnalysisDeferError: valid\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'analysis_defer_v1_failed').slice(0, 2000)\n} }];\n"
+      },
+      "id": "2d201bfc-9d07-5483-afc9-ca1cb9665423",
+      "name": "Code | Validate Analysis Defer | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3790,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f944f544-fb2c-4274-92c9-6b44ee9ab92d",
+              "leftValue": "={{ $json.stateAnalysisDeferSucceeded === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "09d987d9-b53b-5b1b-b549-c7e1c0c2246b",
+      "name": "If | Analysis Defer Succeeded | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4040,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst parsed = $input.first()?.json || {};\nconst job = parsed.stateJob && typeof parsed.stateJob === 'object' ? parsed.stateJob : parsed;\nconst result = parsed.stateAnalysisResult;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst jobId = clean(job.job_id ?? job.jobId);\nconst leaseToken = clean(job.lease_token ?? job.leaseToken);\nconst jobVersion = Number(job.job_version ?? job.jobVersion);\nconst localDate = clean(job.local_date ?? job.localDate ?? parsed.asOfDate);\nconst ruleSetCode = clean(parsed.stateAnalysisRuleSetCode ?? job.rule_set_code ?? job.ruleSetCode);\nconst ruleSetVersion = Number(parsed.stateAnalysisRuleSetVersion ?? job.rule_set_version ?? job.ruleSetVersion);\nconst ruleCatalogVersion = Number(parsed.stateAnalysisRuleCatalogVersion ?? job.rule_catalog_version ?? job.ruleCatalogVersion);\nconst sessionId = clean(job.session_id ?? job.sessionId);\nconst applyKey = clean(parsed.stateApplyKey) || (sessionId\n  ? `state_session_apply:${sessionId}`\n  : `state_analysis_apply:${jobId}:v${jobVersion}:catalog${ruleCatalogVersion}`);\nconst futurePlans = Array.isArray(result?.futurePlans) ? result.futurePlans : null;\nconst ready = Boolean(jobId && leaseToken && Number.isSafeInteger(jobVersion) && localDate &&\n  ruleSetCode && Number.isSafeInteger(ruleSetVersion) && Number.isSafeInteger(ruleCatalogVersion) &&\n  result && typeof result === 'object' && !Array.isArray(result) && futurePlans);\n\nreturn [{ json: {\n  ...parsed,\n  stateAnalysisApplyReady: ready,\n  stateAnalysisApplyError: ready ? '' : 'analysis_apply_v3_input_incomplete',\n  stateApplyKey: applyKey,\n  stateRpcBody: {\n    p_job_id: jobId,\n    p_lease_token: leaseToken,\n    p_expected_job_version: jobVersion,\n    p_apply_key: applyKey,\n    p_model_name: clean(parsed.stateAnalysisModel) || 'gpt-5.6-luna',\n    p_prompt_version: clean(parsed.stateAnalysisPromptVersion) || 'chelsea_state_analysis_prompt_v2_2_future_plans',\n    p_result: result,\n    p_as_of_date: localDate,\n    p_rule_set_code: ruleSetCode,\n    p_rule_set_version: String(ruleSetVersion),\n    p_rule_catalog_version: ruleCatalogVersion\n  }\n} }];\n"
+      },
+      "id": "10bc19ff-9311-5480-8896-3c6211635ace",
+      "name": "Code | Build Analysis Apply RPC | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "621e491e-157e-43b2-8037-69643de5d91f",
+              "leftValue": "={{ $json.stateAnalysisApplyReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ddd81571-1e74-5d38-b4aa-89885dd95f02",
+      "name": "If | Analysis Apply Ready | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3290,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_apply_analysis_v4\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "34f701d6-b8dc-5cdd-a287-1c49312e422c",
+      "name": "Call | Supabase RPC | Apply State Analysis | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3540,
+        320
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet source = {};\nfor (const nodeName of [\n  'Code | Build Analysis Apply RPC | Analysis',\n  'Code | Build Finalization Apply RPC | ClarificationFinalize'\n]) {\n  try {\n    const candidate = $(nodeName).item.json || {};\n    if (candidate.stateRpcBody?.p_job_id) { source = candidate; break; }\n  } catch {}\n}\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst expectedJobId = String(source.stateRpcBody?.p_job_id || '');\nconst futurePlans = Array.isArray(body?.futurePlans) ? body.futurePlans : null;\nconst contractVersion = String(body?.contractVersion || '');\nconst supportedContract = contractVersion === 'chelsea_state_apply_v3' ||\n  contractVersion === 'chelsea_state_apply_v4';\nconst versionSpecificFieldsValid = contractVersion !== 'chelsea_state_apply_v4' ||\n  typeof body?.eventCorrection === 'boolean';\nconst valid = body && typeof body === 'object' && !Array.isArray(body) &&\n  supportedContract && versionSpecificFieldsValid &&\n  String(body.jobId || '') === expectedJobId &&\n  Boolean(body.analysisRunId) &&\n  Number.isSafeInteger(Number(body.futurePlanCount)) &&\n  Number(body.futurePlanCount) >= 0 && futurePlans;\n\nreturn [{ json: {\n  ...source,\n  stateAnalysisApplyResult: body,\n  stateAnalysisApplySucceeded: Boolean(valid),\n  stateAnalysisApplyError: valid\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'analysis_apply_receipt_failed').slice(0, 2000)\n} }];\n"
+      },
+      "id": "2bacecea-4845-5fa3-b927-41e10a69f134",
+      "name": "Code | Validate Analysis Apply | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3790,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "de40c6d4-992d-46ae-8637-2afe9376e742",
+              "leftValue": "={{ $json.stateAnalysisApplySucceeded === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "24bf3ff4-b9f6-5ba3-b090-6149d17dcf57",
+      "name": "If | Analysis Apply Succeeded | Analysis",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4040,
+        320
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4290,
+        220
+      ],
+      "id": "cb0ba66c-9c9c-5502-a59a-f7b5ca33cf19",
+      "name": "End | Analysis Applied or Deferred | Analysis"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst job = input.stateJob && typeof input.stateJob === 'object' ? input.stateJob : input;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst errors = [\n  ...(Array.isArray(input.stateAnalysisErrors) ? input.stateAnalysisErrors : []),\n  input.stateAnalysisContextError,\n  input.stateAnalysisApplyError,\n  input.stateAnalysisDeferError\n].map(clean).filter(Boolean);\nconst message = errors.join('; ').slice(0, 2000) || 'State analysis failed.';\n\nreturn [{ json: {\n  ...input,\n  stateRpcBody: {\n    p_job_id: clean(job.job_id ?? job.jobId),\n    p_lease_token: clean(job.lease_token ?? job.leaseToken),\n    p_expected_job_version: Number(job.job_version ?? job.jobVersion),\n    p_model_name: clean(input.stateAnalysisModel) || 'gpt-5.6-luna',\n    p_prompt_version: clean(input.stateAnalysisPromptVersion) || 'chelsea_state_analysis_prompt_v2_0',\n    p_error_code: (errors[0] || 'state_analysis_failed').slice(0, 120),\n    p_error_text: message,\n    p_retry_delay_minutes: 1\n  }\n} }];\n"
+      },
+      "id": "5ad037cf-7de5-5bab-8551-43fdd2fc607e",
+      "name": "Code | Build Analysis Fail RPC | Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_analysis_job_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "4daf72d0-2f94-5431-bcae-ac5fdcefd0bc",
+      "name": "Call | Supabase RPC | Fail Analysis Job | Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3290,
+        560
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Analysis (Analysis)\nDynamic relational rule catalog; claim v3; context v2 exact CAS; one model repair; clarification is deferred before atomic apply v2.",
+        "height": 720,
+        "width": 5000,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ],
+      "id": "c12f534a-c0e3-52cd-b219-5cd644731bb7",
+      "name": "Sticky Note | Analysis v2 Contract | Analysis"
+    },
+    {
+      "id": "14a44089-cdec-5114-aea4-12b8b8134fbb",
+      "name": "End | Analysis Worker Receipt | AnalysisWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4570,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        820,
+        140
+      ],
+      "id": "2bd8e738-aed6-4df7-8ff2-ecdd457dc4a4",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Analyze State   Analysis | Analysis"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1820,
+        340
+      ],
+      "id": "e3ccd760-7f11-472a-9e75-ea63151b7547",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Repair State Analysis   Analysis | Analysis"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1260,
+        240
+      ],
+      "id": "1dabf511-9f54-44e1-abfe-75f00d2209c9",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Analysis"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2260,
+        440
+      ],
+      "id": "f6e094a7-826c-43bc-99e7-21b92e90ff31",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Analysis 2"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | AnalysisWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Analysis Jobs | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Analysis Jobs | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Analysis Claims | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Analysis Claims | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Get Analysis Context | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Get Analysis Context | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code | Merge Analysis Context | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Merge Analysis Context | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Analysis Context Ready | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Analysis Context Ready | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Request Builder | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Fail RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Analyze State | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Analysis Parser | Parse Primary Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Analysis Result Valid | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Analysis Result Valid | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Pre-Apply Clarification Needed | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build State Analysis Repair Request | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Analysis Repair Request | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Repair State Analysis   Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Repair State Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Analysis 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Analysis Parser | Parse Repaired Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Repaired Analysis Valid | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Repaired Analysis Valid | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Pre-Apply Clarification Needed | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Fail RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Pre-Apply Clarification Needed | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Analysis Defer RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Apply RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Analysis Defer RPC | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Analysis Defer Ready | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Analysis Defer Ready | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Defer State Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Fail RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Defer State Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Analysis Defer | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Analysis Defer | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Analysis Defer Succeeded | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Analysis Defer Succeeded | Analysis": {
+      "main": [
+        [
+          {
+            "node": "End | Analysis Applied or Deferred | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Fail RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Analysis Apply RPC | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Analysis Apply Ready | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Analysis Apply Ready | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Apply State Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Fail RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Apply State Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Analysis Apply | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Analysis Apply | Analysis": {
+      "main": [
+        [
+          {
+            "node": "If | Analysis Apply Succeeded | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Analysis Apply Succeeded | Analysis": {
+      "main": [
+        [
+          {
+            "node": "End | Analysis Applied or Deferred | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Analysis Fail RPC | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Analysis Fail RPC | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail Analysis Job | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Analysis Applied or Deferred | Analysis": {
+      "main": [
+        [
+          {
+            "node": "End | Analysis Worker Receipt | AnalysisWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail Analysis Job | Analysis": {
+      "main": [
+        [
+          {
+            "node": "End | Analysis Worker Receipt | AnalysisWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | Analysis v2 Contract | Analysis": {
+      "main": [
+        [
+          {
+            "node": "End | Analysis Worker Receipt | AnalysisWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Analyze State   Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Analyze State | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Repair State Analysis   Analysis | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Repair State Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Parser | Parse Primary Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | Analysis 2": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Parser | Parse Repaired Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Analysis Request Builder | Analysis": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Analyze State   Analysis | Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

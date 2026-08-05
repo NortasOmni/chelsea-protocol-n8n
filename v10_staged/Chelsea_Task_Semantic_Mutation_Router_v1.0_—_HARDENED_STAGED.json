@@ -1,0 +1,664 @@
+{
+  "id": "TMSem1021924750f",
+  "name": "Chelsea Task Semantic Mutation Router v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "8689ff48-9bf7-5239-836b-1368fe69572a",
+  "nodes": [
+    {
+      "id": "b121ffa2-f436-55de-a37b-5fae7eeaaf15",
+      "name": "Trigger | Parent Workflow | ChelseaTaskSemanticMutationRouterv10",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "eaacf7f3-81b5-536f-a43f-18fc7e588625",
+      "name": "Code | Classify Task Mutation | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\n__modules['./utils'] = function(module, exports, __require) {\n'use strict';\nconst COMMAND_CONTRACT_VERSION = 'chelsea_task_command_v1';\n\nfunction fail(code, message, details) {\n  const error = new Error(message || code);\n  error.code = code;\n  if (details !== undefined) error.details = details;\n  throw error;\n}\n\nfunction assert(condition, code, message, details) {\n  if (!condition) fail(code, message, details);\n}\n\nfunction isPlainObject(value) {\n  return value !== null && typeof value === 'object' && !Array.isArray(value) &&\n    (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);\n}\n\nfunction stableValue(value) {\n  if (Array.isArray(value)) return value.map(stableValue);\n  if (!isPlainObject(value)) return value;\n  const result = {};\n  for (const key of Object.keys(value).sort()) result[key] = stableValue(value[key]);\n  return result;\n}\n\nfunction canonicalJson(value) {\n  return JSON.stringify(stableValue(value));\n}\n\nfunction asString(value, fieldName, options) {\n  const opts = options || {};\n  assert(typeof value === 'string', 'invalid_string', `${fieldName} must be a string`);\n  const result = opts.trim === false ? value : value.trim();\n  const min = opts.min === undefined ? 0 : opts.min;\n  const max = opts.max === undefined ? 4096 : opts.max;\n  assert(result.length >= min && result.length <= max, 'invalid_string_length', `${fieldName} length is outside allowed bounds`);\n  return result;\n}\n\nfunction asInteger(value, fieldName, min, max) {\n  assert(Number.isInteger(value), 'invalid_integer', `${fieldName} must be an integer`);\n  assert(value >= min && value <= max, 'integer_out_of_range', `${fieldName} is outside allowed bounds`);\n  return value;\n}\n\nfunction oneOf(value, allowed, fieldName) {\n  assert(allowed.includes(value), 'invalid_enum', `${fieldName} has an unsupported value`, { fieldName, value });\n  return value;\n}\n\nfunction exactKeys(object, allowed, fieldName) {\n  assert(isPlainObject(object), 'invalid_object', `${fieldName} must be an object`);\n  const unexpected = Object.keys(object).filter((key) => !allowed.includes(key));\n  assert(unexpected.length === 0, 'unknown_fields', `${fieldName} contains unknown fields`, unexpected);\n}\n\nmodule.exports = { COMMAND_CONTRACT_VERSION, fail, assert, isPlainObject, stableValue, canonicalJson, asString, asInteger, oneOf, exactKeys };\n};\n__modules['./semantic'] = function(module, exports, __require) {\n'use strict';\nconst { COMMAND_CONTRACT_VERSION, asInteger, asString, assert, canonicalJson, exactKeys, isPlainObject, oneOf } = __require('./utils');\nconst OPERATIONS = [\n  'create_task', 'create_reminder', 'add_reminder', 'update_task', 'reschedule_task',\n  'complete_task', 'snooze_task', 'skip_occurrence', 'cancel_task', 'list_tasks',\n  'add_subtask', 'pause_series', 'resume_series', 'update_series', 'cancel_series',\n  'answer_task_question', 'not_a_task_command',\n];\n\nconst TOP_KEYS = [\n  'contractVersion', 'operation', 'targetRef', 'title', 'description', 'taskKind',\n  'priority', 'tags', 'schedule', 'recurrence', 'reminderPolicy', 'completionRequired',\n  'seriesMutationScope', 'listKind', 'answerAction', 'clarificationNeeded', 'clarificationReason',\n  'fieldPresence',\n];\n\nconst PATCH_FIELDS = Object.freeze(['title', 'description', 'taskKind', 'priority', 'tags', 'schedule', 'recurrence', 'reminderPolicy', 'completionRequired', 'seriesMutationScope']);\n\nconst FORBIDDEN_IDENTITY_KEYS = [\n  'tenantId', 'tenantSafe', 'taskTableId', 'tableId', 'tableName', 'ownerUserId',\n  'recordId', 'taskId', 'seriesId', 'status', 'rowVersion', 'actionToken', 'idempotencyKey',\n];\n\nfunction parseSemanticJson(value) {\n  let parsed = value;\n  if (typeof value === 'string') {\n    const text = value.trim();\n    assert(text.startsWith('{') && text.endsWith('}'), 'malformed_model_contract', 'Model result must be one JSON object without prose/code fences');\n    try { parsed = JSON.parse(text); } catch (_) {\n      assert(false, 'malformed_model_contract', 'Model result is not valid JSON');\n    }\n  }\n  assert(isPlainObject(parsed), 'malformed_model_contract', 'Model result must be an object');\n  // Identity-like model fields are ignored by design; all other unknown fields fail closed.\n  const clean = {};\n  for (const [key, item] of Object.entries(parsed)) {\n    if (!FORBIDDEN_IDENTITY_KEYS.includes(key)) clean[key] = item;\n  }\n  exactKeys(clean, TOP_KEYS, 'semantic contract');\n  assert(clean.contractVersion === COMMAND_CONTRACT_VERSION, 'malformed_model_contract', 'Unsupported semantic contract version');\n  const operation = oneOf(clean.operation, OPERATIONS, 'operation');\n  const creationOperation = ['create_task', 'create_reminder', 'add_subtask'].includes(operation);\n  const derivedPresence = Object.keys(clean).filter((key) => PATCH_FIELDS.includes(key));\n  const fieldPresence = clean.fieldPresence === undefined || clean.fieldPresence === null\n    ? derivedPresence\n    : requireArray(clean.fieldPresence, 'fieldPresence').map((key) => oneOf(key, PATCH_FIELDS, 'fieldPresence[]'));\n  assert(new Set(fieldPresence).size === fieldPresence.length, 'malformed_model_contract', 'fieldPresence cannot contain duplicates');\n  const result = {\n    contractVersion: COMMAND_CONTRACT_VERSION,\n    operation,\n    targetRef: nullableString(clean.targetRef, 'targetRef', 160),\n    title: optionalString(clean.title, 'title', 240),\n    description: optionalString(clean.description, 'description', 4000),\n    taskKind: clean.taskKind === null || clean.taskKind === undefined || clean.taskKind === ''\n      ? null : oneOf(clean.taskKind, ['action', 'reminder', 'wish', 'habit', 'goal'], 'taskKind'),\n    priority: clean.priority === undefined || clean.priority === null ? (creationOperation ? 2 : null) : asInteger(clean.priority, 'priority', 0, 4),\n    tags: clean.tags === undefined || clean.tags === null ? (creationOperation ? [] : null) : validateTags(clean.tags),\n    schedule: validateSchedule(clean.schedule),\n    recurrence: validateRecurrence(clean.recurrence),\n    reminderPolicy: validateReminderPolicy(clean.reminderPolicy),\n    completionRequired: clean.completionRequired === undefined || clean.completionRequired === null\n      ? null : requireBoolean(clean.completionRequired, 'completionRequired'),\n    seriesMutationScope: clean.seriesMutationScope === undefined || clean.seriesMutationScope === null\n      ? null : oneOf(clean.seriesMutationScope, ['current_occurrence', 'current_and_future', 'future_only', 'entire_series'], 'seriesMutationScope'),\n    listKind: clean.listKind === undefined || clean.listKind === null\n      ? null : oneOf(clean.listKind, ['today', 'tomorrow', 'week', 'overdue', 'backlog', 'reminders', 'recurring', 'goals'], 'listKind'),\n    answerAction: clean.answerAction === undefined || clean.answerAction === null\n      ? null : oneOf(clean.answerAction, ['done', 'not_done', 'snooze', 'reschedule', 'cancel', 'skip_occurrence', 'update_series', 'cancel_series'], 'answerAction'),\n    clarificationNeeded: clean.clarificationNeeded === true,\n    clarificationReason: nullableString(clean.clarificationReason, 'clarificationReason', 500),\n    fieldPresence: Array.from(new Set(fieldPresence)).sort(),\n  };\n  validateOperationShape(result);\n  result.canonicalJson = canonicalJson(result);\n  return result;\n}\n\nfunction validateSchedule(value) {\n  if (value === undefined || value === null) return null;\n  exactKeys(value, ['kind', 'timeRole', 'localDate', 'localTime', 'timezone', 'windowStartLocal', 'windowEndLocal', 'preferredTimeOfDay'], 'schedule');\n  const kind = oneOf(value.kind, ['exact', 'date', 'window', 'none'], 'schedule.kind');\n  const result = {\n    kind,\n    timeRole: oneOf(value.timeRole || (kind === 'window' ? 'window' : kind === 'none' ? 'none' : 'deadline'), ['start', 'deadline', 'reminder', 'window', 'none'], 'schedule.timeRole'),\n    localDate: nullableDate(value.localDate, 'schedule.localDate'),\n    localTime: nullableTime(value.localTime, 'schedule.localTime'),\n    timezone: nullableString(value.timezone, 'schedule.timezone', 64),\n    windowStartLocal: nullableLocalDateTime(value.windowStartLocal, 'schedule.windowStartLocal'),\n    windowEndLocal: nullableLocalDateTime(value.windowEndLocal, 'schedule.windowEndLocal'),\n    preferredTimeOfDay: value.preferredTimeOfDay === undefined || value.preferredTimeOfDay === null\n      ? 'any' : oneOf(value.preferredTimeOfDay, ['morning', 'day', 'evening', 'any'], 'schedule.preferredTimeOfDay'),\n  };\n  if (kind === 'none') assert(!result.localDate && !result.localTime && !result.windowStartLocal && !result.windowEndLocal, 'malformed_model_contract', 'none schedule cannot contain time fields');\n  if (kind === 'date') assert(result.localDate && !result.localTime, 'malformed_model_contract', 'date schedule requires localDate and forbids localTime');\n  if (kind === 'exact') assert(result.localDate && result.localTime && result.timezone, 'malformed_model_contract', 'exact schedule requires localDate/localTime/timezone');\n  if (kind === 'window') {\n    assert(result.windowStartLocal && result.windowEndLocal && result.timezone, 'malformed_model_contract', 'window schedule requires both bounds/timezone');\n    assert(result.windowEndLocal > result.windowStartLocal, 'malformed_model_contract', 'window local end must be after local start');\n  }\n  return result;\n}\n\nfunction validateRecurrence(value) {\n  if (value === undefined || value === null) return null;\n  exactKeys(value, ['version', 'frequency', 'interval', 'byWeekday', 'byMonthDay', 'localTime', 'allDay', 'maxOccurrences', 'timezone', 'dstGapPolicy', 'dstOverlapPolicy', 'startLocalDate', 'endLocalDate'], 'recurrence');\n  assert(value.version === 'chelsea_recurrence_v1', 'malformed_model_contract', 'Unsupported recurrence version');\n  const frequency = oneOf(value.frequency, ['daily', 'weekly'], 'recurrence.frequency');\n  const interval = asInteger(value.interval === undefined ? 1 : value.interval, 'recurrence.interval', 1, 365);\n  const allDay = requireBoolean(value.allDay === undefined ? false : value.allDay, 'recurrence.allDay');\n  const byWeekday = value.byWeekday === undefined ? [] : requireArray(value.byWeekday, 'recurrence.byWeekday').map((day) => oneOf(day, ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'], 'recurrence.byWeekday[]'));\n  assert(new Set(byWeekday).size === byWeekday.length, 'malformed_model_contract', 'Duplicate weekdays are forbidden');\n  if (frequency === 'weekly') assert(byWeekday.length > 0, 'malformed_model_contract', 'Weekly recurrence requires byWeekday');\n  if (frequency !== 'weekly') assert(byWeekday.length === 0, 'malformed_model_contract', 'byWeekday is weekly-only');\n  assert(value.byMonthDay === undefined || (Array.isArray(value.byMonthDay) && value.byMonthDay.length === 0), 'malformed_model_contract', 'Monthly recurrence is outside bounded MVP core');\n  const localTime = nullableTime(value.localTime, 'recurrence.localTime');\n  assert(allDay ? !localTime : !!localTime, 'malformed_model_contract', 'allDay recurrence forbids localTime; timed recurrence requires it');\n  const startLocalDate = nullableDate(value.startLocalDate, 'recurrence.startLocalDate');\n  const endLocalDate = nullableDate(value.endLocalDate, 'recurrence.endLocalDate');\n  assert(!startLocalDate || !endLocalDate || endLocalDate >= startLocalDate,\n    'malformed_model_contract', 'recurrence.endLocalDate must not precede startLocalDate');\n  return {\n    version: 'chelsea_recurrence_v1', frequency, interval, byWeekday, byMonthDay: [], localTime,\n    allDay,\n    maxOccurrences: value.maxOccurrences === undefined || value.maxOccurrences === null ? null : asInteger(value.maxOccurrences, 'recurrence.maxOccurrences', 1, 100000),\n    timezone: asString(value.timezone, 'recurrence.timezone', { min: 1, max: 64 }),\n    dstGapPolicy: oneOf(value.dstGapPolicy || 'shift_forward', ['shift_forward'], 'recurrence.dstGapPolicy'),\n    dstOverlapPolicy: oneOf(value.dstOverlapPolicy || 'earlier_offset', ['earlier_offset'], 'recurrence.dstOverlapPolicy'),\n    startLocalDate, endLocalDate,\n  };\n}\n\nfunction validateReminderPolicy(value) {\n  if (value === undefined || value === null) return null;\n  exactKeys(value, ['version', 'steps', 'completionCheck', 'defaultSnoozeMinutes', 'maxDeliveryAttempts', 'quietHoursMode'], 'reminderPolicy');\n  assert(value.version === 'chelsea_reminder_policy_v1', 'malformed_model_contract', 'Unsupported reminder policy version');\n  const steps = requireArray(value.steps, 'reminderPolicy.steps').map((step) => {\n    exactKeys(step, ['kind', 'offsetMinutes'], 'reminder step');\n    return { kind: oneOf(step.kind, ['before_due', 'at_due'], 'reminder step kind'), offsetMinutes: asInteger(step.offsetMinutes, 'offsetMinutes', 0, 525600) };\n  });\n  const unique = new Map();\n  for (const step of steps) unique.set(`${step.kind}:${step.offsetMinutes}`, step);\n  const completion = value.completionCheck || {};\n  exactKeys(completion, ['enabled', 'delayMinutes', 'answerTtlMinutes', 'repeatAfterMinutes', 'maxQuestions'], 'completionCheck');\n  assert(value.quietHoursMode === undefined || value.quietHoursMode === 'inherit',\n    'quiet_hours_bypass_requires_trusted_confirmation', 'Model output cannot authorize quiet-hours bypass');\n  return {\n    version: 'chelsea_reminder_policy_v1',\n    steps: Array.from(unique.values()).sort((a, b) => b.offsetMinutes - a.offsetMinutes),\n    completionCheck: {\n      enabled: requireBoolean(completion.enabled === undefined ? false : completion.enabled, 'completionCheck.enabled'),\n      delayMinutes: asInteger(completion.delayMinutes === undefined ? 60 : completion.delayMinutes, 'completionCheck.delayMinutes', 0, 525600),\n      answerTtlMinutes: asInteger(completion.answerTtlMinutes === undefined ? 4320 : completion.answerTtlMinutes, 'completionCheck.answerTtlMinutes', 1, 525600),\n      repeatAfterMinutes: asInteger(completion.repeatAfterMinutes === undefined ? 1440 : completion.repeatAfterMinutes, 'completionCheck.repeatAfterMinutes', 1, 525600),\n      maxQuestions: asInteger(completion.maxQuestions === undefined ? 2 : completion.maxQuestions, 'completionCheck.maxQuestions', 0, 20),\n    },\n    defaultSnoozeMinutes: asInteger(value.defaultSnoozeMinutes === undefined ? 60 : value.defaultSnoozeMinutes, 'defaultSnoozeMinutes', 1, 525600),\n    maxDeliveryAttempts: asInteger(value.maxDeliveryAttempts === undefined ? 3 : value.maxDeliveryAttempts, 'maxDeliveryAttempts', 1, 10),\n    quietHoursMode: 'inherit',\n  };\n}\n\nfunction validateOperationShape(value) {\n  const create = ['create_task', 'create_reminder', 'add_subtask'];\n  assert(value.operation !== 'update_series', 'series_update_not_supported_mvp',\n    'Series rule update is fail-closed until its recoverable current/future saga is enabled');\n  if (create.includes(value.operation) && !value.clarificationNeeded) {\n    assert(value.title, 'malformed_model_contract', 'Creation requires title unless clarification is needed');\n  }\n  if (value.operation === 'create_reminder') assert(value.taskKind === 'reminder' || value.taskKind === null, 'malformed_model_contract', 'create_reminder cannot create another task kind');\n  if (value.taskKind === 'goal') {\n    assert(value.operation === 'create_task', 'malformed_model_contract', 'A goal is created as a task');\n    assert(!value.recurrence && !value.reminderPolicy, 'malformed_model_contract', 'A goal cannot have recurrence or reminder policy');\n    assert(!value.schedule || value.schedule.kind === 'none', 'malformed_model_contract', 'A goal cannot have a deadline');\n    assert(value.completionRequired !== true, 'malformed_model_contract', 'A goal does not use completion questions');\n  }\n  if (value.operation === 'create_reminder' && !value.clarificationNeeded) {\n    assert(value.schedule && ['exact', 'date'].includes(value.schedule.kind), 'malformed_model_contract', 'create_reminder requires an actionable exact/date schedule or clarification');\n  }\n  if (value.recurrence) assert(['create_task', 'update_series'].includes(value.operation), 'malformed_model_contract', 'Recurrence is not allowed for this operation');\n  if (value.operation === 'list_tasks') assert(value.listKind, 'malformed_model_contract', 'list_tasks requires listKind');\n  if (value.operation === 'answer_task_question') assert(value.answerAction, 'malformed_model_contract', 'answer_task_question requires answerAction');\n  if (['update_task', 'reschedule_task', 'complete_task', 'snooze_task', 'skip_occurrence', 'cancel_task', 'pause_series', 'resume_series', 'update_series', 'cancel_series', 'add_reminder'].includes(value.operation)) {\n    assert(value.targetRef || value.clarificationNeeded, 'malformed_model_contract', 'Mutation requires a local targetRef or clarification');\n  }\n}\n\nfunction validateSemanticAgainstTrusted(command, trusted, originalText) {\n  assert(command && trusted, 'identity_permanent', 'Trusted semantic validation requires command and trusted context');\n  const timezoneValues = [];\n  if (command.schedule && command.schedule.timezone) timezoneValues.push(command.schedule.timezone);\n  if (command.recurrence && command.recurrence.timezone) timezoneValues.push(command.recurrence.timezone);\n  assert(timezoneValues.every((timezone) => timezone === trusted.timezone), 'timezone_mismatch', 'Model timezone must equal trusted runtime timezone');\n  const source = new Date(trusted.sourceMessageDateIso);\n  assert(Number.isFinite(source.getTime()), 'invalid_datetime', 'Trusted sourceMessageDateIso is invalid');\n  const sourceLocalDate = localDateInTimezone(source, trusted.timezone);\n  const candidateDates = [];\n  if (command.schedule) {\n    // Exact/date schedules are model-proposed calendar identity and must be\n    // traceable to the user's text. Window bounds and recurrence dates are\n    // validated structurally here and require their own explicit/default\n    // planner policies; they are not silently granted by this date gate.\n    if (['exact', 'date'].includes(command.schedule.kind) && command.schedule.localDate) {\n      candidateDates.push(command.schedule.localDate);\n    }\n  }\n  const text = String(originalText || '');\n  for (const date of candidateDates) {\n    const grounded = dateGroundedInText(date, text, sourceLocalDate, trusted.timezone, source);\n    assert(grounded || command.clarificationNeeded === true, 'date_plausibility_requires_clarification', 'Model-proposed date is not grounded in original text');\n  }\n  if (command.schedule && command.schedule.kind === 'exact' && command.schedule.localTime) {\n    const grounded = timeGroundedInText(command.schedule.localTime, text, trusted.timezone, source);\n    assert(grounded || command.clarificationNeeded === true, 'time_plausibility_requires_clarification', 'Model-proposed time is not grounded in original text');\n  }\n  if (command.recurrence) {\n    const recurrence = command.recurrence;\n    const cadenceGrounded = recurrenceCadenceGroundedInText(recurrence.frequency, recurrence.interval, text);\n    assert(cadenceGrounded || command.clarificationNeeded === true, 'recurrence_cadence_requires_clarification', 'Model-proposed recurrence frequency/interval is not grounded in original text');\n    if (!recurrence.allDay) {\n      const grounded = recurrenceTimeGroundedInText(recurrence.localTime, text, trusted.timezone, source);\n      assert(grounded || command.clarificationNeeded === true, 'recurrence_time_requires_clarification', 'Model-proposed recurrence time is not grounded in original text or trusted time-of-day policy');\n    }\n    for (const date of [recurrence.startLocalDate, recurrence.endLocalDate].filter(Boolean)) {\n      const grounded = dateGroundedInText(date, text, sourceLocalDate, trusted.timezone, source);\n      assert(grounded || command.clarificationNeeded === true, 'recurrence_date_requires_clarification', 'Explicit recurrence start/end date is not grounded in original text');\n    }\n    if (recurrence.frequency === 'weekly') {\n      const grounded = recurrenceWeekdaysGroundedInText(recurrence.byWeekday, text);\n      assert(grounded || command.clarificationNeeded === true, 'recurrence_weekday_requires_clarification', 'Model-proposed recurrence weekdays are not grounded in original text');\n    }\n  }\n  if (command.reminderPolicy && command.completionRequired === true) {\n    const completion = command.reminderPolicy.completionCheck;\n    assert(completion.enabled === true && completion.maxQuestions >= 1,\n      'completion_policy_requires_question', 'Completion-required task must ask at least one completion question');\n    assert(completion.maxQuestions === 1 || completion.repeatAfterMinutes < completion.answerTtlMinutes,\n      'invalid_completion_question_cadence', 'Repeated completion question must occur before the current answer TTL expires');\n  }\n  return command;\n}\n\nfunction localDateInTimezone(date, timezone) {\n  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);\n  const value = {};\n  for (const part of parts) if (part.type !== 'literal') value[part.type] = part.value;\n  return `${value.year}-${value.month}-${value.day}`;\n}\n\nfunction dateGroundedInText(date, text, sourceLocalDate, timezone, sourceInstant) {\n  const normalized = String(text || '').normalize('NFKC').toLocaleLowerCase('ru-RU');\n  if (!normalized.trim()) return false;\n  const [year, month, day] = date.split('-').map(Number);\n  if (normalized.includes(date)) return true;\n\n  const numericDates = normalized.match(/(?:^|\\D)(\\d{1,2})[.\\/-](\\d{1,2})(?:[.\\/-](\\d{2,4}))?(?=\\D|$)/gu) || [];\n  for (const token of numericDates) {\n    const match = token.match(/(\\d{1,2})[.\\/-](\\d{1,2})(?:[.\\/-](\\d{2,4}))?/u);\n    if (!match) continue;\n    let parsedYear = match[3] ? Number(match[3]) : Number(sourceLocalDate.slice(0, 4));\n    if (parsedYear < 100) parsedYear += 2000;\n    if (Number(match[1]) === day && Number(match[2]) === month && parsedYear === year) return true;\n  }\n\n  const monthNames = [\n    ['январ', 1], ['феврал', 2], ['март', 3], ['апрел', 4], ['ма(?:й|я)', 5], ['июн', 6],\n    ['июл', 7], ['август', 8], ['сентябр', 9], ['октябр', 10], ['ноябр', 11], ['декабр', 12],\n  ];\n  for (const [stem, number] of monthNames) {\n    const match = normalized.match(new RegExp(`(?:^|\\\\D)${day}\\\\s+${stem}[а-яё]*(?:\\\\s+(${year}))?(?=\\\\D|$)`, 'iu'));\n    if (match && number === month && (year === Number(sourceLocalDate.slice(0, 4)) || match[1])) return true;\n  }\n\n  const targetDelta = Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${sourceLocalDate}T00:00:00Z`)) / 86400000);\n  if (hasNaturalToken(normalized, 'сегодня|today') && targetDelta === 0) return true;\n  if (hasNaturalToken(normalized, 'вчера|yesterday') && targetDelta === -1) return true;\n  if (hasNaturalToken(normalized, 'послезавтра|day\\\\s+after\\\\s+tomorrow') && targetDelta === 2) return true;\n  if (hasNaturalToken(normalized, 'завтра|tomorrow') && !hasNaturalToken(normalized, 'послезавтра') && targetDelta === 1) return true;\n\n  const relativeDays = normalized.match(/(?:через|in)\\s+(\\d{1,5})\\s+(д(?:ень|ня|ней)|days?|недел(?:ю|и|ь)|weeks?)/iu);\n  if (relativeDays) {\n    const amount = Number(relativeDays[1]);\n    const expected = /недел|week/iu.test(relativeDays[2]) ? amount * 7 : amount;\n    if (targetDelta === expected) return true;\n  }\n  const relativeTime = normalized.match(/(?:через|in)\\s+(\\d{1,6})\\s+(минут\\w*|minutes?|час\\w*|hours?)/iu);\n  if (relativeTime && sourceInstant instanceof Date) {\n    const multiplier = /час|hour/iu.test(relativeTime[2]) ? 3600000 : 60000;\n    const expectedDate = localDateInTimezone(new Date(sourceInstant.getTime() + Number(relativeTime[1]) * multiplier), timezone);\n    if (date === expectedDate) return true;\n  }\n\n  const weekdayNames = [\n    [/понедельник|понедельника|monday/iu, 1], [/вторник|вторника|tuesday/iu, 2],\n    [/сред(?:а|у|ы)|wednesday/iu, 3], [/четверг|четверга|thursday/iu, 4],\n    [/пятниц(?:а|у|ы)|friday/iu, 5], [/суббот(?:а|у|ы)|saturday/iu, 6],\n    [/воскресень(?:е|я)|sunday/iu, 0],\n  ];\n  const targetWeekday = new Date(`${date}T12:00:00Z`).getUTCDay();\n  if (targetDelta >= 0 && targetDelta <= 7 && weekdayNames.some(([pattern, weekday]) => pattern.test(normalized) && weekday === targetWeekday)) return true;\n\n  // A time-only phrase grounds today only when the proposed local time has not\n  // passed at source-message time. It never silently authorizes tomorrow.\n  if (targetDelta === 0 && sourceInstant instanceof Date) {\n    const proposed = normalized.match(/(?:^|\\D)(?:в|at)\\s*(\\d{1,2})(?::(\\d{2}))(?=\\D|$)/iu);\n    if (proposed) {\n      const sourceParts = new Intl.DateTimeFormat('en-GB', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(sourceInstant);\n      const values = {}; for (const part of sourceParts) if (part.type !== 'literal') values[part.type] = Number(part.value);\n      if (Number(proposed[1]) * 60 + Number(proposed[2]) >= values.hour * 60 + values.minute) return true;\n    }\n  }\n  return false;\n}\n\nfunction timeGroundedInText(localTime, text, timezone, sourceInstant) {\n  const normalized = String(text || '').normalize('NFKC').toLocaleLowerCase('ru-RU');\n  if (!normalized.trim()) return false;\n  const [targetHour, targetMinute] = localTime.split(':').map(Number);\n  const explicit = /(?:^|[^\\d])([01]?\\d|2[0-3]):([0-5]\\d)(?!\\d)/gu;\n  let match;\n  while ((match = explicit.exec(normalized))) {\n    if (Number(match[1]) === targetHour && Number(match[2]) === targetMinute) return true;\n  }\n  const hourOnly = new RegExp('(?:^|[^\\\\p{L}\\\\p{N}_])(?:\\\\u0432|at)\\\\s+([01]?\\d|2[0-3])(?=$|[^\\d:.])', 'iu').exec(normalized);\n  if (hourOnly && Number(hourOnly[1]) === targetHour && targetMinute === 0) return true;\n  const relative = new RegExp('(?:\\\\u0447\\\\u0435\\\\u0440\\\\u0435\\\\u0437|in)\\\\s+(\\d{1,6})\\\\s+(\\\\u043c\\\\u0438\\\\u043d\\\\u0443\\\\u0442\\\\w*|minutes?|\\\\u0447\\\\u0430\\\\u0441\\\\w*|hours?)', 'iu').exec(normalized);\n  if (relative && sourceInstant instanceof Date) {\n    const multiplier = /\\u0447\\u0430\\u0441|hour/iu.test(relative[2]) ? 3600000 : 60000;\n    const expected = localTimeInTimezone(new Date(sourceInstant.getTime() + Number(relative[1]) * multiplier), timezone);\n    if (expected === localTime) return true;\n  }\n  if (hasNaturalToken(normalized, '\\\\u043f\\\\u043e\\\\u043b\\\\u0434\\\\u0435\\\\u043d\\\\u044c|noon') && localTime === '12:00') return true;\n  if (hasNaturalToken(normalized, '\\\\u043f\\\\u043e\\\\u043b\\\\u043d\\\\u043e\\\\u0447\\\\u044c|midnight') && localTime === '00:00') return true;\n  return false;\n}\n\nfunction recurrenceTimeGroundedInText(localTime, text, timezone, sourceInstant) {\n  if (timeGroundedInText(localTime, text, timezone, sourceInstant)) return true;\n  const normalized = String(text || '').normalize('NFKC').toLocaleLowerCase('ru-RU');\n  const namedSlots = [\n    { pattern: 'утр(?:о|а|ом|ам|ами)?|morning(?:s)?', time: '09:00' },\n    { pattern: 'дн(?:е[мя]|ём)|днем|afternoon(?:s)?|daytime', time: '13:00' },\n    { pattern: 'вечер(?:ом|ам|ами)?|evening(?:s)?', time: '19:00' },\n  ];\n  return namedSlots.some((slot) => localTime === slot.time && hasNaturalToken(normalized, slot.pattern));\n}\n\nfunction recurrenceWeekdaysGroundedInText(byWeekday, text) {\n  if (!Array.isArray(byWeekday) || byWeekday.length === 0) return false;\n  const normalized = String(text || '').normalize('NFKC').toLocaleLowerCase('ru-RU');\n  const requested = new Set(byWeekday);\n  const weekdays = ['MO', 'TU', 'WE', 'TH', 'FR'];\n  const weekend = ['SA', 'SU'];\n  const patterns = {\n    MO: /(?:^|[^\\p{L}])(?:понедельник[\\p{L}]*|mondays?)(?=$|[^\\p{L}])/iu,\n    TU: /(?:^|[^\\p{L}])(?:вторник[\\p{L}]*|tuesdays?)(?=$|[^\\p{L}])/iu,\n    WE: /(?:^|[^\\p{L}])(?:сред(?:а|у|ы|ам|ами)?|wednesdays?)(?=$|[^\\p{L}])/iu,\n    TH: /(?:^|[^\\p{L}])(?:четверг[\\p{L}]*|thursdays?)(?=$|[^\\p{L}])/iu,\n    FR: /(?:^|[^\\p{L}])(?:пятниц[\\p{L}]*|fridays?)(?=$|[^\\p{L}])/iu,\n    SA: /(?:^|[^\\p{L}])(?:суббот[\\p{L}]*|saturdays?)(?=$|[^\\p{L}])/iu,\n    SU: /(?:^|[^\\p{L}])(?:воскресен[\\p{L}]*|воскресень[\\p{L}]*|sundays?)(?=$|[^\\p{L}])/iu,\n  };\n  const detected = new Set();\n  if (/(?:^|[^\\p{L}])(?:будн[\\p{L}]*|weekdays?)(?=$|[^\\p{L}])/iu.test(normalized)) weekdays.forEach((day) => detected.add(day));\n  if (/(?:^|[^\\p{L}])(?:выходн[\\p{L}]*|weekends?)(?=$|[^\\p{L}])/iu.test(normalized)) weekend.forEach((day) => detected.add(day));\n  for (const [day, pattern] of Object.entries(patterns)) if (pattern.test(normalized)) detected.add(day);\n  return detected.size === requested.size && [...detected].every((day) => requested.has(day));\n}\n\nfunction recurrenceCadenceGroundedInText(frequency, interval, text) {\n  const normalized = String(text || '').normalize('NFKC').toLocaleLowerCase('ru-RU');\n  let expectedFrequency = ''; let expectedInterval = null;\n  let match = /(?:кажд(?:ые|ый)|раз\\s+в)\\s+(\\d{1,3})\\s+дн(?:я|ей)|every\\s+(\\d{1,3})\\s+days?/iu.exec(normalized);\n  if (match) { expectedFrequency = 'daily'; expectedInterval = Number(match[1] || match[2]); }\n  else if (/(?:через\\s+день|every\\s+other\\s+day)/iu.test(normalized)) { expectedFrequency = 'daily'; expectedInterval = 2; }\n  else if (/(?:кажд(?:ый\\s+день|ые\\s+дни)|ежедневно|daily|every\\s+day)/iu.test(normalized)) { expectedFrequency = 'daily'; expectedInterval = 1; }\n  // Plural habitual day-parts are a topic-neutral daily cadence in both\n  // supported languages. A singular \"утром/morning\" is intentionally not\n  // enough: it can describe one occurrence rather than a repeating habit.\n  else if (/(?:по\\s+утрам|по\\s+вечерам|по\\s+ночам|mornings|evenings|nightly)/iu.test(normalized)) { expectedFrequency = 'daily'; expectedInterval = 1; }\n  if (!expectedFrequency) {\n    match = /(?:кажд(?:ые|ую)|раз\\s+в)\\s+(\\d{1,3})\\s+недел(?:ю|и|ь)|every\\s+(\\d{1,3})\\s+weeks?/iu.exec(normalized);\n    if (match) { expectedFrequency = 'weekly'; expectedInterval = Number(match[1] || match[2]); }\n    else if (/(?:через\\s+неделю|every\\s+other\\s+week)/iu.test(normalized)) { expectedFrequency = 'weekly'; expectedInterval = 2; }\n    else if (/(?:каждую\\s+неделю|еженедельно|weekly|every\\s+week)/iu.test(normalized)) { expectedFrequency = 'weekly'; expectedInterval = 1; }\n    else if (recurrenceWeekdayMentionCount(normalized) > 0) { expectedFrequency = 'weekly'; expectedInterval = 1; }\n  }\n  return expectedFrequency === frequency && expectedInterval === interval;\n}\n\nfunction recurrenceWeekdayMentionCount(normalized) {\n  const patterns = [\n    /понедельник[\\p{L}]*|mondays?/iu, /вторник[\\p{L}]*|tuesdays?/iu,\n    /сред(?:а|у|ы|ам|ами)?|wednesdays?/iu, /четверг[\\p{L}]*|thursdays?/iu,\n    /пятниц[\\p{L}]*|fridays?/iu, /суббот[\\p{L}]*|saturdays?/iu,\n    /воскресен[\\p{L}]*|воскресень[\\p{L}]*|sundays?/iu,\n    /будн[\\p{L}]*|weekdays?/iu, /выходн[\\p{L}]*|weekends?/iu,\n  ];\n  return patterns.filter((pattern) => pattern.test(normalized)).length;\n}\n\nfunction localTimeInTimezone(date, timezone) {\n  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(date);\n  const value = {}; for (const part of parts) if (part.type !== 'literal') value[part.type] = part.value;\n  return `${value.hour}:${value.minute}`;\n}\n\nfunction hasNaturalToken(text, pattern) {\n  return new RegExp(`(?:^|[^\\\\p{L}\\\\p{N}_])(?:${pattern})(?=$|[^\\\\p{L}\\\\p{N}_])`, 'iu').test(text);\n}\n\nfunction validateTags(value) {\n  if (value === undefined || value === null) return [];\n  return Array.from(new Set(requireArray(value, 'tags').map((tag) => asString(tag, 'tag', { min: 1, max: 64 })))).slice(0, 32);\n}\n\nfunction requireArray(value, field) { assert(Array.isArray(value), 'malformed_model_contract', `${field} must be an array`); return value; }\n\nfunction requireBoolean(value, field) { assert(typeof value === 'boolean', 'malformed_model_contract', `${field} must be boolean`); return value; }\n\nfunction optionalString(value, field, max) { return value === undefined || value === null ? '' : asString(value, field, { max }); }\n\nfunction nullableString(value, field, max) { return value === undefined || value === null || value === '' ? null : asString(value, field, { min: 1, max }); }\n\nfunction nullableDate(value, field) { if (value === undefined || value === null || value === '') return null; assert(/^\\d{4}-\\d{2}-\\d{2}$/.test(value), 'malformed_model_contract', `${field} must be YYYY-MM-DD`); const d = new Date(`${value}T00:00:00Z`); assert(Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === value, 'malformed_model_contract', `${field} is invalid`); return value; }\n\nfunction nullableTime(value, field) { if (value === undefined || value === null || value === '') return null; assert(/^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(value), 'malformed_model_contract', `${field} must be HH:mm`); return value; }\n\nfunction nullableLocalDateTime(value, field) {\n  if (value === undefined || value === null || value === '') return null;\n  assert(/^\\d{4}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(value), 'malformed_model_contract', `${field} must be local YYYY-MM-DDTHH:mm`);\n  const [date, time] = value.split('T');\n  nullableDate(date, `${field}.date`); nullableTime(time, `${field}.time`);\n  return value;\n}\n\nmodule.exports = { OPERATIONS, FORBIDDEN_IDENTITY_KEYS, parseSemanticJson, validateSchedule, validateRecurrence, validateReminderPolicy, validateSemanticAgainstTrusted, dateGroundedInText, timeGroundedInText, recurrenceTimeGroundedInText, recurrenceWeekdaysGroundedInText, recurrenceCadenceGroundedInText };\n};\nconst __cache=Object.create(null);function __require(id){if(__cache[id])return __cache[id].exports;if(!__modules[id])throw new Error(`Unknown bundled module: ${id}`);const module={exports:{}};__cache[id]=module;__modules[id](module,module.exports,__require);return module.exports;}\nconst core=Object.assign({},__require('./utils'),__require('./semantic'));\n\nconst rawEnvelope = $input.first()?.json || {};\nconst envelope = rawEnvelope.envelope && typeof rawEnvelope.envelope === 'object' ? rawEnvelope.envelope : rawEnvelope;\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst route = Array.isArray(contexts['Code | Route Task Operation | TaskSemantic']) ? (contexts['Code | Route Task Operation | TaskSemantic'][0] || {}) : {};\nconst trusted = JSON.parse(route._trustedJson || '{}');\nconst rows = JSON.parse(route._rowsJson || '[]');\nconst refs = JSON.parse(route._targetRefsJson || '{}');\nconst nowIso = new Date().toISOString();\n\nfunction semanticDraft(reason) {\n  return core.parseSemanticJson({\n    contractVersion: 'chelsea_task_command_v1', operation: 'create_task', targetRef: null,\n    title: '', description: '', taskKind: null, priority: 2, tags: [],\n    schedule: null, recurrence: null, reminderPolicy: null, completionRequired: null,\n    seriesMutationScope: null, listKind: null, answerAction: null,\n    clarificationNeeded: true, clarificationReason: String(reason || 'Нужно уточнение').slice(0, 500),\n  });\n}\nfunction terminalOutcome(fields){return [{json:{...route,_mutationNeeded:false,_taskOutcomeJson:JSON.stringify(fields),taskHandled:fields.taskHandled!==false,taskOperation:fields.operation||'failed_review',taskRecordId:fields.recordId||'',taskErrorCode:String(fields.errorCode||route.taskErrorCode||'').slice(0,80),memoryWriteAllowed:fields.taskHandled===false&&route._incomingMemoryWriteAllowed===true}}];}\ntry {\n\nlet command;\nif (route._routeKind === 'ambiguous') command = semanticDraft('Уточните: это нужно сохранить как задачу?');\nelse if (route._routeKind === 'local_semantic' && route._semanticNeeded === false && route._localSemanticJson) command = core.parseSemanticJson(route._localSemanticJson);\nelse {\n  const response = inputItems[0] || {};\n  const content = response.choices?.[0]?.message?.content;\n  if (response.error || typeof content !== 'string' || !content.trim()) throw Object.assign(new Error('Task semantic HTTP response is missing a usable structured result'), { code: 'semantic_http_failed' });\n  command = core.parseSemanticJson(content);\n}\ncore.validateSemanticAgainstTrusted(command, trusted, route.messageText || '');\ncore.assert(!command.reminderPolicy || command.reminderPolicy.quietHoursMode !== 'bypass', 'explicit_confirmation_required', 'quietHours bypass is not accepted from model output');\ncore.assert(command.operation !== 'update_series', 'unsupported_operation', 'update_series is not exposed in the MVP contract');\ncore.assert(command.operation !== 'resume_series' || command.clarificationNeeded !== true, 'target_not_exact', 'Resume series requires an exact local target reference');\nlet semanticBranch='direct';\nif (command.operation === 'not_a_task_command' || command.operation === 'list_tasks') semanticBranch='outcome';\nelse if (command.clarificationNeeded) semanticBranch='clarification';\nelse if (command.operation === 'create_task' && command.recurrence) semanticBranch='create_series';\nelse if (['create_task','create_reminder','add_subtask'].includes(command.operation)) semanticBranch='create';\nelse if (command.operation === 'cancel_series') semanticBranch='cancel_series';\nelse if (command.operation === 'resume_series') semanticBranch='resume_series';\nreturn [{ json: { ...envelope, semanticCommandJson: JSON.stringify(command), semanticBranch } }];\n\n} catch(error){const fields=(String(error.code||'')==='concurrency_conflict'||String(error.code||'')==='lease_conflict')?{taskHandled:true,operation:'task_deferred_retry',text:'Задача сейчас обрабатывается планировщиком. Повторите команду чуть позже.',errorCode:String(error.code).slice(0,80)}:{taskHandled:true,operation:'failed_review',text:'Команда задач остановлена безопасно; изменения не применены.',errorCode:String(error.code||'contract_violation').slice(0,80)};return [{json:{...envelope,semanticBranch:'terminal',terminalItems:terminalOutcome(fields).map(x=>x.json)}}];}\n"
+      }
+    },
+    {
+      "id": "1f1b17d7-c928-55a1-8051-279d4ef10655",
+      "name": "Switch | Task Mutation Branch | TaskMutation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bb77a069-5169-5a05-ae8d-25e92c3a0a86",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "outcome",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0a5dcd36-ecca-53f3-972c-bc58c4a0baca",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "clarification",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5d92d8b7-b48f-5af2-8fdb-7196ab15ba8d",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "create_series",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d6721cdd-01c7-5d67-80e1-706d7529a0d8",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "54d190db-5fcd-59b2-bb81-80a9ad266a9d",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "cancel_series",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7f32a34e-0cc2-53c2-b42f-8b48874dff6c",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "resume_series",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "75454a1a-1c4e-54f0-992a-c34ce1d49c7b",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "direct",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b21e9c8b-9216-5ab4-adb3-1b603c5b2934",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "terminal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "87b9014c-495f-5200-b62b-a39e65ecda12",
+      "name": "Call | Chelsea Task Semantic Branch Outcome | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -600
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM104c3b1b81f45d5",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Outcome v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "a7c8b254-34e5-5c37-bf47-d36c37e3c9cf",
+      "name": "Call | Chelsea Task Semantic Branch Clarification | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10dc11af9a683cf",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Clarification v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "fd53bf6c-f746-5b24-9c06-6624ed6fe44a",
+      "name": "Call | Chelsea Task Semantic Branch Create Series | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM109b672786c183a",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Create Series v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "9c27a207-3518-5e6c-99f2-e150bb461556",
+      "name": "Call | Chelsea Task Semantic Branch Create | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -60
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM109923a89e2320a",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Create v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "1a7d0091-208b-5aee-b9bf-a868cfa33357",
+      "name": "Call | Chelsea Task Semantic Branch Cancel Series | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        120
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM1000359ac234037",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Cancel Series v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "5669fa9c-eca9-51d2-90d9-9dd0244903fd",
+      "name": "Call | Chelsea Task Semantic Branch Resume Series | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        300
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10d624728b9541f",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Resume Series v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "c55f8394-78d5-5315-8c11-4b8ab19d7178",
+      "name": "Call | Chelsea Task Semantic Branch Direct Mutation | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        480
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10f5a134c98a4cf",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Direct Mutation v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "b877e6bb-f871-595f-b19d-e8bfeadda48b",
+      "name": "Call | Chelsea Task Semantic Branch Terminal | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        660
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10576b8acf8d316",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Branch Terminal v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskSemanticMutationRouterv10": {
+      "main": [
+        [
+          {
+            "node": "Code | Classify Task Mutation | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Classify Task Mutation | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Switch | Task Mutation Branch | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch | Task Mutation Branch | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Outcome | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Clarification | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Create Series | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Create | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Cancel Series | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Resume Series | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Direct Mutation | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Branch Terminal | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

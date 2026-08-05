@@ -1,0 +1,204 @@
+{
+  "id": "FLD8wK3pR6tY2qHb",
+  "name": "Создать папки пользователя v4.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 180,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "8db24ce7-7d35-5c84-9d61-5c6b4acfb48b",
+  "nodes": [
+    {
+      "id": "8f69d31e-f1e7-5374-b38f-7d383480fc3f",
+      "name": "Trigger | Parent Workflow | UserFolderProvision",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "45501c49-3ccd-5a13-aa27-9fc16bb2e1d2",
+      "name": "Code | Validate Immutable Folder User Identity | UserFolderProvision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();const storage=t(input.storageUsername).toLowerCase();const actor=t(input.telegramActorId||input.telegramUserId);\nif(!/^actor_[a-f0-9]{32}$/.test(storage)||!/^tgactor_[a-f0-9]{64}$/.test(t(input.principalKey))||!/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t(input.principalUuid))||!/^\\d+$/.test(actor))throw new Error('folder_immutable_identity_required');\nconst expected={userId:storage,memoryUserId:storage,tenantId:`tenant_${storage}`,memoryTenantId:`tenant_${storage}`,qdrantCollection:`kb_tenant_${storage}`,soulId:`chelsea_soul_${storage}`};for(const [k,v] of Object.entries(expected))if(t(input[k])!==v)throw new Error(`folder_identity_scope_mismatch:${k}`);\nconst root=t($env.CHELSEA_USER_FILES_ROOT||'/files/chelsea').replace(/\\/+$/,'');if(!root.startsWith('/')||root==='/'||root==='/files'||root.includes('..'))throw new Error('folder_unsafe_root');const folderRoot=`${root}/${expected.tenantId}`;if(t(input.telegramActorId)&&t(input.telegramUserId)&&t(input.telegramActorId)!==t(input.telegramUserId))throw new Error('folder_telegram_actor_mismatch');return [{json:{...input,...expected,telegramActorId:actor,telegramUserId:actor,currentUsername:t(input.currentUsername).replace(/^@+/,''),filesRoot:root,folderRoot}}];"
+      }
+    },
+    {
+      "id": "d9e8cc86-be39-5f5a-bf6e-39c1d72c9cab",
+      "name": "Execute Command | Create Restricted Tenant Directories | UserFolderProvision",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "command": "=set -euo pipefail\nroot={{ JSON.stringify($json.filesRoot) }}\nstorage={{ JSON.stringify($json.storageUsername) }}\ntarget={{ JSON.stringify($json.folderRoot) }}\ncase \"$storage\" in (actor_[0-9a-f][0-9a-f]*) ;; (*) echo 'invalid immutable storage key' >&2; exit 64;; esac\ncase \"$target\" in (\"$root\"/tenant_actor_*) ;; (*) echo 'path escape blocked' >&2; exit 65;; esac\ninstall -d -m 0700 -- \"$target\" \"$target/obsidian\" \"$target/exports\" \"$target/tmp\"\nfor d in \"$target\" \"$target/obsidian\" \"$target/exports\" \"$target/tmp\"; do test -d \"$d\"; test \"$(stat -c '%a' -- \"$d\")\" = '700'; done\nprintf '{\"folderRoot\":\"%s\",\"verified\":true,\"mode\":\"700\",\"directories\":4}\n' \"$target"
+      }
+    },
+    {
+      "id": "e79879e5-dfc5-4ea2-868d-cb3c61ae4427",
+      "name": "Code | Verify Filesystem Receipt | UserFolderProvision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const source=$('Code | Validate Immutable Folder User Identity | UserFolderProvision').first().json;let r={};try{r=JSON.parse(String($json.stdout||$json.data||'{}').trim())}catch{throw new Error('folder_filesystem_receipt_invalid')};if(r.verified!==true||r.folderRoot!==source.folderRoot||r.mode!=='700'||Number(r.directories)!==4)throw new Error('folder_filesystem_verification_failed');return [{json:{...source,filesystemReceipt:r}}];"
+      }
+    },
+    {
+      "id": "510a20e4-9708-49bd-a337-15c51b9f8e60",
+      "name": "Call | Supabase | Store Immutable Folder Receipt | UserFolderProvision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.CHELSEA_SUPABASE_URL || '').replace(/\\/+$/,'') + '/rest/v1/rpc/chelsea_identity_upsert_folder_receipt_v1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_principal_key:$json.principalKey,p_telegram_actor_id:Number($json.telegramActorId),p_storage_key:$json.storageUsername,p_tenant_id:$json.tenantId,p_qdrant_collection:$json.qdrantCollection,p_soul_id:$json.soulId,p_folder_root:$json.folderRoot,p_filesystem_receipt:$json.filesystemReceipt} }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "ae7bbf1e-dc3b-4d84-980c-d6500bc73602",
+      "name": "Code | Verify PostgreSQL Folder Receipt | UserFolderProvision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        300
+      ],
+      "parameters": {
+        "jsCode": "'use strict';const expected=$('Code | Verify Filesystem Receipt | UserFolderProvision').first().json;const raw=$json.body??$json;const r=Array.isArray(raw)?raw[0]:raw;const t=v=>String(v??'').normalize('NFKC').trim();if(r?.success!==true||r?.verified!==true)throw new Error('folder_postgres_receipt_invalid');for(const k of ['principalKey','storageUsername','userId','tenantId','qdrantCollection','soulId','folderRoot'])if(t(r[k])!==t(expected[k]))throw new Error(`folder_postgres_receipt_mismatch:${k}`);if(t(r.telegramActorId)!==t(expected.telegramActorId)||r.filesystemVerified!==true||t(r.filesystemMode)!=='700')throw new Error('folder_postgres_filesystem_receipt_mismatch');return [{json:{...expected,...r,folderFilesystemReceipt:expected.filesystemReceipt,folderProvisionStatus:'done',folderProvisionVersion:'chelsea_folder_provision_v3',completedAt:new Date().toISOString()}}];"
+      }
+    },
+    {
+      "id": "281aae9a-815f-5b9b-b9f6-075a1f27917b",
+      "name": "End | Folder User Provision Receipt | UserFolderProvision",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        300
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | UserFolderProvision": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Immutable Folder User Identity | UserFolderProvision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Immutable Folder User Identity | UserFolderProvision": {
+      "main": [
+        [
+          {
+            "node": "Execute Command | Create Restricted Tenant Directories | UserFolderProvision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command | Create Restricted Tenant Directories | UserFolderProvision": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify Filesystem Receipt | UserFolderProvision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify Filesystem Receipt | UserFolderProvision": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase | Store Immutable Folder Receipt | UserFolderProvision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase | Store Immutable Folder Receipt | UserFolderProvision": {
+      "main": [
+        [
+          {
+            "node": "Code | Verify PostgreSQL Folder Receipt | UserFolderProvision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Verify PostgreSQL Folder Receipt | UserFolderProvision": {
+      "main": [
+        [
+          {
+            "node": "End | Folder User Provision Receipt | UserFolderProvision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

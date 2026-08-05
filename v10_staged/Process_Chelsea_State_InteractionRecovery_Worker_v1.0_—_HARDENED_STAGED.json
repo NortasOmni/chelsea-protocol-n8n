@@ -1,0 +1,260 @@
+{
+  "id": "lairbKhoaq0o05aA",
+  "name": "Process Chelsea State InteractionRecovery Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "711d34d6-4404-58ac-a06d-aee66ab3d97a",
+  "nodes": [
+    {
+      "id": "17569092-7c25-5f18-bfa1-da16094319f6",
+      "name": "Trigger | Parent Workflow | InteractionRecoveryWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "60d82ec3-170c-5770-aa20-767f1717e00a",
+      "name": "Call | Supabase RPC | Claim Stalled Interactions | InteractionRecovery",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -500,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_interaction_claim_stalled_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {p_worker_id:'n8n_state_scheduler_'+$execution.id,p_batch_size:5,p_lease_minutes:5} }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "79997ead-5890-591e-8290-11f8b8c07af4",
+      "name": "Code | Set Recovery Worker | InteractionRecovery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().map(i=>({json:{...i.json,interactionWorkerMode:'recovery'}}));"
+      }
+    },
+    {
+      "id": "2a1f53d2-c66e-5621-be2e-59d182cd110c",
+      "name": "Call | Челси быстрая реакция worker | Build Recovery Phrase | InteractionRecovery",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -20,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "EWzVuvIxi7Ee8TEu",
+          "mode": "id",
+          "cachedResultName": "Челси быстрая реакция worker v2.1 [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "d62c76f4-3860-56eb-bcca-f4b1a74a17b9",
+      "name": "Code | Set Recovery Delivery | InteractionRecovery",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().map(i=>({json:{...i.json,deliveryMode:'recovery'}}));"
+      }
+    },
+    {
+      "id": "f6dd7c16-014c-5bf5-90c6-b3910527d943",
+      "name": "Call | Челси доставка взаимодействий | Deliver Recovery | InteractionRecovery",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        460,
+        0
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "awa3pS7rw4fCNEVt",
+          "mode": "id",
+          "cachedResultName": "Челси доставка взаимодействий v1.0 [HARDENED STAGED]"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "87dc5b15-caf9-5a6f-8d6e-2d4192f02b3c",
+      "name": "End | InteractionRecovery",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        700,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "6dd0380a-5e8e-5b2c-8ff6-2d8f03b694d6",
+      "name": "End | InteractionRecovery Worker Receipt | InteractionRecoveryWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        980,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | InteractionRecoveryWorker": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Stalled Interactions | InteractionRecovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Stalled Interactions | InteractionRecovery": {
+      "main": [
+        [
+          {
+            "node": "Code | Set Recovery Worker | InteractionRecovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Set Recovery Worker | InteractionRecovery": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси быстрая реакция worker | Build Recovery Phrase | InteractionRecovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Set Recovery Delivery | InteractionRecovery": {
+      "main": [
+        [
+          {
+            "node": "Call | Челси доставка взаимодействий | Deliver Recovery | InteractionRecovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Челси быстрая реакция worker | Build Recovery Phrase | InteractionRecovery": {
+      "main": [
+        [
+          {
+            "node": "Code | Set Recovery Delivery | InteractionRecovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Челси доставка взаимодействий | Deliver Recovery | InteractionRecovery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionRecovery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | InteractionRecovery": {
+      "main": [
+        [
+          {
+            "node": "End | InteractionRecovery Worker Receipt | InteractionRecoveryWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

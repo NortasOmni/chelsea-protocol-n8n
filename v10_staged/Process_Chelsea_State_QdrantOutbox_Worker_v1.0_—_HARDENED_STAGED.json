@@ -1,0 +1,855 @@
+{
+  "id": "puNfqcIG1OEjLpPU",
+  "name": "Process Chelsea State QdrantOutbox Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "ac8dd602-f246-56d3-a771-b91894d056ca",
+  "nodes": [
+    {
+      "id": "e8279237-7481-51b0-bb7f-bde59971b17e",
+      "name": "Trigger | Parent Workflow | QdrantOutboxWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "0a60acdc-1e4c-5a41-9197-e15a0bd08203",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_qdrant_outbox_v2\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $json.schedulerWorkerBase + \":qdrant\", p_limit: $json.qdrantBatchLimit, p_lease_minutes: $json.modelLeaseMinutes } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "5413769a-3f6b-5896-90fb-5908d3de028b",
+      "name": "Call | Supabase RPC | Claim State Qdrant Outbox | QdrantOutbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        240
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst rows=$input.all().flatMap(item=>{const value=item.json?.body??item.json??{};return Array.isArray(value)?value:(Array.isArray(value.data)?value.data:[value]);});\nreturn rows.filter(row=>row&&row.outbox_id&&row.lease_token&&row.qdrant_point_id).map(row=>({json:{...row,stateOutbox:row}}));"
+      },
+      "id": "afb99058-7e54-5506-af5c-ee3651911fc3",
+      "name": "Code | Normalize State Qdrant Claims | QdrantOutbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -210,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst row = input.stateOutbox && typeof input.stateOutbox === 'object' ? input.stateOutbox : input;\nconst text = value => String(value ?? '').normalize('NFKC').trim();\nconst list = value => Array.isArray(value) ? value : [];\nconst object = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};\nconst jsonObject = value => {\n  if (value && typeof value === 'object' && !Array.isArray(value)) return value;\n  if (typeof value !== 'string' || !value.trim()) return {};\n  try { return object(JSON.parse(value)); } catch { return {}; }\n};\n\nconst payload = jsonObject(row.payloadJson ?? row.payload_json);\nconst appliedResult = object(payload.appliedResult);\nconst summaryPayload = object(payload.summary);\nconst sourceType = text(row.sourceType || row.source_type || 'analysis').toLowerCase();\nconst allowedSourceTypes = new Set(['analysis', 'clarification', 'principal_context', 'state_summary']);\nif (!allowedSourceTypes.has(sourceType)) throw new Error(`State Qdrant outbox: unsupported source type ${sourceType || '(empty)'}.`);\n\nconst principalId = text(payload.principalId || appliedResult.principalId || summaryPayload.principalId || row.principalId || row.principal_id);\nconst collection = text(payload.qdrantCollection || appliedResult.qdrantCollection || summaryPayload.qdrantCollection || row.qdrantCollection || row.qdrant_collection);\nconst tenantId = text(payload.memoryTenantId || appliedResult.memoryTenantId || summaryPayload.memoryTenantId || row.memoryTenantId || row.memory_tenant_id);\nconst pointId = text(row.qdrantPointId || row.qdrant_point_id || payload.qdrantPointId);\nconst sourceKey = text(row.sourceKey || row.source_key || row.dedupeKey || row.dedupe_key || payload.inputId || payload.clarificationId || payload.evaluationId);\nconst outboxId = text(row.outboxId || row.outbox_id || row.id);\nif (!principalId || !collection || !tenantId || !pointId || !sourceKey) {\n  throw new Error('State Qdrant outbox: identity, source, collection, tenant, or point context is incomplete.');\n}\n\nconst sphereNames = {\n  health: 'Здоровье', energy: 'Энергия', mood: 'Настроение', calm: 'Спокойствие', clarity: 'Ясность',\n  motivation: 'Мотивация', relationships: 'Отношения', progress: 'Прогресс', inspiration: 'Вдохновлённость', finance: 'Финансы'\n};\nconst stateValues = list(payload.state).length ? list(payload.state)\n  : list(appliedResult.state).length ? list(appliedResult.state)\n    : list(summaryPayload.state);\nconst stateLines = stateValues.map(value => {\n  const code = text(value.sphereCode);\n  const score = Number(value.effectiveScore ?? value.score);\n  const confidence = Number(value.confidence ?? value.modelConfidence);\n  if (!code || !Number.isFinite(score)) return '';\n  return `${sphereNames[code] || code}: ${score}${Number.isFinite(confidence) ? ` (уверенность ${confidence})` : ''}`;\n}).filter(Boolean);\n\nconst events = list(payload.events).length ? list(payload.events) : list(appliedResult.events);\nconst eventLines = events.flatMap(event => {\n  const header = text(event.summary);\n  const evidence = text(event.evidenceText);\n  const effectLines = list(event.effects).map(effect => {\n    const code = text(effect.sphereCode);\n    const direction = Number(effect.direction);\n    const strength = Number(effect.strength);\n    const duration = Number(effect.durationDays);\n    if (!code || ![-1, 1].includes(direction) || ![1, 2, 3].includes(strength) || ![1, 3, 7, 14].includes(duration)) return '';\n    return `${sphereNames[code] || code}: ${direction < 0 ? '−' : '+'}${strength}, ${duration} дн.`;\n  }).filter(Boolean);\n  return [header, evidence ? `Основание: «${evidence}»` : '', ...effectLines].filter(Boolean);\n});\n\nconst userScores = list(payload.userScores).length ? list(payload.userScores) : list(appliedResult.userScores);\nconst scoreLines = userScores.map(score => {\n  const code = text(score.sphereCode);\n  const value = Number(score.score);\n  return code && Number.isFinite(value) ? `${sphereNames[code] || code}: прямая оценка ${value}/10` : '';\n}).filter(Boolean);\n\nconst identity = object(payload.identityContext);\nconst displayName = text(payload.displayName || identity.displayName);\nconst tenantUsername = tenantId.startsWith('tenant_') ? tenantId.slice('tenant_'.length) : '';\nconst collectionUsername = collection.startsWith('kb_tenant_') ? collection.slice('kb_tenant_'.length) : '';\nconst storageUsername = text(payload.storageUsername || identity.storageUsername || tenantUsername).replace(/^@+/, '').toLowerCase();\nconst currentUsername = text(payload.currentUsername || identity.currentUsername || identity.username || '').replace(/^@+/, '').toLowerCase();\nconst telegramActorId = text(payload.telegramActorId || payload.telegramUserId || identity.telegramActorId || identity.telegramUserId || row.telegramActorId || row.telegram_user_id);\nif (!/^tgactor_[a-f0-9]{64}$/.test(principalId) || !/^actor_[a-f0-9]{32}$/.test(storageUsername) || collectionUsername !== storageUsername ||\n    tenantId !== `tenant_${storageUsername}` || !/^\\d+$/.test(telegramActorId) || Number(telegramActorId)<=0 || (currentUsername && !/^[a-z0-9_]{1,64}$/.test(currentUsername))) {\n  throw new Error('State Qdrant outbox: canonical username identity is inconsistent.');\n}\nconst username = currentUsername;\nconst timezone = text(payload.timezone || identity.timezone || summaryPayload.deliveryContext?.timezone);\nconst asOfDate = text(payload.asOfDate || payload.localDate || appliedResult.asOfDate || summaryPayload.asOfDate);\nconst sourceContent = text(payload.content || appliedResult.content);\n\nlet pointType;\nlet knowledgeType;\nlet title;\nlet lines;\nif (sourceType === 'principal_context') {\n  pointType = 'user_state_profile';\n  knowledgeType = 'user_state_profile';\n  title = `Профиль состояния${displayName ? ` · ${displayName}` : ''}`;\n  lines = [\n    title,\n    `Канонический идентификатор: ${principalId}`,\n    displayName ? `Имя: ${displayName}` : '',\n    username ? `Текущий username: ${username}` : '',\n    timezone ? `Часовой пояс: ${timezone}` : '',\n    text(payload.telegramChatId) ? `Telegram chat: ${text(payload.telegramChatId)}` : '',\n    text(payload.deliveryAddress) ? `Адрес доставки: ${text(payload.deliveryAddress)}` : '',\n    `Версия контекста: ${text(payload.contextVersion || '0')}`\n  ];\n} else if (sourceType === 'state_summary') {\n  pointType = 'user_state_summary';\n  knowledgeType = 'user_state_summary';\n  title = `Сводка состояния · ${asOfDate || principalId}`;\n  const benefit = Number(payload.observedBenefit);\n  lines = [\n    title,\n    stateLines.length ? `Сферы: ${stateLines.join('; ')}` : '',\n    Number.isFinite(benefit) ? `Наблюдаемая польза действия: ${benefit}` : '',\n    text(payload.evaluationId) ? `Оценка действия: ${text(payload.evaluationId)}` : ''\n  ];\n} else {\n  pointType = 'user_state';\n  knowledgeType = sourceType === 'clarification' ? 'user_state_clarification' : 'user_state_observation';\n  title = sourceType === 'clarification'\n    ? `Уточнение состояния · ${asOfDate || sourceKey}`\n    : `Состояние пользователя · ${asOfDate || sourceKey}`;\n  lines = [\n    title,\n    sourceContent ? `Сообщение пользователя: ${sourceContent}` : '',\n    ...eventLines,\n    ...scoreLines,\n    stateLines.length ? `Снимок сфер: ${stateLines.join('; ')}` : '',\n    text(payload.targetEffectId) ? `Уточнённый эффект: ${text(payload.targetEffectId)}` : ''\n  ];\n}\n\nconst retrievalText = lines.filter(Boolean).join('\\n');\nconst uploadId = `state:${sourceType}:${sourceKey}`;\nconst evidenceText = sourceContent || eventLines.join('\\n') || stateLines.join('; ') || retrievalText;\nconst retrievalQuestions = [\n  `Как менялось состояние пользователя ${principalId}?`,\n  sourceType === 'principal_context' ? `Какой профиль и контекст у пользователя ${principalId}?` : '',\n  sourceType === 'state_summary' ? `Какова последняя сводка состояния пользователя ${principalId}?` : '',\n  ...stateLines.slice(0, 5).map(line => `Что известно про ${line.split(':')[0]} пользователя?`)\n].filter(Boolean);\nconst tags = [\n  'chelsea_state',\n  pointType,\n  `state_source_${sourceType}`,\n  ...events.flatMap(event => list(event.effects).map(effect => `state_${text(effect.sphereCode)}`)).filter(Boolean)\n];\nconst directItem = {\n  pointType,\n  qdrantPointId: pointId,\n  knowledgeId: `${sourceType}:${sourceKey}`,\n  knowledgeType,\n  type: knowledgeType,\n  title,\n  summary: eventLines.slice(0, 8).join(' | ') || stateLines.join('; ') || sourceContent || title,\n  text: retrievalText,\n  retrievalText,\n  sourceText: evidenceText,\n  evidenceText,\n  retrievalQuestions,\n  queryAliases: ['состояние пользователя', 'профиль пользователя', ...stateLines.slice(0, 10)],\n  tags: [...new Set(tags)],\n  tenantId,\n  memoryTenantId: tenantId,\n  principalId,\n  canonicalPrincipalId: principalId,\n  sourceType,\n  sourceKey,\n  stateOutboxId: outboxId,\n  sourceMessageId: text(payload.sourceMessageId || appliedResult.sourceMessageId),\n  sourceInputId: text(payload.inputId || appliedResult.inputId),\n  sourceAnalysisRunId: text(payload.analysisRunId || appliedResult.analysisRunId),\n  stateSnapshotId: text(payload.snapshotId || appliedResult.snapshotId || payload.afterSnapshotId),\n  stateAsOfDate: asOfDate,\n  stateModelVersion: text(payload.calculationVersion || appliedResult.calculationVersion || 'kernel_v0'),\n  statePayloadSchemaVersion: text(payload.schemaVersion),\n  stateAboutSelf: payload.aboutSelf === true || appliedResult.aboutSelf === true,\n  stateAnalysisConfidence: Number(payload.analysisConfidence ?? appliedResult.analysisConfidence ?? 0),\n  stateEvents: events,\n  stateUserScores: userScores,\n  stateEffectMutations: list(payload.effectMutations).length ? list(payload.effectMutations) : list(appliedResult.effectMutations),\n  stateValues,\n  stateIdentityContext: identity,\n  storageUsername,\n  currentUsername,\n  stateSourcePayload: payload,\n  payloadSchemaVersion: 'chelsea_state_qdrant_point_v2',\n  payloadShape: 'chelsea_state_qdrant_point_v2',\n  sourceTitle: 'Chelsea State',\n  uploadId\n};\n\nreturn [{\n  json: {\n    ...row,\n    qdrantDirectMode: true,\n    qdrantDirectItems: [directItem],\n    qdrantCollection: collection,\n    tenantId,\n    memoryTenantId: tenantId,\n    principalKey: principalId,\n    storageUsername,\n    currentUsername,\n    telegramUsername: currentUsername,\n    userId: storageUsername,\n    memoryUserId: storageUsername,\n    telegramActorId,\n    telegramUserId: telegramActorId,\n    soulId: `chelsea_soul_${storageUsername}`,\n    identitySchemaVersion: 'chelsea_actor_identity_v3',\n    identityStatus: text(identity.identityStatus || payload.identityStatus || 'active'),\n    principalId,\n    universalMemoryMode: false,\n    peopleResolutionEnabled: false,\n    peopleEntityMode: 'off',\n    skipExistingQdrantPoints: true,\n    reindexChangedQdrantPoints: true,\n    qdrantBatchIndexingEnabled: true,\n    qdrantBatchSize: 1,\n    sourceTitle: 'Chelsea State',\n    sourceText: evidenceText,\n    uploadId,\n    stateExpectedPointId: pointId\n  }\n}];\n"
+      },
+      "id": "e9c41403-4dcb-5b02-a6fb-6299375377dc",
+      "name": "Code | Build State Qdrant Load Input | QdrantOutbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "QRD9aL2xK7mP4vNs",
+          "mode": "id",
+          "cachedResultName": "Qdrant загрузка и контроль знаний v6.1 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "userId": "={{ $json.userId }}",
+            "memoryUserId": "={{ $json.memoryUserId }}",
+            "tenantId": "={{ $json.tenantId }}",
+            "memoryTenantId": "={{ $json.memoryTenantId }}",
+            "uploadId": "={{ $json.uploadId }}",
+            "sourceTitle": "={{ $json.sourceTitle }}",
+            "qdrantDirectMode": "={{ $json.qdrantDirectMode }}",
+            "qdrantDirectItems": "={{ $json.qdrantDirectItems }}",
+            "qdrantCollection": "={{ $json.qdrantCollection }}",
+            "skipExistingQdrantPoints": "={{ $json.skipExistingQdrantPoints }}",
+            "reindexChangedQdrantPoints": "={{ $json.reindexChangedQdrantPoints }}",
+            "sourceText": "={{ $json.sourceText }}",
+            "sourcePeople": "={{ [] }}",
+            "personalProfileMode": "={{ false }}",
+            "universalMemoryMode": "={{ false }}",
+            "qdrantBatchIndexingEnabled": "={{ true }}",
+            "principalKey": "={{ $json.principalKey }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "userId",
+              "displayName": "userId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "memoryUserId",
+              "displayName": "memoryUserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tenantId",
+              "displayName": "tenantId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "memoryTenantId",
+              "displayName": "memoryTenantId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploadId",
+              "displayName": "uploadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sourceTitle",
+              "displayName": "sourceTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "qdrantDirectMode",
+              "displayName": "qdrantDirectMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "qdrantDirectItems",
+              "displayName": "qdrantDirectItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "qdrantCollection",
+              "displayName": "qdrantCollection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "skipExistingQdrantPoints",
+              "displayName": "skipExistingQdrantPoints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reindexChangedQdrantPoints",
+              "displayName": "reindexChangedQdrantPoints",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sourceText",
+              "displayName": "sourceText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sourcePeople",
+              "displayName": "sourcePeople",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "personalProfileMode",
+              "displayName": "personalProfileMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "universalMemoryMode",
+              "displayName": "universalMemoryMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "qdrantBatchIndexingEnabled",
+              "displayName": "qdrantBatchIndexingEnabled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "principalKey",
+              "displayName": "principalKey",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "8d92984c-6312-5a68-b600-a52afcd51604",
+      "name": "Call | Qdrant загрузка и контроль знаний | Load State to Qdrant | QdrantOutbox",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        290,
+        240
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst source=$('Code | Build State Qdrant Load Input | QdrantOutbox').item.json||{};\nconst summary=$input.first()?.json||{};\nconst expected=String(source.stateExpectedPointId||'');\nconst indexedIds=(Array.isArray(summary.indexedExamples)?summary.indexedExamples:[]).map(row=>String(row.id||row.qdrantPointId||''));\nconst skippedIds=(Array.isArray(summary.skippedExamples)?summary.skippedExamples:[]).map(row=>String(row.id||row.qdrantPointId||''));\nconst selected=Number(summary.selectedForIndexingCount||0);\nconst skipped=Number(summary.skippedExistingQdrantPointCount||0);\nconst checked=Number(summary.checkedQdrantPointCount||0);\nconst common=summary.status==='done'&&String(summary.qdrantCollection||'')===String(source.qdrantCollection||'')&&checked===1;\nconst indexed=selected===1&&summary.qdrantReadBackStatus==='verified'&&indexedIds.includes(expected);\nconst unchanged=selected===0&&skipped===1&&summary.qdrantReadBackStatus==='not_required'&&skippedIds.includes(expected);\nconst verified=Boolean(common&&(indexed||unchanged));\nconst receipt={verified,expectedPointId:expected,indexedPointIds:indexedIds,skippedPointIds:skippedIds,status:summary.status||'',qdrantReadBackStatus:summary.qdrantReadBackStatus||'',selectedForIndexingCount:selected,skippedExistingQdrantPointCount:skipped,checkedQdrantPointCount:checked,loaderReturnVersion:summary.loaderReturnVersion||'',completedAt:summary.completedAt||new Date().toISOString()};\nreturn [{json:{...source,stateQdrantReceipt:receipt,stateQdrantVerified:verified,stateQdrantError:verified?'':`loader_receipt_invalid:${JSON.stringify(receipt)}`}}];"
+      },
+      "id": "a1ef92bf-de11-5b73-8a87-c14dd02cf97f",
+      "name": "Code | Validate State Qdrant Receipt | QdrantOutbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "482c63fb-65ce-40f9-a3cc-d52ae9054e77",
+              "leftValue": "={{ $json.stateQdrantVerified }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f1ed8563-f5a5-51dc-82e0-ea17bcef160d",
+      "name": "If | State Qdrant Receipt Verified | QdrantOutbox",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        790,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nreturn [{json:{...input,stateRpcBody:{p_outbox_id:input.outbox_id||input.outboxId,p_lease_token:input.lease_token||input.leaseToken,p_expected_outbox_version:Number(input.outbox_version??input.outboxVersion),p_receipt_json:input.stateQdrantReceipt}}}];"
+      },
+      "id": "0661d0a0-91e4-512f-ba53-825723aaae69",
+      "name": "Code | Build Qdrant Complete RPC | QdrantOutbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_complete_qdrant_outbox_v2\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "783b217e-6b8a-5737-921d-7bd4df70d96a",
+      "name": "Call | Supabase RPC | Complete State Qdrant Outbox | QdrantOutbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1290,
+        80
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst input=$input.first()?.json||{};\nlet source=input;\ntry{source=$('Code | Build State Qdrant Load Input | QdrantOutbox').item.json||input;}catch{}\nconst error=String(input.stateQdrantError||input.error?.message||input.message||'qdrant_loader_failed');\nreturn [{json:{...source,stateRpcBody:{p_outbox_id:source.outbox_id||source.outboxId,p_lease_token:source.lease_token||source.leaseToken,p_expected_outbox_version:Number(source.outbox_version??source.outboxVersion),p_error_code:'qdrant_loader_failed',p_error_text:error.slice(0,2000),p_retry_delay_minutes:1}}}];"
+      },
+      "id": "81e72e9a-b9bb-557a-993f-3e4ad71e1c34",
+      "name": "Code | Build Qdrant Fail RPC | QdrantOutbox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_qdrant_outbox_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "86ce29a4-a0b2-56b4-ad32-e73d15c5ef66",
+      "name": "Call | Supabase RPC | Fail State Qdrant Outbox | QdrantOutbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1290,
+        360
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "width": 2100,
+        "height": 620,
+        "color": 5,
+        "content": "## State indexing (QdrantOutbox)\nOutbox lease, direct loader, exact receipt, then complete or fail CAS. One deterministic point is processed per call."
+      },
+      "id": "7a8393b8-a42d-53dc-99b7-c31b0f3fdcd6",
+      "name": "Sticky Note | Qdrant Outbox | QdrantOutbox",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ]
+    },
+    {
+      "id": "ccb8cba6-bc8d-5ef8-bca7-6beff3889684",
+      "name": "End | QdrantOutbox Worker Receipt | QdrantOutboxWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1570,
+        0
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | QdrantOutboxWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim State Qdrant Outbox | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim State Qdrant Outbox | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize State Qdrant Claims | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize State Qdrant Claims | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Code | Build State Qdrant Load Input | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build State Qdrant Load Input | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Call | Qdrant загрузка и контроль знаний | Load State to Qdrant | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate State Qdrant Receipt | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "If | State Qdrant Receipt Verified | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | State Qdrant Receipt Verified | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Qdrant Complete RPC | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Qdrant Fail RPC | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Qdrant Complete RPC | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Complete State Qdrant Outbox | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Qdrant Fail RPC | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail State Qdrant Outbox | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Qdrant загрузка и контроль знаний | Load State to Qdrant | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate State Qdrant Receipt | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Qdrant Fail RPC | QdrantOutbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Complete State Qdrant Outbox | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "End | QdrantOutbox Worker Receipt | QdrantOutboxWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail State Qdrant Outbox | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "End | QdrantOutbox Worker Receipt | QdrantOutboxWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | Qdrant Outbox | QdrantOutbox": {
+      "main": [
+        [
+          {
+            "node": "End | QdrantOutbox Worker Receipt | QdrantOutboxWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,1599 @@
+{
+  "id": "4Wi9cqjk2Mz7CSXq",
+  "name": "Process Chelsea State ClarificationFinalize Worker v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 600,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "8dcfc98c-2c09-5d98-9fca-a08c10e26e50",
+  "nodes": [
+    {
+      "id": "c81ac9a8-31f4-5470-93ef-a89668dcc83e",
+      "name": "Trigger | Parent Workflow | ClarificationFinalizeWorker",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -900,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "070276e0-8020-47dd-9cae-a6bc74b89291",
+              "name": "schedulerRunId",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f6ec991a-11d5-4fc6-878a-746650a0d218",
+              "name": "schedulerWorkerBase",
+              "value": "={{ 'chelsea-state-scheduler-v1:' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "5dfa21d9-b470-4288-9199-d76ea6729aa6",
+              "name": "schedulerAsOfDate",
+              "value": "={{ $now.setZone('Asia/Novosibirsk').toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "e04b927c-66d9-461e-878d-bc16a5812c62",
+              "name": "schedulerObservedAt",
+              "value": "={{ $now.toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "0220491f-8d99-4b5d-9203-9ac36549a19f",
+              "name": "schedulerSince",
+              "value": "={{ $now.minus({ days: 1 }).toUTC().toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "c9ef17b1-8edb-4448-9877-80478d53841b",
+              "name": "analysisBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9c718ca1-44c5-47dd-afb7-4a21119e03a6",
+              "name": "clarificationAskBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "62289808-a61b-4725-85e3-16c959a393cb",
+              "name": "qdrantBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5747ef41-19c0-4469-98e8-cec99a693a1d",
+              "name": "decisionBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "374359fb-9f10-43f4-aa2a-a34108ec01ba",
+              "name": "deliveryBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "0ee233d3-1f59-4a42-b7a2-11d034d78ccd",
+              "name": "evaluationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "5bce10d0-6597-4fcb-a2f3-19db46d4e68d",
+              "name": "modelLeaseMinutes",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "5fc3d463-dd99-441d-945e-e9a9b4ed56cb",
+              "name": "fastLeaseMinutes",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "41e1998a-1ef7-4759-b910-f200cb12e0ff",
+              "name": "stateProductDayClasses",
+              "value": "1,3,7,14",
+              "type": "string"
+            },
+            {
+              "id": "a6be21ab-ff05-4504-a738-7a3737708c46",
+              "name": "stateMinimumProductDays",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9fe6026b-bd60-4a99-a660-d108ad6ee8ee",
+              "name": "stateCalibrationDays",
+              "value": 14,
+              "type": "number"
+            },
+            {
+              "id": "91e5c2ac-4e61-4b55-95b1-12c1ffffffff",
+              "name": "stateChangeNotificationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000001",
+              "name": "stateDateProbeBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "d8300000-0000-4000-8000-000000000002",
+              "name": "stateDatePromptBatchLimit",
+              "value": "1",
+              "type": "number"
+            },
+            {
+              "id": "9eed45b0-c879-4800-b01f-310f9fdb9e78",
+              "name": "clarificationAnswerBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "69a26fa7-24c3-4b97-8bb1-e0f8c74ae8e8",
+              "name": "clarificationFinalizationBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "aa0e7001-a9c9-4b00-979d-cf2db48c6f35",
+              "name": "clarificationExpireBatchLimit",
+              "value": 100,
+              "type": "number"
+            },
+            {
+              "id": "f1700000-0000-4000-8000-000000000001",
+              "name": "futurePlanFollowUpBatchLimit",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "proactivity-batch-limit-v1",
+              "name": "proactivityBatchLimit",
+              "value": "10",
+              "type": "number"
+            },
+            {
+              "id": "proactivity-lease-seconds-v1",
+              "name": "proactivityLeaseSeconds",
+              "value": "120",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "300b7a86-1662-5a7e-9972-60f443911ecc",
+      "name": "Set | Scheduler Constants | StateScheduler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_expire_clarification_sessions_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_limit: $json.clarificationExpireBatchLimit } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "e675502f-eaca-528b-9dfa-0192af9c4645",
+      "name": "Call | Supabase RPC | Expire Clarification Sessions | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -460,
+        320
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_claim_clarification_finalizations_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_worker_id: $(\"Set | Scheduler Constants | StateScheduler\").first().json.schedulerWorkerBase + \":clarification-finalize-v1\", p_limit: $(\"Set | Scheduler Constants | StateScheduler\").first().json.clarificationFinalizationBatchLimit, p_lease_minutes: $(\"Set | Scheduler Constants | StateScheduler\").first().json.modelLeaseMinutes } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "d185550d-5c5c-5698-84c9-06f2d8cd450d",
+      "name": "Call | Supabase RPC | Claim Clarification Finalizations | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -210,
+        320
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet base = {};\ntry { base = $('Set | Scheduler Constants | StateScheduler').first().json || {}; } catch {}\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst rows = $input.all().flatMap(item => {\n  const value = item?.json?.body ?? item?.json ?? {};\n  return Array.isArray(value) ? value : (Array.isArray(value?.data) ? value.data : [value]);\n});\n\nreturn rows.filter(row => row && clean(row.session_id ?? row.sessionId) &&\n  clean(row.job_id ?? row.jobId) && clean(row.lease_token ?? row.leaseToken) &&\n  Number.isSafeInteger(Number(row.session_version ?? row.sessionVersion)) &&\n  Number.isSafeInteger(Number(row.job_version ?? row.jobVersion)) &&\n  ['clarified', 'fallback', 'expired_fallback'].includes(clean(row.resolution_mode ?? row.resolutionMode)) &&\n  clean(row.principal_id ?? row.principalId) && clean(row.input_id ?? row.inputId) &&\n  clean(row.content) && /^\\d{4}-\\d{2}-\\d{2}$/.test(clean(row.local_date ?? row.localDate)) &&\n  Number.isSafeInteger(Number(row.rule_set_version ?? row.ruleSetVersion)) &&\n  Number.isSafeInteger(Number(row.rule_catalog_version ?? row.ruleCatalogVersion))\n).map(row => ({ json: {\n  ...base,\n  ...row,\n  stateClarificationFinalization: row,\n  stateClarificationFinalizationContractVersion: 'chelsea_state_clarification_finalization_claim_v1'\n} }));\n"
+      },
+      "id": "9cc7ade7-8a97-58dd-b2f1-9761162f3475",
+      "name": "Code | Normalize Clarification Finalization Claims | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "873477c8-0425-4776-b1c4-9fbd4f0e40e2",
+              "leftValue": "={{ [\"clarified\"].includes(String($json.resolution_mode || $json.resolutionMode || \"\")) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "12485508-da7d-5e04-9091-b05187505d41",
+      "name": "If | Clarification Finalization Needs Context | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        290,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_get_analysis_context_v2\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_principal_id: $json.principal_id, p_as_of_date: $json.local_date, p_input_id: $json.input_id, p_limit: 50 } }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "9a6698d3-3d3d-543d-bbd6-46acca54109f",
+      "name": "Call | Supabase RPC | Get Finalization Context | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        200
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst claim = $('Code | Normalize Clarification Finalization Claims | ClarificationFinalize').item.json || {};\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst finalization = claim.stateClarificationFinalization || claim;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst session = body?.clarificationSession ?? body?.clarification_session;\nconst catalog = body?.ruleCatalog ?? body?.rule_catalog;\nconst expectedSessionId = clean(finalization.session_id ?? finalization.sessionId);\nconst expectedRuleSetCode = clean(finalization.rule_set_code ?? finalization.ruleSetCode);\nconst expectedRuleSetVersion = Number(finalization.rule_set_version ?? finalization.ruleSetVersion);\nconst expectedCatalogVersion = Number(finalization.rule_catalog_version ?? finalization.ruleCatalogVersion);\nconst expectedRuleCode = clean(finalization.rule_code ?? finalization.ruleCode);\nconst expectedResolutionMode = clean(finalization.resolution_mode ?? finalization.resolutionMode);\nconst ready = body && typeof body === 'object' && !Array.isArray(body) &&\n  body.contractVersion === 'chelsea_state_analysis_context_v2' &&\n  clean(body.principalId ?? body.principal_id) === clean(finalization.principal_id ?? finalization.principalId) &&\n  Number(body.ruleCatalogVersion ?? body.rule_catalog_version) === expectedCatalogVersion &&\n  catalog && typeof catalog === 'object' && !Array.isArray(catalog) &&\n  clean(catalog.ruleSetCode ?? catalog.rule_set_code) === expectedRuleSetCode &&\n  Number(catalog.ruleSetVersion ?? catalog.rule_set_version) === expectedRuleSetVersion &&\n  Number(catalog.ruleCatalogVersion ?? catalog.rule_catalog_version) === expectedCatalogVersion &&\n  session && typeof session === 'object' && !Array.isArray(session) &&\n  clean(session.sessionId ?? session.session_id) === expectedSessionId &&\n  clean(session.status) === 'finalizing' &&\n  clean(session.ruleSetCode ?? session.rule_set_code) === expectedRuleSetCode &&\n  Number(session.ruleSetVersion ?? session.rule_set_version) === expectedRuleSetVersion &&\n  clean(session.ruleCode ?? session.rule_code) === expectedRuleCode &&\n  clean(session.resolutionMode ?? session.resolution_mode) === expectedResolutionMode;\n\nreturn [{ json: {\n  ...claim,\n  analysisContext: ready ? body : {},\n  stateClarificationFinalizationContextReady: ready,\n  stateClarificationFinalizationContextError: ready\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'clarification_finalization_context_invalid').slice(0, 2000)\n} }];\n"
+      },
+      "id": "3811d5f2-a15f-5291-af8b-da0e830c316f",
+      "name": "Code | Merge Clarification Finalization Context | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        790,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "51e37bc5-649f-4878-bdef-6cd1727869de",
+              "leftValue": "={{ $json.stateClarificationFinalizationContextReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "bb1b3fe7-1893-5593-a6fc-f6355d23f748",
+      "name": "If | Clarification Finalization Context Ready | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateClarificationFinalization || input;\nconst context = input.analysisContext && typeof input.analysisContext === 'object' ? input.analysisContext : {};\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst resolutionMode = clean(claim.resolution_mode ?? claim.resolutionMode);\nconst needsModel = resolutionMode === 'clarified';\nconst fallback = claim.neutral_fallback ?? claim.neutralFallback;\nconst session = context.clarificationSession ?? context.clarification_session ?? {};\nconst sessionAnswers = Array.isArray(session.answers) ? session.answers : [];\nconst relevantAnswers = sessionAnswers.filter(answer => {\n  const status = clean(answer?.status);\n  return !status || status === 'resolved';\n});\nconst answerSegments = relevantAnswers.map(answer => clean(answer?.answerText ?? answer?.answer_text)).filter(Boolean);\nconst rawResolvedSlots = session.resolvedSlots ?? session.resolved_slots;\nconst resolvedSlots = rawResolvedSlots && typeof rawResolvedSlots === 'object' && !Array.isArray(rawResolvedSlots)\n  ? rawResolvedSlots\n  : {};\nconst sanitizedSession = { ...session, answers: relevantAnswers };\nconst sanitizedContext = needsModel ? {\n  ...context,\n  clarificationSession: sanitizedSession,\n  ...(Object.prototype.hasOwnProperty.call(context, 'clarification_session')\n    ? { clarification_session: sanitizedSession }\n    : {})\n} : context;\nconst stateJob = {\n  job_id: clean(claim.job_id ?? claim.jobId),\n  job_version: Number(claim.job_version ?? claim.jobVersion),\n  lease_token: clean(claim.lease_token ?? claim.leaseToken),\n  principal_id: clean(claim.principal_id ?? claim.principalId),\n  input_id: clean(claim.input_id ?? claim.inputId),\n  session_id: clean(claim.session_id ?? claim.sessionId),\n  content: clean(claim.content),\n  local_date: clean(claim.local_date ?? claim.localDate),\n  context_json: claim.context_json ?? claim.contextJson ?? {},\n  rule_set_code: clean(claim.rule_set_code ?? claim.ruleSetCode),\n  rule_set_version: Number(claim.rule_set_version ?? claim.ruleSetVersion),\n  rule_catalog_version: Number(claim.rule_catalog_version ?? claim.ruleCatalogVersion),\n  analysis_mode: needsModel ? 'standard' : 'neutral_without_clarification',\n  collectedClarificationAnswerSegments: answerSegments\n};\nconst fallbackReady = !needsModel && fallback && typeof fallback === 'object' && !Array.isArray(fallback) &&\n  fallback.analysisMode === 'neutral_without_clarification' && fallback.clarification?.needed === false;\nconst modelReady = needsModel && input.stateClarificationFinalizationContextReady === true &&\n  clean(session.resolutionMode ?? session.resolution_mode) === 'clarified' &&\n  answerSegments.length > 0 && Object.keys(resolvedSlots).length > 0;\nconst ready = fallbackReady || modelReady;\n\nreturn [{ json: {\n  ...input,\n  stateJob,\n  analysisContext: sanitizedContext,\n  stateClarificationFinalizationNeedsModel: needsModel,\n  stateClarificationFinalizationReady: ready,\n  stateClarificationFinalizationError: ready\n    ? ''\n    : (needsModel ? 'clarified_finalization_context_incomplete' : 'stored_neutral_fallback_invalid'),\n  stateAnalysisResult: fallbackReady ? fallback : null,\n  stateAnalysisValid: fallbackReady,\n  stateAnalysisModel: fallbackReady ? 'catalog-neutral-fallback' : '',\n  stateAnalysisPromptVersion: fallbackReady ? 'chelsea_state_neutral_fallback_v1' : '',\n  stateAnalysisRuleSetCode: clean(claim.rule_set_code ?? claim.ruleSetCode),\n  stateAnalysisRuleSetVersion: Number(claim.rule_set_version ?? claim.ruleSetVersion),\n  stateAnalysisRuleCatalogVersion: Number(claim.rule_catalog_version ?? claim.ruleCatalogVersion),\n  stateApplyKey: `state_session_apply:${clean(claim.session_id ?? claim.sessionId)}`\n} }];\n"
+      },
+      "id": "aaa762aa-257a-5876-9293-fa516e11e311",
+      "name": "Code | Prepare Clarification Finalization | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1290,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f772f425-6c90-4700-af34-163f904b2a1b",
+              "leftValue": "={{ $json.stateClarificationFinalizationReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "15c8603a-dc9f-5391-a0e0-34b3a1d8e048",
+      "name": "If | Clarification Finalization Ready | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "277f0dae-16be-49d8-9ba2-115f1c11c609",
+              "leftValue": "={{ $json.stateClarificationFinalizationNeedsModel === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "15ba7614-1b6d-5943-9828-db12551291ad",
+      "name": "If | Clarification Finalization Needs Model | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1790,
+        320
+      ]
+    },
+    {
+      "id": "f398bd9c-21b5-59b2-a68f-c2496778bc07",
+      "name": "Call | Process Chelsea State Analysis Request Builder | ClarificationFinalize",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2040,
+        200
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "StateReqBuild083e",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Request Builder v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "payload": "={{ $json }}",
+            "profile": "clarification_finalize"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "profile",
+              "displayName": "profile",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateAnalysisRequest }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "558c6662-d01a-5f0b-9774-fe1eb5ee3fd4",
+      "name": "Call | OpenAI Responses | Analyze Clarified Session | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2290,
+        200
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "04063d74-e211-505e-83f1-5117c7399bed",
+      "name": "Call | Process Chelsea State Analysis Parser | Parse Finalization Analysis | ClarificationFinalize",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2540,
+        200
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "STPARSE6xA1b2c3d4",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Parser v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "modelResponse": "={{ $json }}",
+            "builtContext": "={{ $(\"Call | Process Chelsea State Analysis Request Builder | ClarificationFinalize\").first().json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "modelResponse",
+              "displayName": "modelResponse",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "builtContext",
+              "displayName": "builtContext",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "Chelsea Hardening v6: shared parser removes four identical 68k Code-node copies."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dae3cb10-ff57-4d9b-9a1c-6c83a2b30dc5",
+              "leftValue": "={{ $json.stateAnalysisValid === true && $json.stateAnalysisPreApplyClarificationNeeded !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b5347c56-32d6-5fe6-83cd-0d29f6f70039",
+      "name": "If | Finalization Analysis Accepted | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2790,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst parsed = $input.first()?.json || {};\nconst original = parsed.stateAnalysisRequest;\nif (!original || typeof original !== 'object') throw new Error('State analysis repair: original request is missing.');\n\nconst errors = Array.isArray(parsed.stateAnalysisErrors) ? parsed.stateAnalysisErrors.slice(0, 100) : ['unknown_validation_error'];\nconst invalidOutput = String(parsed.stateAnalysisRawText || '').slice(0, 30000);\nconst ruleCatalog = parsed.stateAnalysisRuleCatalog && typeof parsed.stateAnalysisRuleCatalog === 'object'\n  ? parsed.stateAnalysisRuleCatalog\n  : null;\nif (!ruleCatalog) throw new Error('State analysis repair: active rule catalog is missing.');\n\nconst repairInstruction = [\n  'Исправь предыдущий результат полностью. Верни новый полный JSON по той же strict schema, не patch.',\n  'Устрани каждую ошибку валидатора и сохрани schemaVersion=chelsea_state_analysis_v2.',\n  `Используй только этот active ruleCatalog: ${JSON.stringify(ruleCatalog)}.`,\n  'Верхний результат обязан точно копировать ruleSetCode, ruleSetVersion и ruleCatalogVersion из active ruleCatalog.',\n  'Не добавляй собственные связи event→sphere, polarity, impactScale, clarification или finance. Исполняй выбранное правило каталога.',\n  'Каждый event обязан иметь активный ruleCode и точный ruleSetVersion. Каждый effect обязан точно копировать effectRuleCode, sphereCode и direction одного разрешённого allowedEffects.',\n  'Соблюдай все диапазоны strength/confidence, allowedDurationDays, allowedImpactBases, requiredEffectGroups, polarityMode, allowedImpactScales и maxEffects.',\n  'Finance разрешён только financePolicy выбранного правила; outcome/direction/evidencePattern должны совпасть с каталогом.',\n  'Вопрос, его варианты и missingFields должны точно соответствовать одной clarificationPolicy.questions выбранного ruleCode.',\n  'При clarification.needed=true neutralFallback обязателен. Он использует neutral_without_clarification, strength=1, confidence=0.60, neutralScale правила, пустые userScores/retractions, точно повторяет futurePlans верхнего результата и содержит clarification=false.',\n  'При intake_enrichment основные mutation-массивы пусты, target/version null, а fallback содержит минимум одно событие выбранного ruleCode.',\n  'При effect_resolution сохраняй target CAS и ruleCode target. Fallback не содержит supersede/retraction и не меняет неоднозначный target.',\n  'При clarification.needed=false neutralFallback=null, все остальные nullable clarification-поля null, questionOptions/missingFields пусты.',\n  'Буквальные evidence разрешены только из currentMessage.content или currentMessage.collectedClarificationAnswerSegments исходного запроса.',\n  'Исправь временную привязку по currentMessage.temporalContext: today/вчера/явная дата задают occurredOn и startsOn завершённого события; обе даты совпадают и не позже latestMutableDate.',\n  'Полностью удали планы и намерения из events/userScores/retractions и clarification: они не меняют баллы. Конкретный личный план с разрешимой датой сохрани только в futurePlans.',\n  'Для futurePlans plannedFor не раньше anchorLocalDate; сегодня=today, завтра=tomorrow, послезавтра=dayAfterTomorrow, явная дата преобразуется точно. Без надёжной даты план не сохраняй и вопрос не задавай.',\n  'futurePlan.planSemanticKey стабилен и не содержит дату/ID; evidenceText и temporalEvidenceText являются буквальными непрерывными фрагментами источника. Прогнозы и чужие действия не являются планами пользователя.',\n  'temporalEvidenceText копируй буквальным непрерывным фрагментом источника, доказывающим дату и завершённость; не вырезай слова из будущего плана так, чтобы он выглядел свершившимся.',\n  'currentMessage.clarificationSession.resolvedSlots и currentMessage.collectedClarificationAnswerSegments — разрешённые уточнённые данные; не задавай повторный вопрос по уже заполненному slotCode.',\n  'При currentMessage.clarificationSession.status=finalizing и resolutionMode=clarified обязательно верни clarification.needed=false и не создавай новый цикл уточнений.',\n  'Не переставляй слова, не исправляй регистр и не перефразируй evidence. Если короткий фрагмент не получается, используй один разрешённый источник целиком.',\n  'dailySemanticKey должен быть стабильным и не дублировать точный или близкий ключ того же локального дня.',\n  'Для sphere_default бери durationDays из ruleCatalog.sphereDefaults; durationEvidence=null.',\n  'explicit_user_duration используй только с буквальным признаком продолжающегося/повторяющегося влияния; «сегодня» таким признаком не является.',\n  `Ошибки: ${JSON.stringify(errors)}`,\n  `Предыдущий результат: ${invalidOutput || '(пусто)'}`\n].join('\\n');\n\nconst request = {\n  ...original,\n  input: [\n    ...(Array.isArray(original.input) ? original.input : []),\n    { role: 'user', content: [{ type: 'input_text', text: repairInstruction }] }\n  ]\n};\n\nreturn [{\n  json: {\n    ...parsed,\n    stateAnalysisRequest: request,\n    stateAnalysisRepairAttempted: true,\n    stateAnalysisPromptVersion: 'chelsea_state_analysis_prompt_v2_2_future_plans_repair'\n  }\n}];\n"
+      },
+      "id": "6badbe14-19a5-5373-9daf-e97e9c493b73",
+      "name": "Code | Build Finalization Analysis Repair Request | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateAnalysisRequest }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "777acb04-8c4d-5b4d-a7b9-45350dd6fd45",
+      "name": "Call | OpenAI Responses | Repair Clarified Session | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3290,
+        440
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "101aec8e-79f0-5f52-aae3-febc63e1180a",
+      "name": "Call | Process Chelsea State Analysis Parser | Parse Repaired Finalization | ClarificationFinalize",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3540,
+        440
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "STPARSE6xA1b2c3d4",
+          "mode": "id",
+          "cachedResultName": "Process Chelsea State Analysis Parser v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "modelResponse": "={{ $json }}",
+            "builtContext": "={{ $(\"Code | Build Finalization Analysis Repair Request | ClarificationFinalize\").first().json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "modelResponse",
+              "displayName": "modelResponse",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "builtContext",
+              "displayName": "builtContext",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "notes": "Chelsea Hardening v6: shared parser removes four identical 68k Code-node copies."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a2ab4395-49b8-4cb7-90c3-49fdfafc8922",
+              "leftValue": "={{ $json.stateAnalysisValid === true && $json.stateAnalysisPreApplyClarificationNeeded !== true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5bada7e6-e03a-580f-8017-65f79591996b",
+      "name": "If | Repaired Finalization Analysis Accepted | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3790,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst parsed = $input.first()?.json || {};\nconst job = parsed.stateJob && typeof parsed.stateJob === 'object' ? parsed.stateJob : parsed;\nconst result = parsed.stateAnalysisResult;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst jobId = clean(job.job_id ?? job.jobId);\nconst leaseToken = clean(job.lease_token ?? job.leaseToken);\nconst jobVersion = Number(job.job_version ?? job.jobVersion);\nconst localDate = clean(job.local_date ?? job.localDate ?? parsed.asOfDate);\nconst ruleSetCode = clean(parsed.stateAnalysisRuleSetCode ?? job.rule_set_code ?? job.ruleSetCode);\nconst ruleSetVersion = Number(parsed.stateAnalysisRuleSetVersion ?? job.rule_set_version ?? job.ruleSetVersion);\nconst ruleCatalogVersion = Number(parsed.stateAnalysisRuleCatalogVersion ?? job.rule_catalog_version ?? job.ruleCatalogVersion);\nconst sessionId = clean(job.session_id ?? job.sessionId);\nconst applyKey = clean(parsed.stateApplyKey) || (sessionId\n  ? `state_session_apply:${sessionId}`\n  : `state_analysis_apply:${jobId}:v${jobVersion}:catalog${ruleCatalogVersion}`);\nconst futurePlans = Array.isArray(result?.futurePlans) ? result.futurePlans : null;\nconst ready = Boolean(jobId && leaseToken && Number.isSafeInteger(jobVersion) && localDate &&\n  ruleSetCode && Number.isSafeInteger(ruleSetVersion) && Number.isSafeInteger(ruleCatalogVersion) &&\n  result && typeof result === 'object' && !Array.isArray(result) && futurePlans);\n\nreturn [{ json: {\n  ...parsed,\n  stateAnalysisApplyReady: ready,\n  stateAnalysisApplyError: ready ? '' : 'analysis_apply_v3_input_incomplete',\n  stateApplyKey: applyKey,\n  stateRpcBody: {\n    p_job_id: jobId,\n    p_lease_token: leaseToken,\n    p_expected_job_version: jobVersion,\n    p_apply_key: applyKey,\n    p_model_name: clean(parsed.stateAnalysisModel) || 'gpt-5.6-luna',\n    p_prompt_version: clean(parsed.stateAnalysisPromptVersion) || 'chelsea_state_analysis_prompt_v2_2_future_plans',\n    p_result: result,\n    p_as_of_date: localDate,\n    p_rule_set_code: ruleSetCode,\n    p_rule_set_version: String(ruleSetVersion),\n    p_rule_catalog_version: ruleCatalogVersion\n  }\n} }];\n"
+      },
+      "id": "0cbe8ddf-a571-5602-b2b3-5b9133e7682e",
+      "name": "Code | Build Finalization Apply RPC | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4040,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "db94a418-76ad-474b-a527-7dd7b3d13cc8",
+              "leftValue": "={{ $json.stateAnalysisApplyReady === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9a31de78-405d-5497-a60b-c05766e34c1b",
+      "name": "If | Finalization Apply Ready | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4290,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_apply_analysis_v4\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "96d2208e-e367-520b-ae4c-3376fe1e23b4",
+      "name": "Call | Supabase RPC | Apply Clarification Finalization | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4540,
+        200
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nlet source = {};\nfor (const nodeName of [\n  'Code | Build Analysis Apply RPC | Analysis',\n  'Code | Build Finalization Apply RPC | ClarificationFinalize'\n]) {\n  try {\n    const candidate = $(nodeName).item.json || {};\n    if (candidate.stateRpcBody?.p_job_id) { source = candidate; break; }\n  } catch {}\n}\nconst incoming = $input.first()?.json || {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst expectedJobId = String(source.stateRpcBody?.p_job_id || '');\nconst futurePlans = Array.isArray(body?.futurePlans) ? body.futurePlans : null;\nconst contractVersion = String(body?.contractVersion || '');\nconst supportedContract = contractVersion === 'chelsea_state_apply_v3' ||\n  contractVersion === 'chelsea_state_apply_v4';\nconst versionSpecificFieldsValid = contractVersion !== 'chelsea_state_apply_v4' ||\n  typeof body?.eventCorrection === 'boolean';\nconst valid = body && typeof body === 'object' && !Array.isArray(body) &&\n  supportedContract && versionSpecificFieldsValid &&\n  String(body.jobId || '') === expectedJobId &&\n  Boolean(body.analysisRunId) &&\n  Number.isSafeInteger(Number(body.futurePlanCount)) &&\n  Number(body.futurePlanCount) >= 0 && futurePlans;\n\nreturn [{ json: {\n  ...source,\n  stateAnalysisApplyResult: body,\n  stateAnalysisApplySucceeded: Boolean(valid),\n  stateAnalysisApplyError: valid\n    ? ''\n    : String(body?.message || body?.error?.message || body?.hint || 'analysis_apply_receipt_failed').slice(0, 2000)\n} }];\n"
+      },
+      "id": "d1ad6586-b34c-529f-8eb0-eb0dc52861c2",
+      "name": "Code | Validate Finalization Apply | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4790,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "64253ade-247e-4d24-9e9c-f45b6c9c9954",
+              "leftValue": "={{ $json.stateAnalysisApplySucceeded === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b1ea58cd-af6a-5ebe-86b1-29c56b8877ad",
+      "name": "If | Finalization Apply Succeeded | ClarificationFinalize",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5290,
+        120
+      ],
+      "id": "0f9a0597-f217-584a-ae44-ec420539edb8",
+      "name": "End | Clarification Finalization Applied | ClarificationFinalize"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\n\nconst input = $input.first()?.json || {};\nconst claim = input.stateClarificationFinalization || input;\nconst clean = value => String(value ?? '').normalize('NFKC').trim();\nconst errors = [\n  input.stateClarificationFinalizationContextError,\n  input.stateClarificationFinalizationError,\n  ...(Array.isArray(input.stateAnalysisErrors) ? input.stateAnalysisErrors : []),\n  input.stateAnalysisApplyError,\n  input.message,\n  input.error?.message\n].map(clean).filter(Boolean);\nconst errorText = errors.join('; ').slice(0, 2000) || 'Clarification finalization failed.';\n\nreturn [{ json: {\n  ...input,\n  stateRpcBody: {\n    p_session_id: clean(claim.session_id ?? claim.sessionId),\n    p_lease_token: clean(claim.lease_token ?? claim.leaseToken),\n    p_expected_session_version: Number(claim.session_version ?? claim.sessionVersion),\n    p_error_code: (errors[0] || 'clarification_finalization_failed').slice(0, 120),\n    p_error_text: errorText,\n    p_retry_delay_minutes: 1\n  }\n} }];\n"
+      },
+      "id": "61a47de2-de2b-5786-a47b-ecb7de8b04a7",
+      "name": "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4040,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ String($env.CHELSEA_SUPABASE_URL || '').replace(/\\/$/,'') + \"/rest/v1/rpc/chelsea_state_fail_clarification_finalization_v1\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.CHELSEA_SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.stateRpcBody }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "0eb6ac7d-061e-5d04-b416-a12598f828ba",
+      "name": "Call | Supabase RPC | Fail Clarification Finalization | ClarificationFinalize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4290,
+        580
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Session finalization (ClarificationFinalize)\nFallback bypasses the model and is passed raw to atomic apply v2. Clarified sessions use stored answers; nested clarification is rejected.",
+        "height": 900,
+        "width": 6100,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -500,
+        0
+      ],
+      "id": "bebe246e-0d2d-5626-a676-f9142479bdd5",
+      "name": "Sticky Note | Clarification Finalization Contract | ClarificationFinalize"
+    },
+    {
+      "id": "4884544b-888e-5f86-88f6-7e1ab14969f5",
+      "name": "End | ClarificationFinalize Worker Receipt | ClarificationFinalizeWorker",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5570,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2070,
+        100
+      ],
+      "id": "eeff4dcb-d51b-4baa-8576-2b49b85167dd",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Analyze Clarified Session   ClarificationFinalize | ClarificationFinalize"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMReqSecV1d2WxY",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Request Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3070,
+        340
+      ],
+      "id": "1d17c16c-2336-48ac-8ce8-a254c03b4f5a",
+      "name": "Call | Chelsea LLM Request Security Gateway | Protect Repair Clarified Session   ClarificationFinalize | ClarificationFinalize"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2510,
+        200
+      ],
+      "id": "595b48a7-775d-4387-8c83-d7ed9c2d7c97",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationFinalize"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LLMRawSecV1e9PaT",
+          "mode": "list",
+          "cachedResultName": "Chelsea LLM Raw Response Security Gateway v3.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3510,
+        440
+      ],
+      "id": "57b82dc1-1852-44dc-a5a5-81749d9d147b",
+      "name": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationFinalize 2"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ClarificationFinalizeWorker": {
+      "main": [
+        [
+          {
+            "node": "Set | Scheduler Constants | StateScheduler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set | Scheduler Constants | StateScheduler": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Expire Clarification Sessions | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Expire Clarification Sessions | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Claim Clarification Finalizations | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Claim Clarification Finalizations | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Clarification Finalization Claims | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Clarification Finalization Claims | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Finalization Needs Context | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Finalization Needs Context | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Get Finalization Context | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Prepare Clarification Finalization | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Get Finalization Context | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Code | Merge Clarification Finalization Context | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Merge Clarification Finalization Context | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Finalization Context Ready | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Finalization Context Ready | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Code | Prepare Clarification Finalization | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Prepare Clarification Finalization | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Finalization Ready | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Finalization Ready | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Clarification Finalization Needs Model | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Clarification Finalization Needs Model | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Request Builder | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Finalization Apply RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Analyze Clarified Session | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Analysis Parser | Parse Finalization Analysis | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Finalization Analysis Accepted | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Finalization Analysis Accepted | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Finalization Apply RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Finalization Analysis Repair Request | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Finalization Analysis Repair Request | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Repair Clarified Session   ClarificationFinalize | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | OpenAI Responses | Repair Clarified Session | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationFinalize 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Analysis Parser | Parse Repaired Finalization | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Repaired Finalization Analysis Accepted | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Repaired Finalization Analysis Accepted | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Code | Build Finalization Apply RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Finalization Apply RPC | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Finalization Apply Ready | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Finalization Apply Ready | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Apply Clarification Finalization | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Apply Clarification Finalization | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Code | Validate Finalization Apply | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Validate Finalization Apply | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "If | Finalization Apply Succeeded | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If | Finalization Apply Succeeded | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "End | Clarification Finalization Applied | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Build Clarification Finalization Fail RPC | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Supabase RPC | Fail Clarification Finalization | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End | Clarification Finalization Applied | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationFinalize Worker Receipt | ClarificationFinalizeWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Supabase RPC | Fail Clarification Finalization | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationFinalize Worker Receipt | ClarificationFinalizeWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sticky Note | Clarification Finalization Contract | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "End | ClarificationFinalize Worker Receipt | ClarificationFinalizeWorker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Analyze Clarified Session   ClarificationFinalize | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Analyze Clarified Session | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Request Security Gateway | Protect Repair Clarified Session   ClarificationFinalize | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | OpenAI Responses | Repair Clarified Session | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Parser | Parse Finalization Analysis | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea LLM Raw Response Security Gateway | Validate Call | ClarificationFinalize 2": {
+      "main": [
+        [
+          {
+            "node": "Call | Process Chelsea State Analysis Parser | Parse Repaired Finalization | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Process Chelsea State Analysis Request Builder | ClarificationFinalize": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea LLM Request Security Gateway | Protect Analyze Clarified Session   ClarificationFinalize | ClarificationFinalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

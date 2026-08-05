@@ -1,0 +1,228 @@
+{
+  "updatedAt": "2026-07-27T14:29:25.148Z",
+  "createdAt": "2026-07-22T15:30:47.390Z",
+  "id": "kX2iJZ0Bm3hhTjwX",
+  "name": "Челси identity resolver v4.0 — HARDENED STAGED",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "telegramActorId"
+            },
+            {
+              "name": "telegramUserId"
+            },
+            {
+              "name": "currentUsername"
+            },
+            {
+              "name": "telegramUsername"
+            },
+            {
+              "name": "telegramFirstName"
+            },
+            {
+              "name": "chatId"
+            },
+            {
+              "name": "messageId"
+            },
+            {
+              "name": "messageDateIso"
+            },
+            {
+              "name": "sourceUpdateId"
+            },
+            {
+              "name": "eventType"
+            },
+            {
+              "name": "messageText"
+            },
+            {
+              "name": "question"
+            },
+            {
+              "name": "inputType"
+            },
+            {
+              "name": "voiceFileId"
+            },
+            {
+              "name": "callbackQueryId"
+            },
+            {
+              "name": "callbackData"
+            },
+            {
+              "name": "selectedQuestionId"
+            },
+            {
+              "name": "source"
+            },
+            {
+              "name": "memoryWriteAllowed"
+            },
+            {
+              "name": "pendingCheckAllowed"
+            },
+            {
+              "name": "isForwarded"
+            },
+            {
+              "name": "messageAuthorship"
+            },
+            {
+              "name": "replyToMessageId"
+            },
+            {
+              "name": "replyToText"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        300
+      ],
+      "id": "f6b114ea-369d-4fde-824d-a92bd4750063",
+      "name": "Trigger | Parent Workflow | InputModule"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst t=v=>String(v??'').normalize('NFKC').trim();const input=$input.first()?.json||{};const actor=t(input.telegramActorId||input.telegramNumericUserId);if(!/^\\d+$/.test(actor)||Number(actor)<=0)throw new Error('trusted_numeric_telegram_actor_required');\nconst username=t(input.currentUsername||input.telegramUsername).replace(/^@+/,'').toLowerCase();if(username&&!/^[a-z0-9_]{1,64}$/.test(username))throw new Error('telegram_username_invalid');\nconst safe={...input};for(const k of ['message','callback_query','edited_message','telegramUserId'])delete safe[k];return [{json:{...safe,telegramActorId:actor,currentUsername:username,telegramUsername:username,timeZone:t(input.timeZone||input.timezone)||'Asia/Novosibirsk'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        300
+      ],
+      "id": "b60b82b1-bfb7-44e5-adf9-755f881572a8",
+      "name": "Code | Normalize Trusted Telegram Actor | IdentityRoute"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "IdAuthV1x7Nq4Kb",
+          "mode": "list",
+          "cachedResultName": "Chelsea Identity Authority v2.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        600,
+        300
+      ],
+      "id": "51b00c9e-2331-4a55-bb0d-8fe90029e1f3",
+      "name": "Call | Chelsea Identity Authority | Resolve Immutable Actor | IdentityRoute"
+    },
+    {
+      "parameters": {
+        "jsCode": "'use strict';\nconst x=$input.first()?.json||{};const t=v=>String(v??'').normalize('NFKC').trim();if(x.identityAuthorityVerified!==true)throw new Error('postgres_identity_authority_not_verified');\nconst conflict=['identity_conflict','migration_review_required'].includes(t(x.identityStatus));if(conflict)return [{json:{...x,identityUsable:false,identityClaimsVerified:false,registrationState:'failed_review',identityAuthorityBoundaryVersion:'chelsea_postgres_identity_boundary_v2'}}];\nconst actor=t(x.telegramActorId||x.telegramUserId);if(!/^\\d+$/.test(actor)||Number(actor)<=0)throw new Error('postgres_identity_boundary_numeric_actor_required');\nif(!/^tgactor_[a-f0-9]{64}$/.test(t(x.principalKey))||!/^actor_[a-f0-9]{32}$/.test(t(x.storageUsername))||!/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(t(x.principalUuid))||t(x.identitySchemaVersion)!=='chelsea_actor_identity_v3')throw new Error('postgres_identity_boundary_contract_rejected');\nconst isStart=/^\\/start(?:\\s|$)/i.test(t(x.messageText||x.question));let failure=t(x.failureCode);if(t(x.registrationState)==='new'&&!isStart)failure='registration_requires_start';\nreturn [{json:{...x,telegramActorId:actor,telegramUserId:actor,actorPrincipalKey:t(x.principalKey),immutableStorageUsername:t(x.storageUsername),identityClaimsVerified:true,identityUsable:x.identityUsable===true&&t(x.registrationState)==='ready'&&x.identityStorageMigrationRequired!==true,failureCode:failure,identityAuthorityBoundaryVersion:'chelsea_postgres_identity_boundary_v2',identityResolvedAtIso:new Date().toISOString()}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "id": "8d3393ab-d204-41fc-8dc2-17b96293d248",
+      "name": "Code | Enforce PostgreSQL Identity Boundary | IdentityRoute"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        300
+      ],
+      "id": "be403641-7545-41a8-b8db-1718a9317af6",
+      "name": "End | IdentityRoute"
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | InputModule": {
+      "main": [
+        [
+          {
+            "node": "Code | Normalize Trusted Telegram Actor | IdentityRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Normalize Trusted Telegram Actor | IdentityRoute": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Identity Authority | Resolve Immutable Actor | IdentityRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call | Chelsea Identity Authority | Resolve Immutable Actor | IdentityRoute": {
+      "main": [
+        [
+          {
+            "node": "Code | Enforce PostgreSQL Identity Boundary | IdentityRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Enforce PostgreSQL Identity Boundary | IdentityRoute": {
+      "main": [
+        [
+          {
+            "node": "End | IdentityRoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromAList",
+    "callerIds": "5GAzkL7PzohlOycF",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveExecutionProgress": false,
+    "executionTimeout": 180,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "5bd8d711-ab94-567a-a917-ea68ecf41185",
+  "activeVersionId": null,
+  "versionCounter": 19,
+  "tags": []
+}
