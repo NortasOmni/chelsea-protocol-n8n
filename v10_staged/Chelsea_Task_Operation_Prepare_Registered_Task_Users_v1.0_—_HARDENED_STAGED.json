@@ -1,0 +1,56 @@
+{
+  "id": "T104273c7aa49eee",
+  "name": "Chelsea Task Operation Prepare Registered Task Users v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "6750d320-5a18-5637-bd02-9ffd43b75103",
+  "nodes": [
+    {
+      "id": "3f4d72a4-a2a5-59ee-b453-d612e6e15b3b",
+      "name": "Trigger | Parent Workflow | PrepareRegisteredTaskUsers",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "e44cfca3-c440-510c-afe1-5c4181996a5f",
+      "name": "Code | Execute Prepare Registered Task Users | TaskOperation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\n__modules['./utils'] = function(module, exports, __require) {\n'use strict';\nfunction fail(code, message, details) {\n  const error = new Error(message || code);\n  error.code = code;\n  if (details !== undefined) error.details = details;\n  throw error;\n}\n\nfunction assert(condition, code, message, details) {\n  if (!condition) fail(code, message, details);\n}\n\nfunction asString(value, fieldName, options) {\n  const opts = options || {};\n  assert(typeof value === 'string', 'invalid_string', `${fieldName} must be a string`);\n  const result = opts.trim === false ? value : value.trim();\n  const min = opts.min === undefined ? 0 : opts.min;\n  const max = opts.max === undefined ? 4096 : opts.max;\n  assert(result.length >= min && result.length <= max, 'invalid_string_length', `${fieldName} length is outside allowed bounds`);\n  return result;\n}\n\nmodule.exports = { fail, assert, asString };\n};\n__modules['./identity'] = function(module, exports, __require) {\n'use strict';\nconst { asString, assert } = __require('./utils');\nfunction deriveCanonicalIdentity(value) {\n  const input = value && typeof value === 'object' ? value : {};\n  const principalKey = String(input.principalKey ?? input.actorPrincipalKey ?? '').trim();\n  const storageUsername = String(input.storageUsername ?? input.userId ?? input.memoryUserId ?? '').normalize('NFKC').trim().replace(/^@+/, '').toLowerCase();\n  const currentUsername = String(input.currentUsername ?? input.telegramUsername ?? '').normalize('NFKC').trim().replace(/^@+/, '').toLowerCase();\n  const telegramActorId = String(input.telegramActorId ?? input.telegramUserId ?? '').trim();\n  assert(/^\\d+$/.test(telegramActorId) && Number(telegramActorId) > 0, 'identity_permanent', 'telegramActorId must be the immutable numeric Telegram actor id');\n  if (input.telegramActorId !== undefined && input.telegramUserId !== undefined) {\n    assert(String(input.telegramActorId) === String(input.telegramUserId), 'identity_permanent', 'telegramActorId and telegramUserId mismatch');\n  }\n  assert(/^tgactor_[a-f0-9]{64}$/.test(principalKey), 'identity_permanent', 'principalKey must be derived from the immutable Telegram actor id');\n  assert(/^actor_[a-f0-9]{32}$/.test(storageUsername), 'identity_permanent', 'storageUsername must be the immutable actor namespace');\n  assert(!currentUsername || /^[a-z0-9_]{1,64}$/.test(currentUsername), 'identity_permanent', 'currentUsername is invalid');\n  const expected = {\n    userId: storageUsername,\n    memoryUserId: storageUsername,\n    tenantId: `tenant_${storageUsername}`,\n    memoryTenantId: `tenant_${storageUsername}`,\n    qdrantCollection: `kb_tenant_${storageUsername}`,\n    soulId: `chelsea_soul_${storageUsername}`,\n  };\n  for (const [key, expectedValue] of Object.entries(expected)) {\n    if (input[key] !== undefined) assert(String(input[key] || '') === expectedValue, 'identity_permanent', `${key} mismatch`);\n  }\n  assert(input.identitySchemaVersion === undefined || String(input.identitySchemaVersion) === 'chelsea_actor_identity_v3', 'identity_permanent', 'identity schema mismatch');\n  assert(input.identityAuthorityVerified === true || input.identityClaimsVerified === true, 'identity_permanent', 'PostgreSQL identity authority verification required');\n  return {\n    principalKey,\n    storageUsername,\n    currentUsername,\n    telegramActorId,\n    telegramUserId: telegramActorId,\n    ...expected,\n    identitySchemaVersion: 'chelsea_actor_identity_v3',\n  };\n}\n\nfunction deriveTenantTable(tenantId) {\n  const tenantSafe = asString(tenantId, 'tenantId', { min: 1, max: 128 });\n  assert(/^[A-Za-z0-9_-]+$/.test(tenantSafe), 'identity_permanent', 'Derived tenantSafe is not table-safe');\n  return { tenantSafe, tableName: `Chelsea Tasks ${tenantSafe}` };\n}\n\nmodule.exports = { deriveCanonicalIdentity, deriveTenantTable };\n};\nconst __cache = Object.create(null);\nfunction __require(id) { if (__cache[id]) return __cache[id].exports; if (!__modules[id]) throw new Error(`Unknown bundled module: ${id}`); const module = { exports: {} }; __cache[id] = module; __modules[id](module, module.exports, __require); return module.exports; }\nconst core = Object.assign({}, __require('./identity'));\n\nconst envelope = $input.first()?.json || {};\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst wrap = (value) => ({ json: value && typeof value === 'object' ? value : {} });\nconst localInput = inputItems.map(wrap);\nconst localInputApi = { all: () => localInput, first: () => localInput[0] || wrap({}), last: () => localInput[localInput.length - 1] || wrap({}), item: localInput[0] || wrap({}) };\nconst localItems = (name) => (Array.isArray(contexts[String(name)]) ? contexts[String(name)] : []).map(wrap);\nconst localDollar = (name) => { const all = localItems(name); return { all: () => all, first: () => all[0] || wrap({}), last: () => all[all.length - 1] || wrap({}), item: all[0] || wrap({}) }; };\nconst __execute = async ($input, $items, $, $execution, $json, $itemIndex, $runIndex) => {\nconst rows = $input.all().map((item) => item.json || {}).flatMap((row) => Array.isArray(row) ? row : [row]).filter((row) => Object.keys(row).length);\nlet defaults = {};\ntry { defaults = $items('Set | Scheduler Runtime Defaults | SchedulerScan')[0]?.json || {}; } catch (_) {}\nconst defaultTimezone = String(defaults.taskDefaultTimezone || 'Asia/Novosibirsk');\nconst quietHoursStart = String(defaults.taskQuietHoursStart || '22:00');\nconst quietHoursEnd = String(defaults.taskQuietHoursEnd || '08:00');\nconst candidates = [];\nfor (const row of rows) {\n  const storageUsername = String(row.storageUsername || row.userId || row.memoryUserId || '').normalize('NFKC').trim().replace(/^@+/, '').toLowerCase();\n  const telegramActorId = String(row.telegramActorId || row.telegramUserId || '').trim();\n  const principalKey = String(row.principalKey || '').trim();\n  if (!/^actor_[a-f0-9]{32}$/.test(storageUsername)) continue;\n  if (!/^\\d+$/.test(telegramActorId) || Number(telegramActorId) <= 0) continue;\n  if (!/^tgactor_[a-f0-9]{64}$/.test(principalKey)) continue;\n  const tenantId = `tenant_${storageUsername}`;\n  if (String(row.User || row.tenantId || '').trim() !== tenantId) continue;\n  const userId = storageUsername;\n  const identity = core.deriveCanonicalIdentity({\n    ...row,\n    principalKey,\n    storageUsername,\n    userId,\n    memoryUserId: storageUsername,\n    tenantId,\n    memoryTenantId: tenantId,\n    qdrantCollection: `kb_tenant_${storageUsername}`,\n    soulId: `chelsea_soul_${storageUsername}`,\n    telegramActorId,\n    telegramUserId: telegramActorId,\n    identitySchemaVersion: 'chelsea_actor_identity_v3',\n    identityAuthorityVerified: true,\n  });\n  const table = core.deriveTenantTable(tenantId);\n  candidates.push({ row, ...identity, table });\n}\nconst counts = new Map();\nfor (const candidate of candidates) counts.set(candidate.tenantId, (counts.get(candidate.tenantId) || 0) + 1);\nif (Array.from(counts.values()).some((count) => count !== 1)) {\n  const error = new Error('PostgreSQL folder authority contains duplicate canonical task tenant rows');\n  error.code = 'duplicate_registry_tenant';\n  throw error;\n}\nreturn candidates.map(({ row, table, ...identity }) => ({ json: {\n  ...identity,\n  ownerUserId: identity.userId,\n  tenantSafe: table.tenantSafe,\n  taskTableName: table.tableName,\n  schedulerRegistryRowId: String(row.id || ''),\n  schedulerNowIso: new Date().toISOString(),\n  taskDefaultTimezone: defaultTimezone,\n  taskQuietHoursStart: quietHoursStart,\n  taskQuietHoursEnd: quietHoursEnd,\n} }));\n\n};\nreturn __execute(localInputApi, localItems, localDollar, $execution, localInputApi.first().json, 0, 0);\n"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | PrepareRegisteredTaskUsers": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Prepare Registered Task Users | TaskOperation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

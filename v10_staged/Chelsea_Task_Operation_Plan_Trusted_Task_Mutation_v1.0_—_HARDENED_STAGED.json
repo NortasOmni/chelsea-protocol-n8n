@@ -1,0 +1,376 @@
+{
+  "id": "T1014db58b06e187",
+  "name": "Chelsea Task Operation Plan Trusted Task Mutation v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "f0554542-ec71-56d9-a02e-647165eccdff",
+  "nodes": [
+    {
+      "id": "9487d582-b90a-5554-929b-ca35f91f810b",
+      "name": "Trigger | Parent Workflow | ChelseaTaskOperationPlanTrustedTaskM",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "17f3e474-1f92-5285-87ea-cc46722af668",
+      "name": "Code | Classify Task Mutation | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst raw=$input.first()?.json||{};const envelope=raw.envelope&&typeof raw.envelope==='object'?raw.envelope:raw;let contexts={};try{contexts=typeof envelope.contextsJson==='string'?JSON.parse(envelope.contextsJson||'{}'):(envelope.contextsJson||{});}catch{contexts={};}\nconst route=Array.isArray(contexts['Code | Route Task Operation | TaskSemantic'])?(contexts['Code | Route Task Operation | TaskSemantic'][0]||{}):{};\nlet mutationPlannerBranch='semantic';if(['failed','uncorrelated_reply','list'].includes(String(route._routeKind||'')))mutationPlannerBranch='pre_route';else if(route._routeKind==='create_draft_answer')mutationPlannerBranch='create_draft_answer';else if(route._routeKind==='answer')mutationPlannerBranch='answer';\nreturn [{json:{...envelope,mutationPlannerBranch}}];\n"
+      }
+    },
+    {
+      "id": "e46c1a4c-d7e9-55cf-aff6-5b9eb9fe88e5",
+      "name": "Switch | Task Mutation Branch | TaskMutation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bcae3d58-bb56-50e8-ad2a-cd039f03cb94",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "pre_route",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5d22b033-4427-5769-95d2-9902b6a2e695",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "create_draft_answer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ad478dee-3a90-5119-bfde-1f7e753bb7cc",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "answer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e81f090e-e05d-5f38-bbf8-e88cbd2333c1",
+                    "leftValue": "={{ $json.mutationPlannerBranch || $json.semanticBranch || $json.answerBranch || $json.resumeBranch }}",
+                    "rightValue": "semantic",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a83db20b-6a5e-515c-b5c8-610acb81d7d7",
+      "name": "Call | Chelsea Task Mutation Branch Pre Route | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -600
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM105b5cd21f3fecc",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Mutation Branch Pre Route v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "a905bf17-6421-5097-8f60-658b3f2e2a86",
+      "name": "Call | Chelsea Task Mutation Branch Create Draft Answer | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -420
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM10b0febcc818c0c",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Mutation Branch Create Draft Answer v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "6dc7db0d-1db1-5e53-bd3e-0e163fca32f0",
+      "name": "Call | Chelsea Task Mutation Branch Task Answer | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -240
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TM102b6ad5e40f252",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Mutation Branch Task Answer v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "0eba05b0-6c68-55fe-943e-1cdd721cc4b0",
+      "name": "Call | Chelsea Task Semantic Mutation Router | TaskMutation",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        40,
+        -60
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TMSem1021924750f",
+          "mode": "id",
+          "cachedResultName": "Chelsea Task Semantic Mutation Router v1.0 — HARDENED STAGED"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "envelope": "={{ $json }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "envelope",
+              "displayName": "envelope",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": false,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskOperationPlanTrustedTaskM": {
+      "main": [
+        [
+          {
+            "node": "Code | Classify Task Mutation | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code | Classify Task Mutation | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Switch | Task Mutation Branch | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch | Task Mutation Branch | TaskMutation": {
+      "main": [
+        [
+          {
+            "node": "Call | Chelsea Task Mutation Branch Pre Route | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Mutation Branch Create Draft Answer | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Mutation Branch Task Answer | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call | Chelsea Task Semantic Mutation Router | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

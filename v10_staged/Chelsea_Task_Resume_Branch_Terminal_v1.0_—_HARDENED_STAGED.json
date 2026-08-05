@@ -1,0 +1,63 @@
+{
+  "id": "TM10474f43359d19a",
+  "name": "Chelsea Task Resume Branch Terminal v1.0 — HARDENED STAGED",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveExecutionProgress": false,
+    "executionTimeout": 300,
+    "errorWorkflow": "gSoMnSr3MCWcU7Ox"
+  },
+  "pinData": {},
+  "versionId": "6e82d30d-db34-5fd8-bffc-859f11da426e",
+  "nodes": [
+    {
+      "id": "d4f58d06-6238-5a6f-90d8-b690db5b947e",
+      "name": "Trigger | Parent Workflow | ChelseaTaskResumeBranchTerminalv10HA",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "envelope",
+              "type": "object"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "055470a4-328c-569c-aa82-526bcf1b78c7",
+      "name": "Code | Execute Chelsea Task Resume Branch Terminal | TaskMutation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\nconst __modules = Object.create(null);\nconst __cache=Object.create(null);function __require(id){if(__cache[id])return __cache[id].exports;if(!__modules[id])throw new Error(`Unknown bundled module: ${id}`);const module={exports:{}};__cache[id]=module;__modules[id](module,module.exports,__require);return module.exports;}\nconst core={};\n\nconst rawEnvelope = $input.first()?.json || {};\nconst envelope = rawEnvelope.envelope && typeof rawEnvelope.envelope === 'object' ? rawEnvelope.envelope : rawEnvelope;\nconst inputItems = Array.isArray(envelope.inputItems) ? envelope.inputItems : [];\nlet contexts = {};\ntry { contexts = typeof envelope.contextsJson === 'string' ? JSON.parse(envelope.contextsJson || '{}') : (envelope.contextsJson || {}); } catch { contexts = {}; }\nconst route = Array.isArray(contexts['Code | Route Task Operation | TaskSemantic']) ? (contexts['Code | Route Task Operation | TaskSemantic'][0] || {}) : {};\nconst trusted = JSON.parse(route._trustedJson || '{}');\nconst rows = JSON.parse(route._rowsJson || '[]');\nconst refs = JSON.parse(route._targetRefsJson || '{}');\nconst nowIso = new Date().toISOString();\n\n\n\ntry {\nreturn (Array.isArray(envelope.terminalItems)?envelope.terminalItems:[]).map(json=>({json}));\n\n} catch (error) {\n  if (String(error.code || '') === 'concurrency_conflict' || String(error.code || '') === 'lease_conflict') {\n    return outcome({ taskHandled: true, operation: 'task_deferred_retry', text: 'Задача сейчас обрабатывается планировщиком. Повторите команду чуть позже.', errorCode: String(error.code).slice(0, 80) });\n  }\n  return outcome({ taskHandled: true, operation: 'failed_review', text: 'Команда задач остановлена безопасно; изменения не применены.', errorCode: String(error.code || 'contract_violation').slice(0, 80) });\n}\n"
+      }
+    }
+  ],
+  "connections": {
+    "Trigger | Parent Workflow | ChelseaTaskResumeBranchTerminalv10HA": {
+      "main": [
+        [
+          {
+            "node": "Code | Execute Chelsea Task Resume Branch Terminal | TaskMutation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
